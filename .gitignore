@@ -1,0 +1,18 @@
+# Godot 4
+.godot/
+
+# (Godot 3 podpora – pokud bys otevřel starý projekt)
+.import/
+
+# Exporty / buildy
+export/
+bin/
+
+# OS chuchvalce
+.DS_Store
+Thumbs.db
+
+# Zálohy/ide
+*.tmp
+*.log
+*.translation
