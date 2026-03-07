@@ -1,0 +1,163 @@
+extends Resource
+class_name DarkActionsManager
+
+var game_state: GameStateSingleton
+
+# cooldowny per frakce:
+# { "player": {"terrifying_whisper":0, "decoy":0, "infernal_pact":0}, ... }
+var _cooldowns:Dictionary = {}
+
+
+func _init(_game_state:GameStateSingleton = null) -> void:
+	game_state = _game_state
+
+
+# -------------------------------------------------
+# interní helper: zajistí, že pro frakci existuje dict cooldownů
+func _get_faction_cooldowns(faction_id:String) -> Dictionary:
+	if not _cooldowns.has(faction_id):
+		var cd:Dictionary = {}
+		for key in Balance.DARK_ACTIONS.keys():
+			cd[key] = 0
+		_cooldowns[faction_id] = cd
+	return _cooldowns[faction_id]
+
+
+# -------------------------------------------------
+# 1) can_cast – ověří, zda frakce může akci použít (cooldown, AP, mana, target)
+func can_cast(faction_id:String, action_key:String, region_id:int = -1) -> Dictionary:
+	var action_def:Dictionary = Balance.DARK_ACTIONS.get(action_key, {})
+	if action_def.is_empty():
+		return {"ok": false, "reason": "Neznámá dark akce: %s" % action_key}
+
+	var fac = game_state.faction_manager.get_faction(faction_id)
+	if fac == null:
+		return {"ok": false, "reason": "Neznámá frakce: %s" % faction_id}
+
+	var cds = _get_faction_cooldowns(faction_id)
+	if cds.get(action_key, 0) > 0:
+		return {"ok": false, "reason": "Akce je na cooldownu."}
+
+	var ap_cost:int = int(action_def.get("ap_cost", 0))
+	if fac.dark_actions_left < ap_cost:
+		return {"ok": false, "reason": "Nedostatek dark action bodů."}
+
+	var mana_cost:int = int(action_def.get("mana_cost", 0))
+	if fac.get_resource("mana") < mana_cost:
+		return {"ok": false, "reason": "Nedostatek many."}
+
+	var atype:String = String(action_def.get("type", "global"))
+	if atype == "region":
+		# region_id musí být validní
+		if region_id < 0 or region_id >= game_state.region_manager.regions.size():
+			return {"ok": false, "reason": "Neplatný cílový region."}
+
+	return {"ok": true}
+
+
+# -------------------------------------------------
+# 2) cast – provede akci, odečte náklady, nastaví cooldown, aplikuje efekty
+func cast(faction_id:String, action_key:String, region_id:int = -1) -> Dictionary:
+	var logs: Array[Dictionary] = []
+	var events: Array[Dictionary] = []
+
+	var check := can_cast(faction_id, action_key, region_id)
+	if not check.get("ok", false):
+		return {
+			"ok": false,
+			"reason": String(check.get("reason", "Nelze seslat.")),
+			"logs": logs,
+			"events": events,
+			"action": action_key,
+			"faction_id": faction_id,
+			"region_id": region_id
+		}
+
+	var action_def:Dictionary = Balance.DARK_ACTIONS.get(action_key, {})
+	var fac = game_state.faction_manager.get_faction(faction_id)
+	var cds = _get_faction_cooldowns(faction_id)
+
+	# --- costs ---
+	var ap_cost:int = int(action_def.get("ap_cost", 0))
+	var mana_cost:int = int(action_def.get("mana_cost", 0))
+	fac.dark_actions_left -= ap_cost
+	if mana_cost != 0:
+		fac.change_resource("mana", -mana_cost)
+
+	# cooldown
+	var cd_val:int = int(action_def.get("cooldown", 0))
+	cds[action_key] = cd_val
+
+	# efekty přes centrální resolver v GameState
+	# --- effects ---
+	var atype:String = String(action_def.get("type", "global"))
+	var target_region: Region = null
+	if atype == "region":
+		target_region = game_state.query.regions.get_by_id(region_id)
+
+	var effects:Dictionary = action_def.get("effects", {})
+	if not effects.is_empty():
+		# signatura: _apply_effects(effects, region_or_null, source_faction_id)
+		var ctx := EffectContext.make(game_state, target_region, faction_id)
+		var eff_logs: Array[Dictionary] = game_state.effects_system.apply(effects, ctx)
+		logs += eff_logs
+		
+	events = [{
+		"type": "dark_action_cast",
+		"action": action_key,
+		"faction_id": faction_id,
+		"region_id": region_id
+	}]
+
+	# log do UI (pokud chceš mít jednotný feed)
+	var display_name:String = String(action_def.get("display_name", action_key))
+	logs.append({
+		"type": "dark_action",
+		"text": "🔮 Seslána temná akce: %s" % display_name
+	})
+
+	return {
+		"ok": true,
+		"action": action_key,
+		"faction_id": faction_id,
+		"region_id": region_id,
+		"logs": logs,
+		"events": events
+	}
+
+# -------------------------------------------------
+# 3) tick_cooldowns – volat na konci kola
+func tick_cooldowns() -> void:
+	for fid in _cooldowns.keys():
+		var cd_for_faction:Dictionary = _cooldowns[fid]
+		for key in cd_for_faction.keys():
+			var v:int = cd_for_faction[key]
+			if v > 0:
+				cd_for_faction[key] = v - 1
+
+
+# -------------------------------------------------
+# 4) refresh_dark_actions_for_faction – na začátku kola
+func refresh_dark_actions_for_faction(faction_id:String) -> void:
+	var fac = game_state.faction_manager.get_faction(faction_id)
+	if fac == null:
+		return
+	fac.dark_actions_left = fac.dark_actions_max
+
+
+# volitelně: pro všechny frakce najednou
+func refresh_all_dark_actions() -> void:
+	for f in game_state.faction_manager.factions:
+		refresh_dark_actions_for_faction(f.id)
+
+
+# -------------------------------------------------
+# 5) get_available_actions_for_faction – pro UI (cooldown==0)
+# POZOR: nekontrolujeme AP/mana, jen cooldown
+func get_available_actions_for_faction(faction_id:String) -> Array[String]:
+	var result:Array[String] = []
+	var cds = _get_faction_cooldowns(faction_id)
+	for key in Balance.DARK_ACTIONS.keys():
+		if cds.get(key, 0) <= 0:
+			result.append(key)
+	return result

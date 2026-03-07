@@ -1,0 +1,35 @@
+{
+  "meta": {
+	"name": "MVP Scenario",
+	"map_path": "res://data/maps/mvp_map.json"
+  },
+  "globals": {
+	"turn": 1,
+	"heat": 20,
+	"doom": 0,
+	"doom_income": 0,
+	"heat_stage": 0
+  },
+  "factions": [
+	{
+	  "id": "player",
+	  "name": "Temný Pán",
+	  "is_player": true,
+	  "unit_limit": 3,
+	  "dark_actions_max": 1,
+	  "dark_actions_left": 1,
+	  "resources": { "gold": 30, "mana": 10 }
+	},
+	{ "id": "paladin", "name": "Cech Paladinů", "ai_spawn_unit": "paladin_army", "resources": {} },
+	{ "id": "elf", "name": "Říše elfů", "ai_spawn_unit": "inquisitor", "resources": {} },
+	{ "id": "merchant", "name": "Obchodní města", "ai_spawn_unit": "", "resources": {} },
+	{ "id": "orc", "name": "Orčí tlupa", "ai_spawn_unit": "orc_band", "resources": {} }
+  ],
+  "units": [
+	{ "id": 0,   "unit_key": "vampire",      "region_id": 0, "faction_id": "player",  "state": "healthy" },
+	{ "id": 1,   "unit_key": "homunculus",   "region_id": 0, "faction_id": "player",  "state": "healthy" },
+
+	{ "id": 100, "unit_key": "paladin_army", "region_id": 6, "faction_id": "paladin", "state": "healthy" },
+	{ "id": 101, "unit_key": "inquisitor",   "region_id": 4, "faction_id": "elf",     "state": "healthy" }
+  ]
+}

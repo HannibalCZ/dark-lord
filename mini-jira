@@ -1,0 +1,23 @@
+bugy
+- po misi nekdy jednotky zustanou "busy"
+- chybi logy z battle
+
+features
+x prejmenovat suroviny na gold
+x prejmenovat hanebnost na infamy
+x uprava regionu
+xx pridat income gold/mana/research
+xx pridat type & type display name
+xx zjednodusit inicializaci (navazana na type)
+xx zobrazit nove attributy ve vypisu v UI
+- pridat ekonomicky manager, ktery spocita prijem (pro AI frakce se zatim neuklada)
+- zavest upkeep pro jednotky
+- navazat impact misi na staty v regionu (napriklad nasobky prijmu)
+- zavest tagy regionu
+-- modifikuji nektery z parametru
+-- mohou byt trvale ci docasne (pocita se kolik kol jeste bude)
+
+UI
+- zobrazit u vypisu regionu income
+- udelat souhrny log, ktery vysvetli budget
+- zobrazit tagy regionu v UI vypisu (vcetne kol trvani)

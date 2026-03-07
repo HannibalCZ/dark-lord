@@ -1,0 +1,45 @@
+[gd_scene load_steps=2 format=3 uid="uid://ckl1fu7pnsokb"]
+
+[ext_resource type="Script" uid="uid://ulfdh1hbfao7" path="res://scripts/ui/TobBar.gd" id="1_wqstq"]
+
+[node name="TopBar" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_wqstq")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 31.0
+grow_horizontal = 2
+
+[node name="Label" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+text = "Mana: 0"
+
+[node name="Label2" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+text = "Suroviny: 0"
+
+[node name="Label3" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+text = "Hanebnost: 0"
+
+[node name="ResearchLabel" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+text = "Výzkum: 0"
+
+[node name="UnitsLabel" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="ProgressBar" type="ProgressBar" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+step = 5.0
+page = 50.0
+value = 50.0
+
+[node name="Button" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+text = "Další tah"

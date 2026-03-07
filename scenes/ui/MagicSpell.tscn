@@ -1,0 +1,39 @@
+[gd_scene load_steps=3 format=3 uid="uid://chtaf23qvaujm"]
+
+[ext_resource type="Script" uid="uid://chrla0gxjharj" path="res://scripts/ui/MagicSpell.gd" id="1_b6wlt"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b6wlt"]
+
+[node name="MagicSpell" type="Control"]
+custom_minimum_size = Vector2(200, 100)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_b6wlt")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_b6wlt")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="PanelContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="DescLabel" type="Label" parent="PanelContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="CastButton" type="Button" parent="PanelContainer/HBoxContainer"]
+layout_mode = 2
+text = "Sešli kouzlo"

@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3 uid="uid://dr1uf3dhxyvm2"]
+
+[ext_resource type="Script" uid="uid://dy6rvt2qi15le" path="res://scripts/ui/MagicTab.gd" id="1_4x5r6"]
+
+[node name="MagicTab" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_4x5r6")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+offset_right = 200.0
+offset_bottom = 27.0
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Výzkum magie"
+
+[node name="Spells" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2

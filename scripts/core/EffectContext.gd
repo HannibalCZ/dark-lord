@@ -1,0 +1,13 @@
+extends RefCounted
+class_name EffectContext
+
+var game: GameStateSingleton
+var region: Region = null
+var source_faction_id: String = Balance.PLAYER_FACTION
+
+static func make(game: GameStateSingleton, region: Region = null, source_faction_id: String = Balance.PLAYER_FACTION) -> EffectContext:
+	var ctx := EffectContext.new()
+	ctx.game = game
+	ctx.region = region
+	ctx.source_faction_id = source_faction_id
+	return ctx

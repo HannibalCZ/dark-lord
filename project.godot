@@ -11,5 +11,19 @@ config_version=5
 [application]
 
 config/name="dark-lord"
+run/main_scene="uid://b7f7udyiyxxb"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+GameState="*res://scripts/GameState.gd"
+Log_Manager="*res://managers/LogManager.gd"
+Balance="*res://scripts/Balance.gd"
+TweenHelper="*res://scripts/ui/TweenHelper.gd"
+EventBus="*res://scripts/core/EventBus.gd"
+UiHelpers="*res://scripts/ui/UIHelpers.gd"
+
+[gui]
+
+theme/custom="uid://7pki6dpyep33"

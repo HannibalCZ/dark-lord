@@ -1,0 +1,117 @@
+[gd_resource type="Theme" load_steps=11 format=3 uid="uid://7pki6dpyep33"]
+
+[sub_resource type="StyleBoxFlat" id="6"]
+bg_color = Color(0.105882, 0.105882, 0.105882, 1)
+border_color = Color(0, 0, 0, 0.35)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="4"]
+bg_color = Color(0.203922, 0.207843, 0.231373, 1)
+border_color = Color(0.627451, 0.509804, 1, 0.35)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="3"]
+bg_color = Color(0.164706, 0.168627, 0.192157, 1)
+border_color = Color(0, 0, 0, 0.4)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="5"]
+bg_color = Color(0.121569, 0.12549, 0.14902, 1)
+border_color = Color(0, 0, 0, 0.5)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="8"]
+bg_color = Color(0.262745, 0.266667, 0.298039, 1)
+border_color = Color(0, 0, 0, 0.55)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="9"]
+bg_color = Color(0.313726, 0.317647, 0.352941, 1)
+border_color = Color(0.627451, 0.509804, 1, 0.35)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="7"]
+bg_color = Color(0.0784314, 0.0823529, 0.0941176, 1)
+border_color = Color(0, 0, 0, 0.4)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="11"]
+content_margin_left = 0.0
+content_margin_top = 1.0
+content_margin_right = 0.0
+content_margin_bottom = 1.0
+bg_color = Color(1, 1, 1, 0.07)
+
+[sub_resource type="StyleBoxFlat" id="2"]
+bg_color = Color(0.109804, 0.113725, 0.133333, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="10"]
+bg_color = Color(0.2, 0.2, 0.23, 1)
+border_color = Color(0, 0, 0, 0.4)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[resource]
+default_base_scale = 1.0
+default_font_size = 16
+Button/colors/font_color = Color(0.92, 0.92, 0.92, 1)
+Button/colors/font_hover_color = Color(1, 1, 1, 1)
+Button/colors/font_pressed_color = Color(1, 1, 1, 1)
+Button/constants/hseparation = 10
+Button/constants/vseparation = 6
+Button/styles/disabled = SubResource("6")
+Button/styles/hover = SubResource("4")
+Button/styles/normal = SubResource("3")
+Button/styles/pressed = SubResource("5")
+HScrollBar/styles/grabber = SubResource("8")
+HScrollBar/styles/grabber_highlight = SubResource("9")
+HScrollBar/styles/grabber_pressed = SubResource("5")
+HScrollBar/styles/scroll = SubResource("7")
+HSeparator/styles/separator = SubResource("11")
+OptionButton/colors/font_color = Color(0.92, 0.92, 0.92, 1)
+OptionButton/colors/font_hover_color = Color(1, 1, 1, 1)
+OptionButton/styles/disabled = SubResource("6")
+OptionButton/styles/hover = SubResource("4")
+OptionButton/styles/normal = SubResource("3")
+OptionButton/styles/pressed = SubResource("5")
+Panel/styles/panel = SubResource("2")
+PanelContainer/styles/panel = SubResource("2")
+PopupMenu/colors/font_color = Color(0.9, 0.9, 0.9, 1)
+PopupMenu/colors/font_hover_color = Color(1, 1, 1, 1)
+PopupMenu/constants/hseparation = 8
+PopupMenu/constants/vseparation = 4
+PopupMenu/styles/panel = SubResource("10")
+VScrollBar/styles/grabber = SubResource("8")
+VScrollBar/styles/grabber_highlight = SubResource("9")
+VScrollBar/styles/grabber_pressed = SubResource("5")
+VScrollBar/styles/scroll = SubResource("7")
+VSeparator/styles/separator = SubResource("11")
