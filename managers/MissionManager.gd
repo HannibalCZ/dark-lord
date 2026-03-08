@@ -196,7 +196,7 @@ func _compute_mission_success(mission_key: String, unit: Unit, region: Region) -
 
 	# 3) spočítat výslednou šanci
 	var total_chance: float = base + region_delta + unit_delta
-	total_chance = clamp(total_chance, 0.05, 0.95)
+	total_chance = clamp(total_chance, Balance.MISSION_CHANCE_MIN, Balance.MISSION_CHANCE_MAX)
 
 	return {
 		"chance": total_chance,
