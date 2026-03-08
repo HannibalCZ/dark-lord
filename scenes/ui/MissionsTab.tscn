@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bi2sbp5b8uiwf"]
 
-[ext_resource type="Script" uid="uid://bv2d074apckkc" path="res://scripts/ui/MissonsTab.gd" id="1_ablup"]
+[ext_resource type="Script" uid="uid://bv2d074apckkc" path="res://scripts/ui/MissionsTab.gd" id="1_ablup"]
 
 [node name="MissionsTab" type="Control"]
 layout_mode = 3

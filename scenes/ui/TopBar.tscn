@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://ckl1fu7pnsokb"]
 
-[ext_resource type="Script" uid="uid://ulfdh1hbfao7" path="res://scripts/ui/TobBar.gd" id="1_wqstq"]
+[ext_resource type="Script" uid="uid://ulfdh1hbfao7" path="res://scripts/ui/TopBar.gd" id="1_wqstq"]
 
 [node name="TopBar" type="Control"]
 layout_mode = 3
