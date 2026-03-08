@@ -27,8 +27,8 @@ func compute_income_and_upkeep(faction_id: String) -> Dictionary:
 	var gold_upkeep := 0.0
 	var mana_upkeep := 0.0
 
-	for u in game_state.unit_manager.units:
-		if u.faction_id == faction_id and u.state != "lost":
+	for u in game_state.query.units.by_faction.get(faction_id, []):
+		if u.state != "lost":
 			var cfg : Dictionary = Balance.UNIT.get(u.unit_key, {})
 			var upkeep : Dictionary = cfg.get("upkeep_cost", {})
 			gold_upkeep += float(upkeep.get("gold", 0))

@@ -26,17 +26,17 @@ func build(id: int) -> Dictionary:
 	if b["built"]:
 		return {"text":"ℹ️ Budova %s už stojí." % b["name"], "type":"info"}
 
-	if GameState.faction_manager.get_faction(Balance.PLAYER_FACTION).resources["gold"] < b["cost"]:
+	if game_state.faction_manager.get_faction(Balance.PLAYER_FACTION).resources["gold"] < b["cost"]:
 		return {"text":"❌ Nedostatek surovin pro stavbu %s." % b["name"], "type":"warn"}
 
 	# Zaplať a postav
-	GameState.faction_manager.get_faction(Balance.PLAYER_FACTION).change_resource("gold", -b["cost"])
+	game_state.faction_manager.get_faction(Balance.PLAYER_FACTION).change_resource("gold", -b["cost"])
 	b["built"] = true
 
 	# Okamžité jednorázové dopady na state (pokud nějaké má být už nyní)
 	match b["name"]:
 		"Doupě":
-			GameState.unit_manager.unit_limit += 1
+			game_state.unit_manager.unit_limit += 1
 		_:
 			pass
 
@@ -50,7 +50,7 @@ func apply_end_of_turn_effects() -> Array[Dictionary]:
 			continue
 		match b["name"]:
 			"Knihovna":
-				GameState.faction_manager.get_faction(Balance.PLAYER_FACTION).change_resource("research", 1)
+				game_state.faction_manager.get_faction(Balance.PLAYER_FACTION).change_resource("research", 1)
 			"Past":
 				# později: přičítej trvalý bonus k obraně věže / stacky pastí apod.
 				pass
