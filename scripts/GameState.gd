@@ -324,8 +324,8 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 	if new_heat == old_heat:
 		return
 
-	# --- STAGE 1: 25 ---
-	if old_heat < 25 and new_heat >= 25:
+	# --- STAGE 1 ---
+	if old_heat < Balance.HEAT_STAGE_1 and new_heat >= Balance.HEAT_STAGE_1:
 		heat_stage = max(heat_stage, 1)
 		paladin_faction.ai_defend_other_factions = true
 		_log({
@@ -333,8 +333,8 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 			"text": "🔥 [HEAT 25] Řády paladinů začínají sledovat temné aktivity."
 		})
 
-	# --- STAGE 2: 50 ---
-	if old_heat < 50 and new_heat >= 50:
+	# --- STAGE 2 ---
+	if old_heat < Balance.HEAT_STAGE_2 and new_heat >= Balance.HEAT_STAGE_2:
 		heat_stage = max(heat_stage, 2)
 		paladin_faction.ai_can_attack_lairs = true
 		_log({
@@ -342,8 +342,8 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 			"text": "🔥🔥 [HEAT 50] Frakce dobra mobilizují armády a vysílají inkvizitory."
 		})
 
-	# --- STAGE 3: 76 ---
-	if old_heat < 76 and new_heat >= 76:
+	# --- STAGE 3 ---
+	if old_heat < Balance.HEAT_STAGE_3 and new_heat >= Balance.HEAT_STAGE_3:
 		heat_stage = max(heat_stage, 3)
 		paladin_faction.ai_regular_spawns_enabled = true
 		_log({
@@ -351,8 +351,8 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 			"text": "🔥🔥🔥 [HEAT 76] Svaté výpravy proudí ze všech koutů světa."
 		})
 
-	# --- STAGE 4: 100 ---
-	if old_heat < 100 and new_heat >= 100:
+	# --- STAGE 4 ---
+	if old_heat < Balance.HEAT_MAX and new_heat >= Balance.HEAT_MAX:
 		heat_stage = 4
 		paladin_faction.ai_final_crusade = true
 		_log({
@@ -366,7 +366,7 @@ func check_end_conditions() -> Dictionary:
 		return game_over_result
 
 	# LOSE: heat
-	if heat >= 100:
+	if heat >= Balance.HEAT_MAX:
 		game_over = true
 		game_over_result = {
 			"ok": false,
@@ -376,9 +376,9 @@ func check_end_conditions() -> Dictionary:
 		emit_signal("game_ended", game_over_result)
 		return game_over_result
 
-	# WIN: 8 owned or controlled
+	# WIN: ovládáš dostatek regionů
 	var cnt: int = query.regions.count_player_owned_or_controlled()
-	if cnt >= 8:
+	if cnt >= Balance.WIN_REGIONS_REQUIRED:
 		game_over = true
 		game_over_result = {
 			"ok": true,

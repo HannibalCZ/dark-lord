@@ -6,6 +6,22 @@ const CORRUPTION_THRESHOLD = 50
 
 const CORRUPTION_CONTROLLER_PHASE := 3
 
+# Heat stage thresholdy
+const HEAT_STAGE_1 = 25
+const HEAT_STAGE_2 = 50
+const HEAT_STAGE_3 = 76
+const HEAT_MAX = 100  # stage 4 + podmínka prohry
+
+# Podmínka výhry
+const WIN_REGIONS_REQUIRED = 8
+
+# Doupata
+const LAIR_INFLUENCE_CONTROL_THRESHOLD = 20
+
+# Mise
+const MISSION_CHANCE_MIN = 0.05
+const MISSION_CHANCE_MAX = 0.95
+
 const CORRUPTION_PHASE_DATA := [
 	{
 		"id": 0,
