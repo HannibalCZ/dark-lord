@@ -16,7 +16,8 @@ func execute_ai_turn() -> void:
 		if u_cfg.is_empty():
 			continue
 
-		var prof: Dictionary = u_cfg.get("ai_profile", {})
+		var profile_key: String = _pick_profile(u)
+		var prof: Dictionary = Balance.AI_PROFILE.get(profile_key, {})
 		if prof.is_empty():
 			continue
 
@@ -24,16 +25,34 @@ func execute_ai_turn() -> void:
 		if target_id == -1:
 			continue
 
-		_ai_move_towards(u, target_id)
+		# Pohyb — jen pokud move_towards_target == true A není na cíli
+		if prof.get("move_towards_target", false) and u.region_id != target_id:
+			_ai_move_towards(u, target_id)
 
+		# Akce — jen pokud je na cíli
 		if u.region_id == target_id:
-			_ai_execute_plan(u, target_id, prof)
+			_ai_execute_action(u, target_id, prof)
+
+# Výběr profilu podle heat flags frakce.
+# Inquisitor vždy dostane "investigator" bez ohledu na heat flags.
+func _pick_profile(u: Unit) -> String:
+	if u.unit_key == "inquisitor":
+		return "investigator"
+
+	var faction: Faction = game_state.faction_manager.get_faction(u.faction_id)
+	if faction == null:
+		return "defender"
+
+	# Prioritní pořadí: final_crusade > can_attack_lairs > výchozí
+	if faction.ai_final_crusade:
+		return "raider"
+	if faction.ai_can_attack_lairs:
+		return "lair_hunter"
+	return "defender"
 
 func _ai_pick_target_region(u: Unit, prof: Dictionary) -> int:
 	var target_def: Dictionary = prof.get("target", {})
 	if target_def.is_empty():
-		return -1
-	if String(target_def.get("type", "")) != "region":
 		return -1
 	var select: String = String(target_def.get("select", "nearest"))
 	if select != "nearest":
@@ -49,17 +68,24 @@ func _ai_move_towards(u: Unit, target_id: int) -> void:
 			return
 		game_state.move_unit(u.id, next_step)
 
-func _ai_execute_plan(u: Unit, target_id: int, prof: Dictionary) -> void:
-	var plan: Array = prof.get("plan", [])
-	if plan.is_empty():
+# Spustí misi pokud je jednotka na cílovém regionu a akce projde validací can_do.
+# Pokud action_at_target == null, jednotka stojí — boj proběhne implicitně.
+func _ai_execute_action(u: Unit, target_id: int, prof: Dictionary) -> void:
+	var action: Variant = prof.get("action_at_target", null)
+	if action == null or String(action).is_empty():
 		return
-	var step: Dictionary = plan[0]
-	var mission_key: String = String(step.get("mission_key", "_none"))
-	if mission_key == "_none" or mission_key == "wait":
+
+	var action_key: String = String(action)
+
+	# Validace: akce musí být v can_do jednotky
+	var u_cfg: Dictionary = Balance.UNIT.get(u.unit_key, {})
+	var can_do: Array = u_cfg.get("can_do", [])
+	if action_key not in can_do:
 		return
+
 	var region: Region = game_state.query.regions.get_by_id(target_id)
 	if region == null:
 		return
-	if not game_state.mission_manager.can_do_mission(u, region, mission_key):
+	if not game_state.mission_manager.can_do_mission(u, region, action_key):
 		return
-	game_state.mission_manager.plan_ai_mission(u, region, mission_key)
+	game_state.mission_manager.plan_ai_mission(u, region, action_key)

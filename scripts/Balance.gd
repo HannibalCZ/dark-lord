@@ -320,21 +320,6 @@ const UNIT = {
 		"upkeep_cost": { "gold": 2 },
 		"moves": 1,
 		"can_do": ["raid","explore"],
-		# NEW: AI profile (data-driven)
-		"ai_profile": {
-		  "policy": "raider",
-		  "target": {
-			"type": "region",
-			"select": "nearest",
-			"filters": {
-			  "region_kind": "civilized",
-			  "owner_rule": "not_self"
-			}
-		  },
-		  "plan": [
-			{ "mission_key": "raid" }
-		  ]
-		}
 	},
 	"vampire": {
 		"display_name": "Upír",
@@ -367,21 +352,6 @@ const UNIT = {
 			"mission_key": ["raid"],
 			"affects": "enemies"
 		},                 # hráč ji nikdy neovládá
-		# NEW: AI profile
-		#"ai_profile": {
-		  #"policy": "defender",
-		  #"target": {
-			#"type": "region",
-			#"select": "nearest",
-			#"filters": {
-			  #"occupied": "true",
-			  #"owner_rule": "self"
-			#},
-		  #},
-		  #"plan": [
-			#{ "mission_key": "_none" }
-		  #]
-		#}
 	},
 	"inquisitor": {
 		"display_name": "Inkvizitor",
@@ -396,6 +366,49 @@ const UNIT = {
 			"mission_key": ["corrupt", "sabotage"],
 			"affects": "enemies"
 		}       # AI agent, dělá purge a loví agenty
+	}
+}
+
+# --- AI PROFILY ---
+# Odděleno od UNIT dat. Frakce vybírá profil podle heat flags,
+# jednotka jen poskytuje can_do pro validaci akce.
+const AI_PROFILE = {
+	"defender": {
+		"target": {
+			"select": "nearest",
+			"filters": { "owner_rule": "self" }
+		},
+		"move_towards_target": true,
+		"action_at_target": null
+		# defender stojí na vlastním území a bojuje implicitně
+	},
+	"raider": {
+		"target": {
+			"select": "nearest",
+			"filters": { "region_kind": "civilized", "owner_rule": "not_self" }
+		},
+		"move_towards_target": true,
+		"action_at_target": "raid"
+	},
+	"lair_hunter": {
+		"target": {
+			# TODO: filter "has_lair" není podporován v RegionQuery._matches_filters()
+			# Fallback: hledá nejbližší wildlands region (lairs se typicky nacházejí tam)
+			"select": "nearest",
+			"filters": { "region_kind": "wildlands" }
+		},
+		"move_towards_target": true,
+		"action_at_target": "raid"
+	},
+	"investigator": {
+		"target": {
+			# TODO: select "highest_corruption" není podporován — find_nearest_with_filters()
+			# používá BFS (nejbližší shoda), ne maximum. Fallback na nearest civilized.
+			"select": "nearest",
+			"filters": { "region_kind": "civilized" }
+		},
+		"move_towards_target": true,
+		"action_at_target": "purge"
 	}
 }
 
