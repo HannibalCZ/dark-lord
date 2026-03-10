@@ -16,6 +16,7 @@ signal game_ended(result: Dictionary) # { ok:bool, outcome:"win"/"lose", reason:
 @onready var faction_manager    : FactionManager    = FactionManager.new()
 @onready var dark_actions_manager    : DarkActionsManager    = DarkActionsManager.new()
 @onready var effects_system: EffectsSystem = EffectsSystem.new()
+@onready var ai_manager: AIManager = AIManager.new()
 
 var rng := RandomNumberGenerator.new()
 var turn:int = 1
@@ -42,8 +43,9 @@ func _ready() -> void:
 	mission_manager.game_state    = self
 	economic_manager.game_state    = self
 	building_manager.game_state    = self
-	
-	
+	ai_manager.game_state          = self
+
+
 	query = GameQuery.new(self)
 	query.rebuild_indexes()
 	commands = GameCommands.new(self)
@@ -247,7 +249,7 @@ func advance_turn() -> void:
 	# =========================
 	# A) AI plánování (férově před resolve)
 	# =========================
-	mission_manager.assign_ai_actions(unit_manager.units, region_manager)
+	ai_manager.execute_ai_turn()
 	# (později sem dáš i ai movement planning, pokud bude)
 	
 	# =========================
