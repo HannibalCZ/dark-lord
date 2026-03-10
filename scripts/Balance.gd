@@ -346,7 +346,7 @@ const UNIT = {
 		"recruit_cost": {},        # AI-only jednotka
 		"upkeep_cost": {},
 		"moves": 1,
-		"can_do": [], 
+		"can_do": ["raid"],
 		"aura": {
 			"mission_success": -0.50,
 			"mission_key": ["raid"],
