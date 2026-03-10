@@ -277,8 +277,9 @@ func advance_turn() -> void:
 	# D) Souboje (po world ticku)
 	# =========================
 	var combat_res: Dictionary = combat_manager.resolve_all_combats()
-	entries += combat_res.get("logs")
-	_process_domain_events(combat_res.get("events"))
+	for e in combat_res.get("logs", []):
+		entries.append(e)
+	_process_domain_events(combat_res.get("events", []))
 
 	# =========================
 	# E) End-of-turn cleanup
@@ -420,6 +421,7 @@ func _process_domain_events(events: Array) -> void:
 
 	var touched_units := false
 	var touched_regions := false
+	var unit_moved_payloads: Array[Dictionary] = []
 
 	for ev in events:
 		if typeof(ev) != TYPE_DICTIONARY:
@@ -431,7 +433,11 @@ func _process_domain_events(events: Array) -> void:
 			"unit_added", "unit_removed", "unit_state_changed", "unit_moved":
 				touched_units = true
 				if t == "unit_moved":
-					emit_signal("unit_moved", ev["unit_id"], ev["from"], ev["to"])
+					unit_moved_payloads.append({
+						"unit_id": ev["unit_id"],
+						"from": ev["from"],
+						"to": ev["to"]
+					})
 
 			# --- regions ---
 			"region_owner_changed", "region_controller_changed", "region_tags_changed":
@@ -440,12 +446,16 @@ func _process_domain_events(events: Array) -> void:
 			_:
 				pass
 
-	# MVP: rebuild podle toho, co se dotklo
+	# Rebuild indexes FIRST so signal handlers see fresh cache
 	if query != null:
 		if touched_units:
 			query.units.rebuild()
 		if touched_regions:
 			query.regions.rebuild()
+
+	# Emit unit_moved AFTER rebuild — _refresh_unit_positions() now gets correct cache
+	for p in unit_moved_payloads:
+		emit_signal("unit_moved", p["unit_id"], p["from"], p["to"])
 
 func process_lairs_end_of_turn() -> void:
 	for region in region_manager.regions:
