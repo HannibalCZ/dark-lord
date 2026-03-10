@@ -55,11 +55,14 @@ func _ai_pick_target_region(u: Unit, prof: Dictionary) -> int:
 	if target_def.is_empty():
 		return -1
 	var select: String = String(target_def.get("select", "nearest"))
-	if select != "nearest":
-		# MVP: jen nearest
-		return -1
 	var filters: Dictionary = target_def.get("filters", {})
-	return game_state.query.regions.find_nearest_with_filters(u.region_id, u.faction_id, filters)
+	match select:
+		"nearest":
+			return game_state.query.regions.find_nearest_with_filters(u.region_id, u.faction_id, filters)
+		"highest_corruption":
+			return game_state.query.regions.find_highest_corruption_with_filters(u.faction_id, filters)
+		_:
+			return -1
 
 func _ai_move_towards(u: Unit, target_id: int) -> void:
 	while u.moves_left > 0 and u.region_id != target_id:

@@ -392,20 +392,16 @@ const AI_PROFILE = {
 	},
 	"lair_hunter": {
 		"target": {
-			# TODO: filter "has_lair" není podporován v RegionQuery._matches_filters()
-			# Fallback: hledá nejbližší wildlands region (lairs se typicky nacházejí tam)
 			"select": "nearest",
-			"filters": { "region_kind": "wildlands" }
+			"filters": { "has_lair": true }
 		},
 		"move_towards_target": true,
 		"action_at_target": "raid"
 	},
 	"investigator": {
 		"target": {
-			# TODO: select "highest_corruption" není podporován — find_nearest_with_filters()
-			# používá BFS (nejbližší shoda), ne maximum. Fallback na nearest civilized.
-			"select": "nearest",
-			"filters": { "region_kind": "civilized" }
+			"select": "highest_corruption"
+			# žádné filters — hledá v celém světě region s nejvyšší hráčskou korupcí
 		},
 		"move_towards_target": true,
 		"action_at_target": "purge"

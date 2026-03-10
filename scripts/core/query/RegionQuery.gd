@@ -152,7 +152,28 @@ func _matches_filters(region_id: int, actor_faction_id: String, filters: Diction
 		if game.query.units.has_enemy_army(region_id, actor_faction_id):
 			return false
 
+	# has_lair: true = region musí mít lair (lair_id != "")
+	if filters.get("has_lair", false):
+		if not r.has_lair():
+			return false
+
 	return true
+
+# Vrací region s nejvyšší korupcí hráčské frakce, který projde filters.
+# Vrací -1 pokud žádný kandidát nemá korupci > 0.
+func find_highest_corruption_with_filters(actor_faction_id: String, filters: Dictionary) -> int:
+	var best_id: int = -1
+	var best_corruption: float = 0.0
+	for r: Region in by_id:
+		if r == null:
+			continue
+		if not _matches_filters(r.id, actor_faction_id, filters):
+			continue
+		var corruption: float = r.get_corruption_for(Balance.PLAYER_FACTION)
+		if corruption > best_corruption:
+			best_corruption = corruption
+			best_id = r.id
+	return best_id
 
 func find_next_step_towards(start_id: int, target_id: int) -> int:
 	if start_id == target_id:
