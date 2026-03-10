@@ -320,6 +320,7 @@ const UNIT = {
 		"upkeep_cost": { "gold": 2 },
 		"moves": 1,
 		"can_do": ["raid","explore"],
+		"ai_profile": "raider",   # fixní profil — vždy raider bez ohledu na heat/faction behavior
 	},
 	"vampire": {
 		"display_name": "Upír",

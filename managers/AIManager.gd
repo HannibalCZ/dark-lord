@@ -33,12 +33,21 @@ func execute_ai_turn() -> void:
 		if u.region_id == target_id:
 			_ai_execute_action(u, target_id, prof)
 
-# Výběr profilu podle heat flags frakce.
-# Inquisitor vždy dostane "investigator" bez ohledu na heat flags.
+# Výběr profilu pro jednotku.
+# Priorita: unit-level override ("ai_profile" v Balance.UNIT) >
+#           speciální typy (inquisitor) > faction.current_behavior.
 func _pick_profile(u: Unit) -> String:
+	# 1) Unit-level override: fixní profil nezávislý na heat a faction behavior
+	var u_cfg: Dictionary = Balance.UNIT.get(u.unit_key, {})
+	var fixed: String = String(u_cfg.get("ai_profile", ""))
+	if not fixed.is_empty():
+		return fixed
+
+	# 2) Speciální typy s pevným profilem
 	if u.unit_key == "inquisitor":
 		return "investigator"
 
+	# 3) Faction behavior: paladin_army a ostatní bez fixed profile
 	var faction: Faction = game_state.faction_manager.get_faction(u.faction_id)
 	if faction == null:
 		return "defender"
