@@ -330,7 +330,6 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 	# --- STAGE 1 ---
 	if old_heat < Balance.HEAT_STAGE_1 and new_heat >= Balance.HEAT_STAGE_1:
 		heat_stage = max(heat_stage, 1)
-		paladin_faction.ai_defend_other_factions = true
 		_log({
 			"type": "heat",
 			"text": "🔥 [HEAT 25] Řády paladinů začínají sledovat temné aktivity."
@@ -339,7 +338,6 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 	# --- STAGE 2 ---
 	if old_heat < Balance.HEAT_STAGE_2 and new_heat >= Balance.HEAT_STAGE_2:
 		heat_stage = max(heat_stage, 2)
-		paladin_faction.ai_can_attack_lairs = true
 		_log({
 			"type": "heat",
 			"text": "🔥🔥 [HEAT 50] Frakce dobra mobilizují armády a vysílají inkvizitory."
@@ -357,11 +355,20 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 	# --- STAGE 4 ---
 	if old_heat < Balance.HEAT_MAX and new_heat >= Balance.HEAT_MAX:
 		heat_stage = 4
-		paladin_faction.ai_final_crusade = true
 		_log({
 			"type": "cycle",
 			"text": "💀 [HEAT 100] Začíná závěrečná křížová výprava proti Temnému pánovi!"
 		})
+
+	# --- BEHAVIOR ENUM (paralelně s boolean flags, bude primární) ---
+	if new_heat >= Balance.HEAT_STAGE_3:
+		paladin_faction.current_behavior = Faction.Behavior.COORDINATED
+	elif new_heat >= Balance.HEAT_STAGE_2:
+		paladin_faction.current_behavior = Faction.Behavior.AGGRESSIVE
+	elif new_heat >= Balance.HEAT_STAGE_1:
+		paladin_faction.current_behavior = Faction.Behavior.PATROLLING
+	else:
+		paladin_faction.current_behavior = Faction.Behavior.PASSIVE
 
 func check_end_conditions() -> Dictionary:
 	# už skončeno

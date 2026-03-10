@@ -43,12 +43,15 @@ func _pick_profile(u: Unit) -> String:
 	if faction == null:
 		return "defender"
 
-	# Prioritní pořadí: final_crusade > can_attack_lairs > výchozí
-	if faction.ai_final_crusade:
-		return "raider"
-	if faction.ai_can_attack_lairs:
-		return "lair_hunter"
-	return "defender"
+	match faction.current_behavior:
+		Faction.Behavior.COORDINATED:
+			return "raider"
+		Faction.Behavior.AGGRESSIVE:
+			return "lair_hunter"
+		Faction.Behavior.PATROLLING:
+			return "defender"
+		_:
+			return "defender"
 
 func _ai_pick_target_region(u: Unit, prof: Dictionary) -> int:
 	var target_def: Dictionary = prof.get("target", {})
