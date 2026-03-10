@@ -40,6 +40,10 @@ step = 5.0
 page = 50.0
 value = 50.0
 
+[node name="TurnLabel" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+text = "Tah: 1"
+
 [node name="Button" type="Button" parent="HBoxContainer"]
 layout_mode = 2
 text = "Další tah"
