@@ -2,48 +2,132 @@
 
 [ext_resource type="Script" uid="uid://ulfdh1hbfao7" path="res://scripts/ui/TopBar.gd" id="1_wqstq"]
 
-[node name="TopBar" type="Control"]
+[node name="TopBar" type="PanelContainer"]
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_wqstq")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 31.0
-grow_horizontal = 2
-
-[node name="Label" type="Label" parent="HBoxContainer"]
 layout_mode = 2
-text = "Mana: 0"
+theme_override_constants/separation = 16
 
-[node name="Label2" type="Label" parent="HBoxContainer"]
+[node name="Resources" type="HBoxContainer" parent="HBoxContainer"]
 layout_mode = 2
-text = "Suroviny: 0"
+theme_override_constants/separation = 8
 
-[node name="Label3" type="Label" parent="HBoxContainer"]
-layout_mode = 2
-text = "Hanebnost: 0"
-
-[node name="ResearchLabel" type="Label" parent="HBoxContainer"]
-layout_mode = 2
-text = "Výzkum: 0"
-
-[node name="UnitsLabel" type="Label" parent="HBoxContainer"]
+[node name="ManaBlock" type="VBoxContainer" parent="HBoxContainer/Resources"]
 layout_mode = 2
 
-[node name="ProgressBar" type="ProgressBar" parent="HBoxContainer"]
+[node name="Icon" type="Label" parent="HBoxContainer/Resources/ManaBlock"]
 layout_mode = 2
+text = "\u2726"
+theme_override_font_sizes/font_size = 16
+
+[node name="Value" type="Label" parent="HBoxContainer/Resources/ManaBlock"]
+layout_mode = 2
+text = "0"
+theme_override_font_sizes/font_size = 18
+
+[node name="Delta" type="Label" parent="HBoxContainer/Resources/ManaBlock"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
+
+[node name="ZlatoBlock" type="VBoxContainer" parent="HBoxContainer/Resources"]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="HBoxContainer/Resources/ZlatoBlock"]
+layout_mode = 2
+text = "\u25ce"
+theme_override_font_sizes/font_size = 16
+
+[node name="Value" type="Label" parent="HBoxContainer/Resources/ZlatoBlock"]
+layout_mode = 2
+text = "0"
+theme_override_font_sizes/font_size = 18
+
+[node name="Delta" type="Label" parent="HBoxContainer/Resources/ZlatoBlock"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
+
+[node name="HanebnostBlock" type="VBoxContainer" parent="HBoxContainer/Resources"]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="HBoxContainer/Resources/HanebnostBlock"]
+layout_mode = 2
+text = "\U0001f441"
+theme_override_font_sizes/font_size = 16
+
+[node name="Value" type="Label" parent="HBoxContainer/Resources/HanebnostBlock"]
+layout_mode = 2
+text = "0"
+theme_override_font_sizes/font_size = 18
+
+[node name="Delta" type="Label" parent="HBoxContainer/Resources/HanebnostBlock"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
+
+[node name="VyzkumBlock" type="VBoxContainer" parent="HBoxContainer/Resources"]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="HBoxContainer/Resources/VyzkumBlock"]
+layout_mode = 2
+text = "\u2697"
+theme_override_font_sizes/font_size = 16
+
+[node name="Value" type="Label" parent="HBoxContainer/Resources/VyzkumBlock"]
+layout_mode = 2
+text = "0"
+theme_override_font_sizes/font_size = 18
+
+[node name="Delta" type="Label" parent="HBoxContainer/Resources/VyzkumBlock"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
+
+[node name="VSeparator" type="VSeparator" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="Units" type="HBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="UnitsLabel" type="Label" parent="HBoxContainer/Units"]
+layout_mode = 2
+text = "\u2694 0 / 0"
+
+[node name="VSeparator2" type="VSeparator" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="HeatSection" type="HBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HeatIcon" type="Label" parent="HBoxContainer/HeatSection"]
+layout_mode = 2
+text = "\U0001f321"
+
+[node name="HeatBar" type="ProgressBar" parent="HBoxContainer/HeatSection"]
+layout_mode = 2
+custom_minimum_size = Vector2(100, 12)
 size_flags_horizontal = 3
-step = 5.0
-page = 50.0
-value = 50.0
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="HeatValue" type="Label" parent="HBoxContainer/HeatSection"]
+layout_mode = 2
+text = "0%"
+
+[node name="VSeparator3" type="VSeparator" parent="HBoxContainer"]
+layout_mode = 2
 
 [node name="TurnLabel" type="Label" parent="HBoxContainer"]
 layout_mode = 2
 text = "Tah: 1"
 
-[node name="Button" type="Button" parent="HBoxContainer"]
+[node name="NextTurnButton" type="Button" parent="HBoxContainer"]
 layout_mode = 2
-text = "Další tah"
+text = "\u23ed Dalsi tah"
