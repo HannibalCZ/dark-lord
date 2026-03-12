@@ -553,8 +553,20 @@ const LAIR = {
 	"orc_camp": {
 		"display_name": "Orčí tábor",
 		"spawn_unit": "orc_band",    # id z Balance.UNIT
-		"spawn_rate": 1,             # zatím klidně “každé kolo 1 jednotka”
+		"spawn_rate": 1,             # zatím klidně "každé kolo 1 jednotka"
 		"max_units": 2,              # maximální počet jednotek z lairu v regionu
 		"faction_id": "orc",         # nebo "neutral_monsters" – podle toho, co máš
 	},
 }
+
+# --- Rada zasvěcených ---
+const ADVISOR_KAPITAN = "kapitan"
+const ADVISOR_VEZIR   = "vezir"
+
+const EVENT_CRITICAL  = "critical"
+const EVENT_IMPORTANT = "important"
+const EVENT_ROUTINE   = "routine"
+
+const COUNCIL_MAX_CRITICAL  = 99  # zobraz vždy
+const COUNCIL_MAX_IMPORTANT = 4   # max za tah
+const COUNCIL_MAX_TOTAL     = 5   # celkový limit

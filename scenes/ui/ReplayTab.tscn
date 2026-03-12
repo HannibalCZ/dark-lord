@@ -21,5 +21,3 @@ grow_vertical = 2
 custom_minimum_size = Vector2(0, 300)
 layout_mode = 2
 size_flags_vertical = 3
-scroll_active = true
-fit_content = false

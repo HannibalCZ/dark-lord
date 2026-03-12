@@ -111,11 +111,18 @@ Data-driven. Každá mise má `success_chance`, `success_effects[]`, `fail_effec
 - [x] Zdroje (zlato, mana, RP)
 - [x] Heat / Infamy / Awareness
 - [x] UI / HUD základní struktura
+- [x] AI turn pipeline přesunuta do AIManager (commit 1b7cf88)
+      - AIManager.execute_ai_turn() — vstupní bod, volán z GameState.advance_turn()
+      - MissionManager je čistě sdílená vrstva: plan_ai_mission(), resolve_all(), can_do_mission()
+      - GameState volá ai_manager.execute_ai_turn() místo mission_manager.assign_ai_actions()
+- [x] AI profily odděleny od unit dat — Balance.AI_PROFILE samostatně,
+      jednotky mají allowed_missions místo ai_profile (Task 2)
+- [x] Behavior enum místo boolean flags na Faction (Task 3)
+- [x] AI profily pro paladin_army a inquisitor (Task 4)
+- [x] Narativní eventy — Rada zasvěcených (GDD sekce 12)
 
 ### Zbývá implementovat
-- [ ] Narativní eventy — Rada zasvěcených (GDD sekce 12)
 - [ ] Stínové organizace + doktríny (GDD sekce 4.3–4.4)
-- [ ] AI frakce — chování a triggery (GDD sekce 5)
 - [ ] Mid-game krize — Zrada, RDL, Inkvizitorská kampaň (GDD sekce 14)
 - [ ] Dark Lord progression strom (GDD sekce 15)
 - [ ] Archetypy + vítězné podmínky (GDD sekce 13)

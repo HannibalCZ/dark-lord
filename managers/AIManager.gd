@@ -2,8 +2,10 @@ extends Node
 class_name AIManager
 
 var game_state: GameStateSingleton
+var turn_movement_log: Array[Dictionary] = []
 
 func execute_ai_turn() -> void:
+	turn_movement_log.clear()
 	game_state.mission_manager.planned_ai_missions.clear()
 
 	for u: Unit in game_state.unit_manager.units:
@@ -81,7 +83,15 @@ func _ai_move_towards(u: Unit, target_id: int) -> void:
 		var next_step: int = game_state.query.regions.find_next_step_towards(u.region_id, target_id)
 		if next_step == -1 or next_step == u.region_id:
 			return
+		var from_id: int = u.region_id
 		game_state.move_unit(u.id, next_step)
+		turn_movement_log.append({
+			"unit_id": u.id,
+			"unit_name": u.name,
+			"faction_id": u.faction_id,
+			"from_region_id": from_id,
+			"to_region_id": next_step
+		})
 
 # Spustí misi pokud je jednotka na cílovém regionu a akce projde validací can_do.
 # Pokud action_at_target == null, jednotka stojí — boj proběhne implicitně.

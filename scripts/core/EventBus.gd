@@ -12,3 +12,5 @@ signal unit_moved(unit_id: int, from_region: int, to_region: int)
 signal resources_changed(faction_id: String)
 
 signal heat_threshold_reached(threshold)
+
+signal council_events_ready(events: Array[EventData])

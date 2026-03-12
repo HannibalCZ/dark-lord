@@ -17,6 +17,7 @@ signal game_ended(result: Dictionary) # { ok:bool, outcome:"win"/"lose", reason:
 @onready var dark_actions_manager    : DarkActionsManager    = DarkActionsManager.new()
 @onready var effects_system: EffectsSystem = EffectsSystem.new()
 @onready var ai_manager: AIManager = AIManager.new()
+@onready var events_manager: EventsManager = EventsManager.new()
 
 var rng := RandomNumberGenerator.new()
 var turn:int = 1
@@ -27,6 +28,10 @@ var doom:int = 0
 var doom_income:int = 0
 var game_over: bool = false
 var game_over_result: Dictionary = {}
+var awareness: int = 0      # stub — MVP nemá awareness mechaniku
+var prev_awareness: int = 0 # předchozí hodnota pro EventsManager
+var pending_events: Array[EventData] = []  # eventy čekající na zobrazení v Radě zasvěcených
+var _welcome_shown: bool = false
 var query: GameQuery
 var commands: GameCommands
 
@@ -44,7 +49,7 @@ func _ready() -> void:
 	economic_manager.game_state    = self
 	building_manager.game_state    = self
 	ai_manager.game_state          = self
-
+	events_manager.init(self)
 
 	query = GameQuery.new(self)
 	query.rebuild_indexes()
@@ -60,8 +65,16 @@ func _ready() -> void:
 
 # ---------------------------
 func init_data() -> void:
-	load_scenario(DEFAULT_SCENARIO_PATH)	
+	load_scenario(DEFAULT_SCENARIO_PATH)
 	emit_signal("game_updated")
+	if not _welcome_shown:
+		call_deferred("_emit_welcome_event")
+
+func _emit_welcome_event() -> void:
+	_welcome_shown = true
+	var welcome: EventData = events_manager.generate_welcome_event()
+	pending_events = [welcome]
+	EventBus.council_events_ready.emit(pending_events)
 
 func load_scenario(path: String) -> void:
 	# 0) parse JSON
@@ -291,7 +304,18 @@ func advance_turn() -> void:
 	
 	# HEAT reakce
 	_check_heat_thresholds(old_heat, heat)
+
+	# =========================
+	# F) Rada zasvěcených — generuj eventy z tohoto tahu
+	#    MUSÍ být před old_heat = heat (EventsManager čte starou vs novou hodnotu)
+	#    Tah 1 přeskočíme — uvítací event byl zobrazen při startu hry
+	# =========================
+	if turn > 1:
+		pending_events = events_manager.generate_events_for_turn()
+		EventBus.council_events_ready.emit(pending_events)
+
 	old_heat = heat
+	prev_awareness = awareness
 
 	# zaloguj vše najednou (konsistentně)
 	for e in entries:
