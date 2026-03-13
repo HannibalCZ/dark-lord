@@ -14,3 +14,5 @@ signal resources_changed(faction_id: String)
 signal heat_threshold_reached(threshold)
 
 signal council_events_ready(events: Array[EventData])
+
+signal combat_resolved(result: Dictionary)

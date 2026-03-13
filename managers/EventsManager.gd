@@ -12,10 +12,14 @@ var game_state: GameStateSingleton
 # generate_events_for_turn() je přečte a seznam vymaže.
 var _collected_player_results: Array[Dictionary] = []
 
+# Výsledky bitev z aktuálního tahu — sbíráme přes EventBus.
+var _collected_combat_results: Array[Dictionary] = []
+
 # ---------------------------
 func init(gs: GameStateSingleton) -> void:
 	game_state = gs
 	EventBus.mission_resolved.connect(_on_mission_resolved)
+	EventBus.combat_resolved.connect(_on_combat_resolved)
 
 # ---------------------------
 # Voláno na začátku tahu (Rada zasvěcených).
@@ -25,6 +29,7 @@ func generate_events_for_turn() -> Array[EventData]:
 
 	_collect_movement_events(events)
 	_collect_mission_events(events)
+	_collect_combat_events(events)
 	_collect_heat_awareness_events(events)
 
 	_collected_player_results.clear()
@@ -140,7 +145,77 @@ func _collect_mission_events(events: Array[EventData]) -> void:
 		))
 
 # ---------------------------
-# ZDROJ 3 — Změny Heat a Awareness (Stínový vezír)
+# ZDROJ 3 — Výsledky bitev (Temný kapitán)
+# ---------------------------
+func _collect_combat_events(events: Array[EventData]) -> void:
+	for result in _collected_combat_results:
+		var region_name:        String = String(result.get("region_name", "?"))
+		var att_fac:            String = String(result.get("attacker_faction", "?"))
+		var def_fac:            String = String(result.get("defender_faction", "?"))
+		var player_involved:    bool   = bool(result.get("player_involved", false))
+		var player_was_defender: bool  = bool(result.get("player_was_defender", false))
+		var attacker_won:       bool   = bool(result.get("attacker_won", false))
+
+		var priority:  String
+		var narrative: String
+		var summary:   String
+
+		if player_involved:
+			if player_was_defender and attacker_won:
+				# Hráč bránil a prohrál → CRITICAL
+				priority  = Balance.EVENT_CRITICAL
+				narrative = (
+					"Pane, nase pozice v %s byla prolomena. "
+					+ "%s nas premohla — utrpeli jsme porazku, kterou nelze ignorovat. "
+					+ "Doporucuji okamzita opatreni."
+				) % [region_name, att_fac]
+				summary = "%s zvitezila v %s — nasa obrana se zhroutila." % [att_fac, region_name]
+
+			elif not player_was_defender and attacker_won:
+				# Hráč útočil a vyhrál → IMPORTANT
+				priority  = Balance.EVENT_IMPORTANT
+				narrative = (
+					"Vyborne, Pane. Nase sily v %s zvitezily. "
+					+ "%s byla odrazena a region je pod nasi kontrolou."
+				) % [region_name, def_fac]
+				summary = "Nasa armada zvitezila v %s." % region_name
+
+			elif player_was_defender and not attacker_won:
+				# Hráč bránil a ubránil → IMPORTANT
+				priority  = Balance.EVENT_IMPORTANT
+				narrative = (
+					"Pane, nasa obrana v %s odrazila utok. "
+					+ "%s byla odrazena — pozice drzi."
+				) % [region_name, att_fac]
+				summary = "Obrana %s uspesna, utok %s odrazen." % [region_name, att_fac]
+
+			else:
+				# Hráč útočil a prohrál → IMPORTANT
+				priority  = Balance.EVENT_IMPORTANT
+				narrative = (
+					"Pane, nase sily v %s utrpely porazku. "
+					+ "%s nas odrazila — armadu jsme ztratili."
+				) % [region_name, def_fac]
+				summary = "Nasa armada porazena v %s." % region_name
+
+		else:
+			# AI vs AI → ROUTINE (půjde pouze do logu)
+			priority  = Balance.EVENT_ROUTINE
+			narrative = "%s zauctocila na %s v %s." % [att_fac, def_fac, region_name]
+			summary   = "AI vs AI bitva v %s." % region_name
+
+		events.append(EventData.create(
+			Balance.ADVISOR_KAPITAN,
+			priority,
+			narrative,
+			summary
+		))
+
+	_collected_combat_results.clear()
+
+# ---------------------------
+# ZDROJ 4 — Změny Heat a Awareness (Stínový vezír)
+# (přečíslováno — původně ZDROJ 3)
 # ---------------------------
 func _collect_heat_awareness_events(events: Array[EventData]) -> void:
 	var old_h: int = game_state.old_heat
@@ -251,3 +326,9 @@ func _on_mission_resolved(data: Dictionary) -> void:
 	var entry: Dictionary = data.duplicate()
 	entry["is_fatal"] = is_fatal
 	_collected_player_results.append(entry)
+
+# ---------------------------
+# Signal handler — sbírá výsledky bitev přes EventBus
+# ---------------------------
+func _on_combat_resolved(result: Dictionary) -> void:
+	_collected_combat_results.append(result)

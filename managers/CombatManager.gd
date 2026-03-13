@@ -80,9 +80,29 @@ func _resolve_region_battle(region_idx: int) -> Dictionary:
 		elif p == max_power:
 			winners.append(f)
 
+	# --- Určení útočníka / obránce pro EventBus signal ---
+	# Obránce = vlastník regionu před bitvou; útočník = invazní frakce.
+	# TODO: MVP model předpokládá max 2 frakce v bitvě; při N-way
+	#       bereme nejsilnější non-owner jako útočníka, ostatní ignorujeme pro signal.
+	var _def_fac: String = ""
+	var _att_fac: String = ""
+	if region.owner_faction_id != "" and by_faction.has(region.owner_faction_id):
+		_def_fac = region.owner_faction_id
+		for f in factions_sorted:
+			if f != _def_fac:
+				_att_fac = f
+				break
+	else:
+		# TODO: žádný vlastník regionu — deterministický fallback (sorted[0] vs sorted[1])
+		_def_fac = factions_sorted[0] if factions_sorted.size() > 0 else ""
+		_att_fac = factions_sorted[1] if factions_sorted.size() > 1 else _def_fac
+
+	var _winner_faction: String = ""  # prázdný = remíza
+
 	# 3) vyhodnocení
 	if winners.size() == 1:
 		var winner_faction: String = winners[0]
+		_winner_faction = winner_faction
 		var winner_power: int = max_power
 
 		# poražení – všechny armády ztraceny
@@ -143,6 +163,21 @@ func _resolve_region_battle(region_idx: int) -> Dictionary:
 			"type": "neutral",
 			"text": "Bitva v %s skončila patem (síly frakcí vyrovnané, všechny armády zničeny)." % region.name
 		})
+
+	# Emit pro EventsManager — jednou za bitvu, po vyhodnocení výsledku
+	var _att_unit: Unit = _pick_strongest(by_faction.get(_att_fac, []))
+	var _def_unit: Unit = _pick_strongest(by_faction.get(_def_fac, []))
+	EventBus.combat_resolved.emit({
+		"attacker_faction":   _att_fac,
+		"defender_faction":   _def_fac,
+		"region_id":          region.id,
+		"region_name":        region.name,
+		"attacker_won":       (_winner_faction == _att_fac and _winner_faction != ""),
+		"player_involved":    by_faction.has(Balance.PLAYER_FACTION),
+		"player_was_defender": (_def_fac == Balance.PLAYER_FACTION),
+		"attacker_unit_key":  _att_unit.unit_key if _att_unit != null else "",
+		"defender_unit_key":  _def_unit.unit_key if _def_unit != null else "",
+	})
 
 	return {
 		"ok": true,
