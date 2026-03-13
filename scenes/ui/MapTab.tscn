@@ -27,84 +27,183 @@ theme_override_constants/v_separation = 2
 columns = 4
 
 [node name="RightPanel" type="VBoxContainer" parent="HBoxContainer"]
-custom_minimum_size = Vector2(360, 0)
+custom_minimum_size = Vector2(320, 0)
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_constants/separation = 0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/RightPanel"]
+[node name="RegionSection" type="PanelContainer" parent="HBoxContainer/RightPanel"]
 layout_mode = 2
 
-[node name="RegionInfo" type="Label" parent="HBoxContainer/RightPanel/VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/RightPanel/RegionSection"]
 layout_mode = 2
-text = "region info"
+theme_override_constants/separation = 6
 
-[node name="HSeparator" type="HSeparator" parent="HBoxContainer/RightPanel/VBoxContainer"]
+[node name="RegionName" type="Label" parent="HBoxContainer/RightPanel/RegionSection/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Region"
+
+[node name="RegionOwner" type="Label" parent="HBoxContainer/RightPanel/RegionSection/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/RightPanel/RegionSection/VBoxContainer"]
 layout_mode = 2
 
-[node name="DarkActionBox" type="HBoxContainer" parent="HBoxContainer/RightPanel/VBoxContainer"]
+[node name="StatsRow" type="HBoxContainer" parent="HBoxContainer/RightPanel/RegionSection/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="LeftCol" type="VBoxContainer" parent="HBoxContainer/RightPanel/RegionSection/VBoxContainer/StatsRow"]
 layout_mode = 2
 
-[node name="DarkActionLabel" type="Label" parent="HBoxContainer/RightPanel/VBoxContainer/DarkActionBox"]
+[node name="ObranaLabel" type="Label" parent="HBoxContainer/RightPanel/RegionSection/VBoxContainer/StatsRow/LeftCol"]
 layout_mode = 2
-text = "Temné akce: "
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
+theme_override_font_sizes/font_size = 11
+text = "Obrana:"
 
-[node name="DarkActionSelect" type="OptionButton" parent="HBoxContainer/RightPanel/VBoxContainer/DarkActionBox"]
+[node name="ObranaVal" type="Label" parent="HBoxContainer/RightPanel/RegionSection/VBoxContainer/StatsRow/LeftCol"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "0"
+
+[node name="PrijemLabel" type="Label" parent="HBoxContainer/RightPanel/RegionSection/VBoxContainer/StatsRow/LeftCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
+theme_override_font_sizes/font_size = 11
+text = "P  em:"
+
+[node name="PrijemVal" type="Label" parent="HBoxContainer/RightPanel/RegionSection/VBoxContainer/StatsRow/LeftCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.298, 0.686, 0.314, 1)
+theme_override_font_sizes/font_size = 13
+text = "0G / 0M / 0R"
+
+[node name="RightCol" type="VBoxContainer" parent="HBoxContainer/RightPanel/RegionSection/VBoxContainer/StatsRow"]
 layout_mode = 2
 
-[node name="DarkActionConfirm" type="Button" parent="HBoxContainer/RightPanel/VBoxContainer/DarkActionBox"]
+[node name="KorupceLabel" type="Label" parent="HBoxContainer/RightPanel/RegionSection/VBoxContainer/StatsRow/RightCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
+theme_override_font_sizes/font_size = 11
+text = "Korupce:"
+
+[node name="KorupceVal" type="Label" parent="HBoxContainer/RightPanel/RegionSection/VBoxContainer/StatsRow/RightCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.596, 0, 1)
+theme_override_font_sizes/font_size = 13
+text = "0%"
+
+[node name="StrachLabel" type="Label" parent="HBoxContainer/RightPanel/RegionSection/VBoxContainer/StatsRow/RightCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
+theme_override_font_sizes/font_size = 11
+text = "Strach:"
+
+[node name="StrachVal" type="Label" parent="HBoxContainer/RightPanel/RegionSection/VBoxContainer/StatsRow/RightCol"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "0/100"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="HBoxContainer/RightPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ScrollContent" type="VBoxContainer" parent="HBoxContainer/RightPanel/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="ActionsSection" type="PanelContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AkceLabel" type="Label" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
+theme_override_font_sizes/font_size = 11
+text = "AKCE"
+
+[node name="DarkActionRow" type="HBoxContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DarkActionPicker" type="OptionButton" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/DarkActionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DarkActionButton" type="Button" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/DarkActionRow"]
+custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 text = "Seslat"
 
-[node name="DarkActionInfo" type="Label" parent="HBoxContainer/RightPanel/VBoxContainer"]
+[node name="DarkActionDesc" type="Label" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer"]
 custom_minimum_size = Vector2(60, 40)
 layout_mode = 2
+theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
+theme_override_font_sizes/font_size = 12
 autowrap_mode = 3
 
-[node name="HSeparator2" type="HSeparator" parent="HBoxContainer/RightPanel/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer"]
 layout_mode = 2
 
-[node name="UnitSelect" type="OptionButton" parent="HBoxContainer/RightPanel/VBoxContainer"]
+[node name="UnitPicker" type="OptionButton" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer"]
 layout_mode = 2
 
-[node name="UnitInfo" type="Label" parent="HBoxContainer/RightPanel/VBoxContainer"]
+[node name="UnitInfo" type="Label" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
+theme_override_font_sizes/font_size = 12
 
-[node name="HSeparator3" type="HSeparator" parent="HBoxContainer/RightPanel/VBoxContainer"]
+[node name="MissionRow" type="HBoxContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer"]
 layout_mode = 2
+theme_override_constants/separation = 8
 
-[node name="MissionsBox" type="HBoxContainer" parent="HBoxContainer/RightPanel/VBoxContainer"]
+[node name="MissionPicker" type="OptionButton" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/MissionRow"]
 layout_mode = 2
+size_flags_horizontal = 3
 
-[node name="Label" type="Label" parent="HBoxContainer/RightPanel/VBoxContainer/MissionsBox"]
-layout_mode = 2
-text = "Výběr mise"
-
-[node name="MissionSelect" type="OptionButton" parent="HBoxContainer/RightPanel/VBoxContainer/MissionsBox"]
-layout_mode = 2
-
-[node name="MissionConfirm" type="Button" parent="HBoxContainer/RightPanel/VBoxContainer/MissionsBox"]
+[node name="MissionButton" type="Button" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/MissionRow"]
+custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 text = "Potvrdit"
 
-[node name="MissionInfo" type="Label" parent="HBoxContainer/RightPanel/VBoxContainer"]
+[node name="MissionInfo" type="Label" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer"]
 custom_minimum_size = Vector2(60, 20)
 layout_mode = 2
-text = "Popis mise.."
+theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
+theme_override_font_sizes/font_size = 12
 autowrap_mode = 3
 
-[node name="HSeparator4" type="HSeparator" parent="HBoxContainer/RightPanel/VBoxContainer"]
+[node name="MovementSection" type="PanelContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent"]
 layout_mode = 2
 
-[node name="MoveBox" type="HBoxContainer" parent="HBoxContainer/RightPanel/VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection"]
 layout_mode = 2
+theme_override_constants/separation = 8
 
-[node name="Label" type="Label" parent="HBoxContainer/RightPanel/VBoxContainer/MoveBox"]
+[node name="PohybLabel" type="Label" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection/VBoxContainer"]
 layout_mode = 2
-text = "Cíl pohybu"
+theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
+theme_override_font_sizes/font_size = 11
+text = "POHYB"
 
-[node name="NeighborSelect" type="OptionButton" parent="HBoxContainer/RightPanel/VBoxContainer/MoveBox"]
+[node name="MoveRow" type="HBoxContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection/VBoxContainer"]
 layout_mode = 2
+theme_override_constants/separation = 8
 
-[node name="MoveConfirm" type="Button" parent="HBoxContainer/RightPanel/VBoxContainer/MoveBox"]
+[node name="MovePicker" type="OptionButton" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection/VBoxContainer/MoveRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MoveButton" type="Button" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection/VBoxContainer/MoveRow"]
+custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 text = "Potvrdit"

@@ -1,24 +1,66 @@
 extends Control
 
+# --- Mapa ---
 @onready var grid: GridContainer = $HBoxContainer/RegionsGrid
 @onready var right_panel: VBoxContainer = $HBoxContainer/RightPanel
-@onready var region_info: Label      = $HBoxContainer/RightPanel/VBoxContainer/RegionInfo
-@onready var unit_select: OptionButton = $HBoxContainer/RightPanel/VBoxContainer/UnitSelect
-@onready var unit_info: Label        = $HBoxContainer/RightPanel/VBoxContainer/UnitInfo
-@onready var mission_select: OptionButton = $HBoxContainer/RightPanel/VBoxContainer/MissionsBox/MissionSelect
-@onready var mission_confirm: Button      = $HBoxContainer/RightPanel/VBoxContainer/MissionsBox/MissionConfirm
-@onready var mission_info: Label = $HBoxContainer/RightPanel/VBoxContainer/MissionInfo
 
-@onready var neighbor_select: OptionButton = $HBoxContainer/RightPanel/VBoxContainer/MoveBox/NeighborSelect
-@onready var move_confirm: Button          = $HBoxContainer/RightPanel/VBoxContainer/MoveBox/MoveConfirm
-@onready var dark_action_select: OptionButton = $HBoxContainer/RightPanel/VBoxContainer/DarkActionBox/DarkActionSelect
-@onready var dark_action_confirm: Button      = $HBoxContainer/RightPanel/VBoxContainer/DarkActionBox/DarkActionConfirm
-@onready var dark_action_info: Label = $HBoxContainer/RightPanel/VBoxContainer/DarkActionInfo
+# --- RegionSection ---
+@onready var region_section: PanelContainer  = $HBoxContainer/RightPanel/RegionSection
+@onready var region_name: Label    = $HBoxContainer/RightPanel/RegionSection/VBoxContainer/RegionName
+@onready var region_owner: Label   = $HBoxContainer/RightPanel/RegionSection/VBoxContainer/RegionOwner
+@onready var obrana_val: Label     = $HBoxContainer/RightPanel/RegionSection/VBoxContainer/StatsRow/LeftCol/ObranaVal
+@onready var prijem_val: Label     = $HBoxContainer/RightPanel/RegionSection/VBoxContainer/StatsRow/LeftCol/PrijemVal
+@onready var korupce_val: Label    = $HBoxContainer/RightPanel/RegionSection/VBoxContainer/StatsRow/RightCol/KorupceVal
+@onready var strach_val: Label     = $HBoxContainer/RightPanel/RegionSection/VBoxContainer/StatsRow/RightCol/StrachVal
+
+# --- ScrollContainer ---
+@onready var scroll_container: ScrollContainer  = $HBoxContainer/RightPanel/ScrollContainer
+
+# --- ActionsSection ---
+@onready var actions_section: PanelContainer    = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection
+@onready var dark_action_select: OptionButton   = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/DarkActionRow/DarkActionPicker
+@onready var dark_action_confirm: Button        = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/DarkActionRow/DarkActionButton
+@onready var dark_action_info: Label            = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/DarkActionDesc
+@onready var unit_select: OptionButton          = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/UnitPicker
+@onready var unit_info: Label                   = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/UnitInfo
+@onready var mission_select: OptionButton       = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/MissionRow/MissionPicker
+@onready var mission_confirm: Button            = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/MissionRow/MissionButton
+@onready var mission_info: Label                = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/MissionInfo
+
+# --- MovementSection ---
+@onready var movement_section: PanelContainer   = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection
+@onready var neighbor_select: OptionButton      = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection/VBoxContainer/MoveRow/MovePicker
+@onready var move_confirm: Button               = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection/VBoxContainer/MoveRow/MoveButton
 
 var selected_region_idx: int = -1
 var tile_scene: PackedScene = preload("res://scenes/ui/RegionTile.tscn")
 
 func _ready() -> void:
+	# Pozadi sekcí
+	var bg_region := StyleBoxFlat.new()
+	bg_region.bg_color = Color("#1e1e2e")
+	bg_region.content_margin_left   = 12.0
+	bg_region.content_margin_right  = 12.0
+	bg_region.content_margin_top    = 12.0
+	bg_region.content_margin_bottom = 12.0
+	region_section.add_theme_stylebox_override("panel", bg_region)
+
+	var bg_actions := StyleBoxFlat.new()
+	bg_actions.bg_color = Color("#16213e")
+	bg_actions.content_margin_left   = 12.0
+	bg_actions.content_margin_right  = 12.0
+	bg_actions.content_margin_top    = 12.0
+	bg_actions.content_margin_bottom = 12.0
+	actions_section.add_theme_stylebox_override("panel", bg_actions)
+
+	var bg_movement := StyleBoxFlat.new()
+	bg_movement.bg_color = Color("#0f3460")
+	bg_movement.content_margin_left   = 12.0
+	bg_movement.content_margin_right  = 12.0
+	bg_movement.content_margin_top    = 12.0
+	bg_movement.content_margin_bottom = 12.0
+	movement_section.add_theme_stylebox_override("panel", bg_movement)
+
 	grid.columns = 4
 	_build_grid()
 
@@ -29,13 +71,13 @@ func _ready() -> void:
 	dark_action_confirm.pressed.connect(_on_dark_action_confirm)
 	dark_action_select.item_selected.connect(_on_dark_action_selected)
 	mission_select.item_selected.connect(_on_mission_selected)
-	
+
 	GameState.connect("unit_moved", Callable(self, "_on_unit_moved"))
 	GameState.connect("turn_resolved", Callable(self, "_on_turn_resolved"))
 	GameState.connect("game_updated", Callable(self, "_on_game_updated"))
-	
+
 	EventBus.connect("mission_resolved", Callable(self, "_on_mission_resolved"))
-	
+
 	right_panel.visible = false
 	_set_actions_enabled(false)
 
@@ -188,28 +230,23 @@ func _update_mission_info() -> void:
 	var region_delta: float = float(info.get("region_delta", 0.0))
 	var unit_delta: float = float(info.get("unit_delta", 0.0))
 	var total: float = float(info.get("chance", base_c))
-	
+
 	var lines: Array[String] = []
 	lines.append("Šance: %d%%" % int(total * 100.0))
-	
+
 	# breakdown jen pokud je co ukazovat
 	var have_modifiers := not is_equal_approx(region_delta, 0.0) or not is_equal_approx(unit_delta, 0.0)
 	if have_modifiers:
 		lines.append(" (base %d%%" % int(base_c * 100.0))
 		if not is_equal_approx(region_delta, 0.0):
 			var rd_pp: int = int(region_delta * 100.0)
-			# „Inkvizitor v regionu: -50 %“ – zobecníme jako „Regionální modifikátory“
 			lines.append(", region: %+d%%" % rd_pp)
 		if not is_equal_approx(unit_delta, 0.0):
 			var ud_pp: int = int(unit_delta * 100.0)
 			lines.append(", jednotka: %+d%%" % ud_pp)
 		lines.append(")")
 
-	var chance_str = "\n" + "".join(lines)	
-
-	#var chance: float = GameState.mission_manager.get_mission_success_chance(key, unit, region)
-#
-	#var chance_str := "\nŠance: %d%%" % int(chance * 100.0)
+	var chance_str = "\n" + "".join(lines)
 
 	mission_info.text = "%s\n%s%s%s" % [name, desc, cost_str, chance_str]
 
@@ -232,7 +269,7 @@ func _build_grid() -> void:
 		var r: Region = GameState.query.regions.get_by_id(i)
 		var t: Control = tile_scene.instantiate()
 		grid.add_child(t)
-		t.call_deferred("setup", i, r) 
+		t.call_deferred("setup", i, r)
 		t.connect("tile_selected", Callable(self, "_on_tile_selected"))
 
 	_refresh_unit_positions()
@@ -248,7 +285,6 @@ func _refresh_tile_selection() -> void:
 	for i in grid.get_child_count():
 		var tile = grid.get_child(i)
 		var is_sel = (i == selected_region_idx)
-		# voláme RegionTile.set_selected
 		tile.call_deferred("set_selected", is_sel)
 
 func _refresh_selected_panel() -> void:
@@ -258,31 +294,50 @@ func _refresh_selected_panel() -> void:
 
 	right_panel.visible = true
 	var r: Region = GameState.query.regions.get_by_id(selected_region_idx)
-	region_info.text = r.get_info_text()
-	
+	_update_region_section(r)
+
 	_build_dark_actions_menu()
 	_populate_unit_select(selected_region_idx)
-	_update_unit_info()  # na začátek nic/placeholder
-	_build_mission_menu()  # dle vybrané jednotky (zatím žádná) -> disabled
+	_update_unit_info()
+	_build_mission_menu()
 	_build_neighbors_menu(selected_region_idx)
 
-	# mise/move jsou vidět vždy, ale bez jednotky disabled
 	_set_actions_enabled(unit_select.get_item_count() > 0 and unit_select.get_selected_id() != -1)
+	scroll_container.scroll_vertical = 0
 
-func _populate_unit_select(region_idx:int) -> void:
+# --------------------------
+# REGION SECTION
+
+func _update_region_section(region: Region) -> void:
+	# TODO: Region nemá display_name — používáme region.name
+	region_name.text = region.name
+	region_owner.text = region.controller_faction_id
+	obrana_val.text = str(region.defense)
+	prijem_val.text = _format_income(region)
+	# TODO: Region nemá get_corruption_percent() — používáme get_corruption_for()
+	korupce_val.text = "%d%%" % int(region.get_corruption_for(Balance.PLAYER_FACTION))
+	strach_val.text = "%d/100" % region.fear
+
+func _format_income(region: Region) -> String:
+	var inc := region.get_income()
+	return "%dG / %dM / %dR" % [int(inc["gold"]), int(inc["mana"]), int(inc["research"])]
+
+# --------------------------
+# UNIT + MISE
+
+func _populate_unit_select(region_idx: int) -> void:
 	unit_select.clear()
 	unit_select.add_item("— vyber jednotku —", -1)
 	var player_id = Balance.PLAYER_FACTION
 	var first_index: int = -1
 	var count: int = 0
-	
+
 	for u in GameState.query.units.in_region(region_idx, false):
 		if u.faction_id == player_id and u.state == "healthy":
 			var label := "%s (%s)" % [u.name, u.type]
 			unit_select.add_item(label, u.id)
 			count += 1
 			if first_index == -1:
-				# index v OptionButtonu (0 = placeholder, 1..count = jednotky)
 				first_index = unit_select.get_item_count() - 1
 
 	if count == 1 and first_index != -1:
@@ -336,9 +391,7 @@ func _build_mission_menu(region_idx: int = selected_region_idx) -> void:
 		mission_info.text = ""
 		return
 
-	# vyplň menu
 	mission_select.clear()
-	# placeholder nahoře (metadata = "")
 	UIHelpers.add_option_with_key(mission_select, "— vyber misi —", "")
 
 	for key in keys:
@@ -348,12 +401,11 @@ func _build_mission_menu(region_idx: int = selected_region_idx) -> void:
 		var label: String = String(cfg.get("display_name", key.capitalize()))
 		UIHelpers.add_option_with_key(mission_select, label, key)
 
-	# vyber první skutečnou misi (index 1)
 	mission_select.select(1)
 	mission_confirm.disabled = false
 	_update_mission_info()
-			
-func _build_neighbors_menu(region_idx:int) -> void:
+
+func _build_neighbors_menu(region_idx: int) -> void:
 	neighbor_select.clear()
 	var neighbors = GameState.query.regions.neighbors(region_idx)
 	if neighbors.is_empty():
@@ -366,14 +418,13 @@ func _build_neighbors_menu(region_idx:int) -> void:
 		neighbor_select.add_item(rr.name, n)
 	neighbor_select.select(0)
 	move_confirm.disabled = false
-	
+
 func _set_actions_enabled(enabled: bool) -> void:
 	mission_select.disabled = not enabled
 	mission_confirm.disabled = not enabled
-	# Move závisí na jednotce i sousedech, ale necháme vidět a jen disablovat:
 	move_confirm.disabled = not enabled or neighbor_select.get_selected_id() == -1
 
-func _on_unit_selected(_idx:int) -> void:
+func _on_unit_selected(_idx: int) -> void:
 	_update_unit_info()
 	_build_mission_menu()
 	_set_actions_enabled(unit_select.get_selected_id() != -1)
@@ -387,7 +438,6 @@ func _on_mission_confirm() -> void:
 	if key == "":
 		return
 
-	#GameState.plan_mission(uid, selected_region_idx, key)
 	GameState.exec(GameState.commands.plan_mission(uid, selected_region_idx, key))
 
 func _on_move_confirm() -> void:
@@ -395,7 +445,6 @@ func _on_move_confirm() -> void:
 	var target = neighbor_select.get_selected_id()
 	if uid == -1 or target == -1:
 		return
-	#GameState.move_unit(uid, target)
 	GameState.exec(GameState.commands.move_unit(uid, target))
 
 func _on_turn_resolved() -> void:
@@ -453,7 +502,6 @@ func _build_dark_actions_menu() -> void:
 		if atype == "global":
 			filtered.append(key)
 		elif atype == "region":
-			# regionové akce mají smysl jen pokud je vybraný region
 			if selected_region_idx >= 0:
 				filtered.append(key)
 
@@ -464,7 +512,6 @@ func _build_dark_actions_menu() -> void:
 		dark_action_info.text = ""
 		return
 
-	# Placeholder vždy první, key = ""
 	UIHelpers.add_option_with_key(dark_action_select, "— vyber temnou akci —", "")
 
 	for key in filtered:
@@ -472,7 +519,6 @@ func _build_dark_actions_menu() -> void:
 		var name: String = String(def.get("display_name", key))
 		UIHelpers.add_option_with_key(dark_action_select, name, key)
 
-	# vyber první reálnou akci (index 1)
 	dark_action_select.select(1)
 	dark_action_select.disabled = false
 
@@ -490,40 +536,26 @@ func _on_dark_action_confirm() -> void:
 	var check := _check_dark_action_requirements(key)
 	if not check.get("ok", false):
 		var reason = String(check.get("reason", "Podmínky nejsou splněny."))
-		GameState._log({"type":"warn", "text":"❌ Nelze seslat akci: %s" % reason})
+		GameState._log({"type": "warn", "text": "Nelze seslat akci: %s" % reason})
 		_update_dark_action_info()
 		return
 
-	var def:Dictionary = Balance.DARK_ACTIONS.get(key, {})
-	var atype:String = String(def.get("type", "global"))
+	var def: Dictionary = Balance.DARK_ACTIONS.get(key, {})
+	var atype: String = String(def.get("type", "global"))
 
-	var region_id:int = -1
+	var region_id: int = -1
 	if atype == "region":
 		if selected_region_idx < 0:
-			GameState._log({"type":"warn", "text":"⚠ Není vybrán žádný region pro temnou akci."})
+			GameState._log({"type": "warn", "text": "Není vybrán žádný region pro temnou akci."})
 			return
 		region_id = selected_region_idx
 
-	#var res:Dictionary = GameState.dark_actions_manager.cast(Balance.PLAYER_FACTION, key, region_id)
-	var res : Dictionary = GameState.exec(GameState.commands.cast_dark_action(key, region_id, Balance.PLAYER_FACTION))
-	#if not res.get("ok", false):
-		#var reason = String(res.get("reason", "Neznámý důvod."))
-		#GameState._log({"type":"warn", "text":"❌ Nelze seslat akci: %s" % reason})
-		#_update_dark_action_info()
-		#return
-#
-	## 1) zaloguj vše (pokud DarkActionsManager vrací logs)
-	#for e in res.get("logs", []):
-		#GameState._log(e)
-#
-	## 2) zpracuj domain events (rebuilduje query, emituje unit_moved, atd.)
-	#GameState._process_domain_events(res.get("events", []))
+	var _res: Dictionary = GameState.exec(GameState.commands.cast_dark_action(key, region_id, Balance.PLAYER_FACTION))
 
-	# 3) refresh UI
+	# refresh UI
 	_build_dark_actions_menu()
 	_update_dark_action_info()
 
-	# region info přes query
 	var r := GameState.query.regions.get_by_id(selected_region_idx)
 	if r != null:
-		region_info.text = r.get_info_text()
+		_update_region_section(r)
