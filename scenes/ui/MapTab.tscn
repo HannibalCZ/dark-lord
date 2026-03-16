@@ -119,6 +119,62 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
+[node name="OrgSection" type="PanelContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="OrgTitle" type="Label" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
+theme_override_font_sizes/font_size = 11
+text = "ORGANIZACE"
+
+[node name="OrgHeader" type="HBoxContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="OrgName" type="Label" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/OrgHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = ""
+
+[node name="OrgOwner" type="Label" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/OrgHeader"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
+theme_override_font_sizes/font_size = 11
+text = ""
+
+[node name="OrgSeparator" type="HSeparator" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer"]
+layout_mode = 2
+
+[node name="DoctrineLabel" type="Label" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
+theme_override_font_sizes/font_size = 11
+text = "Doktrína:"
+
+[node name="DoctrinePicker" type="OptionButton" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
+
+[node name="DoctrineEffects" type="Label" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
+theme_override_font_sizes/font_size = 11
+autowrap_mode = 3
+text = ""
+
+[node name="DestroyButton" type="Button" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.2, 0.2, 1)
+text = "Zlikvidovat"
+
 [node name="ActionsSection" type="PanelContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent"]
 layout_mode = 2
 
