@@ -83,6 +83,18 @@ func _apply_globals(e: Dictionary, gs: GameStateSingleton, logs: Array[Dictionar
 	if e.has("doom_income"):
 		gs.doom_income += int(e["doom_income"])
 
+	# TODO: org passive effect — pridat az bude awareness implementovano v GameState
+	if e.has("awareness"):
+		push_warning("EffectsSystem: awareness not yet implemented")
+
+	# TODO: org passive effect — OrgManager bude poskytovat bonus pri vyhodnoceni mise
+	if e.has("mission_bonus"):
+		push_warning("EffectsSystem: mission_bonus not yet implemented")
+
+	# TODO: org passive effect — DarkActionsManager bude cist z OrgManager zda je region empowered
+	if e.has("dark_action_empowered"):
+		push_warning("EffectsSystem: dark_action_empowered not yet implemented")
+
 
 func _apply_region(e: Dictionary, region: Region, source_faction_id: String, gs: GameStateSingleton, logs: Array[Dictionary]) -> void:
 	# Defense
