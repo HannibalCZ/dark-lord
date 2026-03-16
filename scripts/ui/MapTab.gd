@@ -32,7 +32,17 @@ extends Control
 @onready var neighbor_select: OptionButton      = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection/VBoxContainer/MoveRow/MovePicker
 @onready var move_confirm: Button               = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection/VBoxContainer/MoveRow/MoveButton
 
+# --- OrgSection ---
+@onready var org_section: PanelContainer  = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection
+@onready var org_name: Label              = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/OrgHeader/OrgName
+@onready var org_owner: Label             = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/OrgHeader/OrgOwner
+@onready var doctrine_picker: OptionButton = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/DoctrinePicker
+@onready var doctrine_effects: Label      = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/DoctrineEffects
+@onready var destroy_button: Button       = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/DestroyButton
+
 var selected_region_idx: int = -1
+# parallel array — uchovává doctrine key pro každý item v doctrine_picker
+var _doctrine_keys: Array[String] = []
 var tile_scene: PackedScene = preload("res://scenes/ui/RegionTile.tscn")
 
 func _ready() -> void:
@@ -61,10 +71,18 @@ func _ready() -> void:
 	bg_movement.content_margin_bottom = 12.0
 	movement_section.add_theme_stylebox_override("panel", bg_movement)
 
+	var bg_org := StyleBoxFlat.new()
+	bg_org.bg_color = Color("#1a2535")
+	bg_org.content_margin_left   = 12.0
+	bg_org.content_margin_right  = 12.0
+	bg_org.content_margin_top    = 12.0
+	bg_org.content_margin_bottom = 12.0
+	org_section.add_theme_stylebox_override("panel", bg_org)
+
 	grid.columns = 4
 	_build_grid()
 
-	# signály
+	# signály — akce
 	mission_confirm.pressed.connect(_on_mission_confirm)
 	move_confirm.pressed.connect(_on_move_confirm)
 	unit_select.item_selected.connect(_on_unit_selected)
@@ -72,14 +90,24 @@ func _ready() -> void:
 	dark_action_select.item_selected.connect(_on_dark_action_selected)
 	mission_select.item_selected.connect(_on_mission_selected)
 
+	# signály — org sekce
+	doctrine_picker.item_selected.connect(_on_doctrine_picker_item_selected)
+	destroy_button.pressed.connect(_on_destroy_button_pressed)
+
 	GameState.connect("unit_moved", Callable(self, "_on_unit_moved"))
 	GameState.connect("turn_resolved", Callable(self, "_on_turn_resolved"))
 	GameState.connect("game_updated", Callable(self, "_on_game_updated"))
 
 	EventBus.connect("mission_resolved", Callable(self, "_on_mission_resolved"))
 
+	# EventBus — org zmeny refreshuji OrgSection
+	EventBus.org_founded.connect(_on_org_changed)
+	EventBus.org_destroyed.connect(_on_org_changed)
+	EventBus.org_doctrine_changed.connect(_on_doctrine_externally_changed)
+
 	right_panel.visible = false
 	_set_actions_enabled(false)
+	org_section.visible = false
 
 func _on_game_updated() -> void:
 	if grid.get_child_count() != GameState.region_manager.regions.size():
@@ -302,6 +330,7 @@ func _refresh_selected_panel() -> void:
 	_build_mission_menu()
 	_build_neighbors_menu(selected_region_idx)
 
+	_update_org_section(selected_region_idx)
 	_set_actions_enabled(unit_select.get_item_count() > 0 and unit_select.get_selected_id() != -1)
 	scroll_container.scroll_vertical = 0
 
@@ -559,3 +588,108 @@ func _on_dark_action_confirm() -> void:
 	var r := GameState.query.regions.get_by_id(selected_region_idx)
 	if r != null:
 		_update_region_section(r)
+
+# --------------------------
+# ORG SECTION
+
+func _update_org_section(region_id: int) -> void:
+	var data: Dictionary = GameState.org_manager.get_org_display_data(region_id)
+	if not data.get("has_org", false):
+		org_section.visible = false
+		return
+
+	org_section.visible = true
+	org_name.text = data["display_name"]
+
+	if data["is_player_org"]:
+		org_owner.visible = false
+		destroy_button.visible = false
+		doctrine_picker.visible = true
+		doctrine_effects.visible = true
+		_populate_doctrine_picker(region_id)
+	else:
+		org_owner.visible = true
+		org_owner.text = _format_owner(data["owner"])
+		doctrine_picker.visible = false
+		doctrine_effects.visible = false
+		destroy_button.visible = true
+
+
+func _populate_doctrine_picker(region_id: int) -> void:
+	doctrine_picker.clear()
+	_doctrine_keys.clear()
+	var doctrines: Array[Dictionary] = GameState.org_manager.get_available_doctrines(region_id)
+	var current_idx: int = 0
+	for i in doctrines.size():
+		var d: Dictionary = doctrines[i]
+		doctrine_picker.add_item(d["display_name"])
+		_doctrine_keys.append(d["key"])
+		if d["is_current"]:
+			current_idx = i
+	doctrine_picker.select(current_idx)
+	_update_doctrine_effects(region_id)
+
+
+func _update_doctrine_effects(region_id: int) -> void:
+	var doctrines: Array[Dictionary] = GameState.org_manager.get_available_doctrines(region_id)
+	var selected: int = doctrine_picker.selected
+	if selected < 0 or selected >= doctrines.size():
+		doctrine_effects.text = ""
+		return
+	doctrine_effects.text = _format_effects(doctrines[selected]["effects"])
+
+
+func _format_owner(owner: String) -> String:
+	match owner:
+		Balance.ORG_OWNER_ROGUE:   return "Odpadlicka organizace"
+		Balance.ORG_OWNER_NEUTRAL: return "Nezavisla organizace"
+		Balance.ORG_OWNER_RIVAL:   return "Rivalitni Temny pan"
+		_: return owner
+
+
+func _format_effects(effects: Dictionary) -> String:
+	var parts: Array[String] = []
+	if effects.has("gold"):
+		parts.append("%+d zlato/tah" % int(effects["gold"]))
+	if effects.has("mana"):
+		parts.append("%+d mana/tah" % int(effects["mana"]))
+	if effects.has("heat"):
+		parts.append("%+d heat/tah" % int(effects["heat"]))
+	if effects.has("awareness"):
+		parts.append("%+d awareness/tah" % int(effects["awareness"]))
+	if effects.has("mission_bonus"):
+		parts.append("+%d%% sance na mise" % int(effects["mission_bonus"]))
+	if effects.get("dark_action_empowered", false):
+		parts.append("Dark Actions zesíleny")
+	if parts.is_empty():
+		return "Žádné pasivní efekty"
+	return "  ".join(parts)
+
+
+func _on_doctrine_picker_item_selected(index: int) -> void:
+	if index < 0 or index >= _doctrine_keys.size():
+		return
+	var new_key: String = _doctrine_keys[index]
+	var current: Dictionary = GameState.org_manager.get_org_display_data(selected_region_idx)
+	if new_key == current.get("doctrine_key", ""):
+		return  # žádná změna
+	GameState.org_manager.set_doctrine(selected_region_idx, new_key)
+	_update_doctrine_effects(selected_region_idx)
+
+
+func _on_destroy_button_pressed() -> void:
+	var uid: int = unit_select.get_selected_id()
+	if uid == -1 or selected_region_idx < 0:
+		GameState._log({"type": "warn", "text": "Vyberte jednotku schopnou provest purge."})
+		return
+	GameState.exec(GameState.commands.plan_mission(uid, selected_region_idx, "purge"))
+
+
+func _on_org_changed(_ignored) -> void:
+	if selected_region_idx >= 0:
+		_update_org_section(selected_region_idx)
+
+
+func _on_doctrine_externally_changed(region_id: int, _doctrine: String) -> void:
+	if region_id == selected_region_idx:
+		_populate_doctrine_picker(region_id)
