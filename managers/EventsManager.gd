@@ -15,11 +15,15 @@ var _collected_player_results: Array[Dictionary] = []
 # Výsledky bitev z aktuálního tahu — sbíráme přes EventBus.
 var _collected_combat_results: Array[Dictionary] = []
 
+# Znicene organizace z aktuálního tahu — sbíráme přes EventBus.
+var _collected_org_events: Array[Dictionary] = []
+
 # ---------------------------
 func init(gs: GameStateSingleton) -> void:
 	game_state = gs
 	EventBus.mission_resolved.connect(_on_mission_resolved)
 	EventBus.combat_resolved.connect(_on_combat_resolved)
+	EventBus.org_destroyed.connect(_on_org_destroyed)
 
 # ---------------------------
 # Voláno na začátku tahu (Rada zasvěcených).
@@ -31,6 +35,7 @@ func generate_events_for_turn() -> Array[EventData]:
 	_collect_mission_events(events)
 	_collect_combat_events(events)
 	_collect_heat_awareness_events(events)
+	_collect_org_events(events)
 
 	_collected_player_results.clear()
 
@@ -332,3 +337,30 @@ func _on_mission_resolved(data: Dictionary) -> void:
 # ---------------------------
 func _on_combat_resolved(result: Dictionary) -> void:
 	_collected_combat_results.append(result)
+
+# ---------------------------
+# ZDROJ 5 — Znicene organizace (Temny kapitan)
+# ---------------------------
+func _collect_org_events(events: Array[EventData]) -> void:
+	for e in _collected_org_events:
+		var region_id: int = int(e.get("region_id", -1))
+		var region: Region = (
+			game_state.region_manager.get_region(region_id)
+			if region_id >= 0 else null
+		)
+		var region_name: String = region.name if region != null else "neznamem miste"
+
+		events.append(EventData.create(
+			Balance.ADVISOR_KAPITAN,
+			Balance.EVENT_CRITICAL,
+			"Pane, nase organizace v %s byla odhalena a zlikvidovana." % region_name,
+			"Organizace znicena v regionu %s." % region_name
+		))
+
+	_collected_org_events.clear()
+
+# ---------------------------
+# Signal handler — sbírá znicene organizace přes EventBus
+# ---------------------------
+func _on_org_destroyed(region_id: int) -> void:
+	_collected_org_events.append({ "region_id": region_id })

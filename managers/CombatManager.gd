@@ -145,6 +145,19 @@ func _resolve_region_battle(region_idx: int) -> Dictionary:
 					region.name, winner_faction, prev_owner
 				]
 			})
+
+		# zniceni organizace pri obsazeni — po zmene ownera, pred emitem signalu
+		var org: Dictionary = game_state.org_manager.get_org_in_region(region.id)
+		if not org.is_empty():
+			if org["owner"] != winner_faction:
+				logs.append({
+					"type": "battle",
+					"text": "Organizace v regionu %s znicena vitezem (%s)." % [
+						region.name, winner_faction
+					]
+				})
+				game_state.org_manager.remove_org(region.id)
+
 	else:
 		# remíza – všichni zničeni
 		for f in factions_sorted:

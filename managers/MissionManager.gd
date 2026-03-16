@@ -178,6 +178,10 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 		var eff_logs : Array[Dictionary] = game_state.effects_system.apply(effects, ctx)
 		#game_state._apply_effects(effects, region, unit.faction_id)
 
+		# purge znicí organizaci v regionu pokud existuje
+		if key == "purge":
+			_handle_purge_org(region.id)
+
 		# jednotka je zaneprázdněná pouze během plánování
 		unit.state = "healthy"
 
@@ -268,6 +272,23 @@ func _check_requirements(req:Dictionary, unit:Unit, region:Region) -> bool:
 			return false
 
 	return true
+
+# -------------------------------------------------
+# Purge — znici organizaci v regionu pokud existuje
+func _handle_purge_org(region_id: int) -> void:
+	var org: Dictionary = game_state.org_manager.get_org_in_region(region_id)
+	if org.is_empty():
+		return
+	var org_type: String  = String(org.get("org_type", "?"))
+	var org_owner: String = String(org.get("owner", "?"))
+	game_state._log({
+		"type": "mission_success",
+		"text": "Purge: organizace typu '%s' (owner: %s) v regionu %d byla odhalena a znicena." % [
+			org_type, org_owner, region_id
+		]
+	})
+	game_state.org_manager.remove_org(region_id)
+
 
 func get_available_missions_for(unit:Unit, region:Region) -> Array[String]:
 	var result: Array[String] = []
