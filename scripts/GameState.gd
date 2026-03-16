@@ -18,6 +18,7 @@ signal game_ended(result: Dictionary) # { ok:bool, outcome:"win"/"lose", reason:
 @onready var effects_system: EffectsSystem = EffectsSystem.new()
 @onready var ai_manager: AIManager = AIManager.new()
 @onready var events_manager: EventsManager = EventsManager.new()
+@onready var org_manager: OrgManager = OrgManager.new()
 
 var rng := RandomNumberGenerator.new()
 var turn:int = 1
@@ -49,6 +50,7 @@ func _ready() -> void:
 	economic_manager.game_state    = self
 	building_manager.game_state    = self
 	ai_manager.game_state          = self
+	org_manager.game_state         = self
 	events_manager.init(self)
 
 	query = GameQuery.new(self)
@@ -277,13 +279,16 @@ func advance_turn() -> void:
 	# 1) efekty budov
 	entries += building_manager.apply_end_of_turn_effects()
 
-	# 2) ekonomika
+	# 2) pasivni efekty organizaci
+	entries += org_manager.apply_end_of_turn_effects()
+
+	# 3) ekonomika
 	entries += economic_manager.apply_economy_cycle()
 
-	# 3) cooldowny dark actions
+	# 4) cooldowny dark actions
 	dark_actions_manager.tick_cooldowns()
 
-	# 4) doom income
+	# 5) doom income
 	doom += doom_income
 
 	# =========================
