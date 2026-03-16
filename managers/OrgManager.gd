@@ -33,6 +33,43 @@ func has_org_in_region(region_id: int) -> bool:
 	return false
 
 
+func get_available_doctrines(region_id: int) -> Array[Dictionary]:
+	var org: Dictionary = get_org_in_region(region_id)
+	if org.is_empty():
+		return []
+	var current_doctrine: String = org["doctrine"]
+	var doctrines_cfg: Dictionary = Balance.ORG[org["org_type"]]["doctrines"]
+	var result: Array[Dictionary] = []
+	for key in doctrines_cfg.keys():
+		var d: Dictionary = doctrines_cfg[key]
+		result.append({
+			"key":          key,
+			"display_name": d["display_name"],
+			"effects":      d["effects"],
+			"is_current":   key == current_doctrine
+		})
+	return result
+
+
+func get_org_display_data(region_id: int) -> Dictionary:
+	var org: Dictionary = get_org_in_region(region_id)
+	if org.is_empty():
+		return { "has_org": false }
+	var org_type: String     = org["org_type"]
+	var doctrine_key: String = org["doctrine"]
+	var org_cfg: Dictionary      = Balance.ORG[org_type]
+	var doctrine_cfg: Dictionary = org_cfg["doctrines"][doctrine_key]
+	return {
+		"has_org":          true,
+		"org_type":         org_type,
+		"display_name":     org_cfg["display_name"],
+		"owner":            org["owner"],
+		"doctrine_key":     doctrine_key,
+		"doctrine_display": doctrine_cfg["display_name"],
+		"is_player_org":    org["owner"] == Balance.ORG_OWNER_PLAYER
+	}
+
+
 # ---------------------------------------------------------
 # Mutace
 # ---------------------------------------------------------

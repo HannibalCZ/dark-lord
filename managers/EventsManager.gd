@@ -24,6 +24,7 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.mission_resolved.connect(_on_mission_resolved)
 	EventBus.combat_resolved.connect(_on_combat_resolved)
 	EventBus.org_destroyed.connect(_on_org_destroyed)
+	EventBus.org_doctrine_changed.connect(_on_org_doctrine_changed)
 
 # ---------------------------
 # Voláno na začátku tahu (Rada zasvěcených).
@@ -364,3 +365,16 @@ func _collect_org_events(events: Array[EventData]) -> void:
 # ---------------------------
 func _on_org_destroyed(region_id: int) -> void:
 	_collected_org_events.append({ "region_id": region_id })
+
+# ---------------------------
+# Signal handler — zmena doktríny organizace (ROUTINE — jen do logu)
+# ---------------------------
+func _on_org_doctrine_changed(region_id: int, new_doctrine: String) -> void:
+	if game_state == null:
+		return
+	var region: Region = game_state.region_manager.get_region(region_id)
+	var region_name: String = region.name if region != null else "region %d" % region_id
+	game_state._log({
+		"type": "org",
+		"text": "Doktrína organizace v %s zmenena na '%s'." % [region_name, new_doctrine]
+	})
