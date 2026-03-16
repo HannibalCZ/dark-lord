@@ -46,11 +46,22 @@ func can_cast(faction_id:String, action_key:String, region_id:int = -1) -> Dicti
 	if fac.get_resource("mana") < mana_cost:
 		return {"ok": false, "reason": "Nedostatek many."}
 
+	var gold_cost:int = int(action_def.get("gold_cost", 0))
+	if fac.get_resource("gold") < gold_cost:
+		return {"ok": false, "reason": "Nedostatek zlata."}
+
 	var atype:String = String(action_def.get("type", "global"))
 	if atype == "region":
 		# region_id musí být validní
 		if region_id < 0 or region_id >= game_state.region_manager.regions.size():
 			return {"ok": false, "reason": "Neplatný cílový region."}
+
+	# validace specifická pro found_org akce
+	if action_def.get("effects", {}).has("found_org"):
+		if game_state.org_manager.has_org_in_region(region_id):
+			return {"ok": false, "reason": "Region jiz ma organizaci."}
+		if _find_available_agent(region_id) == null:
+			return {"ok": false, "reason": "Zadny dostupny agent v regionu."}
 
 	return {"ok": true}
 
@@ -80,9 +91,12 @@ func cast(faction_id:String, action_key:String, region_id:int = -1) -> Dictionar
 	# --- costs ---
 	var ap_cost:int = int(action_def.get("ap_cost", 0))
 	var mana_cost:int = int(action_def.get("mana_cost", 0))
+	var gold_cost:int = int(action_def.get("gold_cost", 0))
 	fac.dark_actions_left -= ap_cost
 	if mana_cost != 0:
 		fac.change_resource("mana", -mana_cost)
+	if gold_cost != 0:
+		fac.change_resource("gold", -gold_cost)
 
 	# cooldown
 	var cd_val:int = int(action_def.get("cooldown", 0))
@@ -101,7 +115,12 @@ func cast(faction_id:String, action_key:String, region_id:int = -1) -> Dictionar
 		var ctx := EffectContext.make(game_state, target_region, faction_id)
 		var eff_logs: Array[Dictionary] = game_state.effects_system.apply(effects, ctx)
 		logs += eff_logs
-		
+
+	# zpracování speciálního efektu found_org
+	if effects.has("found_org"):
+		var found_logs: Array[Dictionary] = _handle_found_org(action_key, region_id, faction_id)
+		logs += found_logs
+
 	events = [{
 		"type": "dark_action_cast",
 		"action": action_key,
@@ -161,3 +180,51 @@ func get_available_actions_for_faction(faction_id:String) -> Array[String]:
 		if cds.get(key, 0) <= 0:
 			result.append(key)
 	return result
+
+
+# -------------------------------------------------
+# 6) _find_available_agent – první zdravý agent hráče v regionu
+func _find_available_agent(region_id: int) -> Unit:
+	for unit in game_state.unit_manager.units:
+		if unit.region_id == region_id \
+				and unit.faction_id == Balance.PLAYER_FACTION \
+				and unit.is_available() \
+				and not unit.is_army():
+			return unit
+	return null
+
+
+# -------------------------------------------------
+# 7) _handle_found_org – vytvoří organizaci a spotřebuje agenta
+func _handle_found_org(action_key: String, region_id: int, faction_id: String) -> Array[Dictionary]:
+	var logs: Array[Dictionary] = []
+
+	# double-check (can_cast už validoval, ale pro jistotu)
+	if game_state.org_manager.has_org_in_region(region_id):
+		push_error("DarkActionsManager._handle_found_org: region %d jiz ma organizaci" % region_id)
+		logs.append({"type": "warn", "text": "Region jiz ma organizaci — organizace nevznikla."})
+		return logs
+
+	var agent: Unit = _find_available_agent(region_id)
+	if agent == null:
+		push_error("DarkActionsManager._handle_found_org: zadny agent v regionu %d" % region_id)
+		logs.append({"type": "warn", "text": "Zadny dostupny agent v regionu — organizace nevznikla."})
+		return logs
+
+	# vytvoř organizaci
+	var org_type: String = Balance.DARK_ACTIONS[action_key]["effects"]["found_org"]
+	var org: Dictionary = game_state.org_manager.add_org(
+		org_type,
+		Balance.ORG_OWNER_PLAYER,
+		region_id
+	)
+
+	# spotřebuj agenta
+	agent.state = "lost"
+
+	var org_display: String = Balance.ORG[org_type]["display_name"]
+	logs.append({
+		"type": "dark_action",
+		"text": "Organizace zalozena: %s (region %d). Agent obetuji." % [org_display, region_id]
+	})
+	return logs
