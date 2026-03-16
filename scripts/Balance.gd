@@ -1,4 +1,4 @@
-# scripts/data/Balance.gd
+﻿# scripts/data/Balance.gd
 extends Node
 
 const PLAYER_FACTION = "player"
@@ -570,3 +570,60 @@ const EVENT_ROUTINE   = "routine"
 const COUNCIL_MAX_CRITICAL  = 99  # zobraz vždy
 const COUNCIL_MAX_IMPORTANT = 4   # max za tah
 const COUNCIL_MAX_TOTAL     = 5   # celkový limit
+
+# --- Organizace ---
+const ORG_OWNER_PLAYER  = "player"
+const ORG_OWNER_ROGUE   = "rogue"
+const ORG_OWNER_NEUTRAL = "neutral"
+const ORG_OWNER_RIVAL   = "rival_dark_lord"
+
+const ORG = {
+	"crime_syndicate": {
+		"display_name": "Zlo\u010dineck\u00fd syndik\u00e1t",
+		"cost": { "gold": 20, "mana": 0 },
+		"default_doctrine": "extortion",
+		"doctrines": {
+			"extortion": {
+				"display_name": "Vydírání",
+				"effects": { "gold": 5, "heat": 1 }
+			},
+			"laundering": {
+				"display_name": "Praní peněz",
+				"effects": { "gold": 2 }
+			}
+		}
+	},
+	"shadow_network": {
+		"display_name": "Stínová organizace",
+		"cost": { "gold": 15, "mana": 0 },
+		"default_doctrine": "informants",
+		"doctrines": {
+			"informants": {
+				"display_name": "Síť informátorů",
+				"effects": { "mission_bonus": 15 }
+			},
+			"disinfo": {
+				"display_name": "Dezinformace",
+				"effects": { "heat": -1, "awareness": -1 }
+			}
+		}
+	},
+	"cult": {
+		"display_name": "Kult",
+		"cost": { "gold": 0, "mana": 15 },
+		"default_doctrine": "dark_rituals",
+		"doctrines": {
+			"dark_rituals": {
+				"display_name": "Temné obřady",
+				"effects": { "mana": 4, "awareness": 1 }
+			},
+			"ritual_empowerment": {
+				"display_name": "Rituální posílení",
+				"effects": { "mana": 2, "dark_action_empowered": true }
+			}
+		}
+	}
+}
+
+static func get_org_effects(org_type: String, doctrine: String) -> Dictionary:
+	return ORG[org_type]["doctrines"][doctrine]["effects"]
