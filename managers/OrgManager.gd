@@ -124,21 +124,15 @@ func set_doctrine(region_id: int, new_doctrine: String) -> void:
 func apply_end_of_turn_effects() -> Array[Dictionary]:
 	var logs: Array[Dictionary] = []
 
-	print("[OrgManager] apply_end_of_turn_effects: orgs.size()=", orgs.size())
-
 	for org in orgs:
 		var effects: Dictionary = Balance.get_org_effects(org["org_type"], org["doctrine"])
-		print("[OrgManager] org=%s doctrine=%s effects=%s" % [org["org_id"], org["doctrine"], str(effects)])
 		if effects.is_empty():
 			continue
 
 		var region: Region = game_state.region_manager.get_region(org["region_id"])
-		var fac: Faction = game_state.faction_manager.get_faction(Balance.ORG_OWNER_PLAYER)
-		print("[OrgManager] region=%s fac=%s gold_before=%s" % [str(region), str(fac), str(fac.get_resource("gold") if fac != null else "N/A")])
 		var ctx := EffectContext.make(game_state, region, Balance.ORG_OWNER_PLAYER)
 
 		var effect_logs: Array[Dictionary] = game_state.effects_system.apply(effects, ctx)
-		print("[OrgManager] effect_logs=", effect_logs, " gold_after=", str(fac.get_resource("gold") if fac != null else "N/A"))
 		logs += effect_logs
 
 		logs.append({
