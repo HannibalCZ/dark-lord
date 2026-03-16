@@ -125,15 +125,22 @@ func apply_end_of_turn_effects() -> Array[Dictionary]:
 	var logs: Array[Dictionary] = []
 
 	for org in orgs:
-		var effects: Dictionary = Balance.get_org_effects(org["org_type"], org["doctrine"])
-		if effects.is_empty():
+		var all_effects: Dictionary = Balance.get_org_effects(org["org_type"], org["doctrine"])
+		if all_effects.is_empty():
 			continue
 
-		var region: Region = game_state.region_manager.get_region(org["region_id"])
-		var ctx := EffectContext.make(game_state, region, Balance.ORG_OWNER_PLAYER)
+		# Gold a mana jsou spravovany EconomicManagerem (compute_income_and_upkeep).
+		# Zde aplikujeme pouze globalni a regionalni efekty (heat, awareness, atd.).
+		var non_economic: Dictionary = {}
+		for key in all_effects:
+			if key != "gold" and key != "mana":
+				non_economic[key] = all_effects[key]
 
-		var effect_logs: Array[Dictionary] = game_state.effects_system.apply(effects, ctx)
-		logs += effect_logs
+		if not non_economic.is_empty():
+			var region: Region = game_state.region_manager.get_region(org["region_id"])
+			var ctx := EffectContext.make(game_state, region, Balance.ORG_OWNER_PLAYER)
+			var effect_logs: Array[Dictionary] = game_state.effects_system.apply(non_economic, ctx)
+			logs += effect_logs
 
 		logs.append({
 			"type": "org",
