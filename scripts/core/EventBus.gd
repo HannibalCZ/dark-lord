@@ -16,3 +16,7 @@ signal heat_threshold_reached(threshold)
 signal council_events_ready(events: Array[EventData])
 
 signal combat_resolved(result: Dictionary)
+
+signal org_founded(org: Dictionary)
+signal org_destroyed(region_id: int)
+signal org_doctrine_changed(region_id: int, new_doctrine: String)
