@@ -53,6 +53,8 @@ func _apply_faction(e: Dictionary, fac: Faction, logs: Array[Dictionary]) -> voi
 		fac.change_resource("mana", float(e["mana"]))
 	if e.has("infamy"):
 		fac.change_resource("infamy", float(e["infamy"]))
+	if e.has("research"):
+		fac.change_resource("research", float(e["research"]))
 
 	# Infernal pact flag (example)
 	if e.has("infernal_pact") and bool(e["infernal_pact"]):
@@ -191,7 +193,7 @@ func _check_lair_influence(region: Region, source_faction_id: String, gs: GameSt
 # -----------------------
 
 func _has_any_faction_fields(e: Dictionary) -> bool:
-	return e.has("gold") or e.has("mana") or e.has("infamy") or e.has("infernal_pact")
+	return e.has("gold") or e.has("mana") or e.has("infamy") or e.has("infernal_pact") or e.has("research")
 
 func _has_any_region_fields(e: Dictionary) -> bool:
 	return e.has("defense") or e.has("corruption") or e.has("purge_corruption_all") or e.has("secret_progress") or e.has("lair_influence")

@@ -106,10 +106,17 @@ func apply_economy_cycle() -> Array[Dictionary]:
 		if not r.ok:
 			continue
 
-		# aplikace změn
-		faction.change_resource("gold", r.net_gold)
-		faction.change_resource("mana", r.net_mana)
-		faction.change_resource("research", r.research_income)
+		# aplikace změn přes EffectsSystem
+		var effects: Dictionary = {}
+		if r.net_gold != 0:
+			effects["gold"] = r.net_gold
+		if r.net_mana != 0:
+			effects["mana"] = r.net_mana
+		if r.research_income != 0:
+			effects["research"] = r.research_income
+		if not effects.is_empty():
+			var ctx := EffectContext.make(game_state, null, faction.id)
+			game_state.effects_system.apply(effects, ctx)
 
 		# log
 		logs.append({

@@ -30,12 +30,15 @@ func build(id: int) -> Dictionary:
 		return {"text":"❌ Nedostatek surovin pro stavbu %s." % b["name"], "type":"warn"}
 
 	# Zaplať a postav
-	game_state.faction_manager.get_faction(Balance.PLAYER_FACTION).change_resource("gold", -b["cost"])
+	var pay_ctx := EffectContext.make(game_state, null, Balance.PLAYER_FACTION)
+	game_state.effects_system.apply({"gold": -b["cost"]}, pay_ctx)
 	b["built"] = true
 
 	# Okamžité jednorázové dopady na state (pokud nějaké má být už nyní)
 	match b["name"]:
 		"Doupě":
+			# TODO: unit_limit by měl jít přes EffectsSystem
+			# až bude přidán klíč "unit_limit"
 			game_state.unit_manager.unit_limit += 1
 		_:
 			pass
@@ -50,7 +53,8 @@ func apply_end_of_turn_effects() -> Array[Dictionary]:
 			continue
 		match b["name"]:
 			"Knihovna":
-				game_state.faction_manager.get_faction(Balance.PLAYER_FACTION).change_resource("research", 1)
+				var ctx := EffectContext.make(game_state, null, Balance.PLAYER_FACTION)
+				game_state.effects_system.apply({"research": 1}, ctx)
 			"Past":
 				# později: přičítej trvalý bonus k obraně věže / stacky pastí apod.
 				pass

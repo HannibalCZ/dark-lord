@@ -129,8 +129,10 @@ func apply_end_of_turn_effects() -> Array[Dictionary]:
 		if all_effects.is_empty():
 			continue
 
-		# Gold a mana jsou spravovany EconomicManagerem (compute_income_and_upkeep).
-		# Zde aplikujeme pouze globalni a regionalni efekty (heat, awareness, atd.).
+		# gold/mana org efektů jsou zahrnuty v
+		# EconomicManager.compute_income_and_upkeep()
+		# aby šly přes jeden centrální výpočet příjmů.
+		# Zde aplikujeme pouze neekonomické efekty (heat, awareness, atd.).
 		var non_economic: Dictionary = {}
 		for key in all_effects:
 			if key != "gold" and key != "mana":
