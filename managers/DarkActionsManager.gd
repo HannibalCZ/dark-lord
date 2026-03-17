@@ -92,11 +92,17 @@ func cast(faction_id:String, action_key:String, region_id:int = -1) -> Dictionar
 	var ap_cost:int = int(action_def.get("ap_cost", 0))
 	var mana_cost:int = int(action_def.get("mana_cost", 0))
 	var gold_cost:int = int(action_def.get("gold_cost", 0))
+	# TODO: AP cost by měl jít přes EffectsSystem
+	# až bude přidán klíč "ap"
 	fac.dark_actions_left -= ap_cost
-	if mana_cost != 0:
-		fac.change_resource("mana", -mana_cost)
-	if gold_cost != 0:
-		fac.change_resource("gold", -gold_cost)
+	var cost_effects: Dictionary = {}
+	if mana_cost > 0:
+		cost_effects["mana"] = -mana_cost
+	if gold_cost > 0:
+		cost_effects["gold"] = -gold_cost
+	if not cost_effects.is_empty():
+		var cost_ctx := EffectContext.make(game_state, null, fac.id)
+		game_state.effects_system.apply(cost_effects, cost_ctx)
 
 	# cooldown
 	var cd_val:int = int(action_def.get("cooldown", 0))

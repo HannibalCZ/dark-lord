@@ -289,7 +289,9 @@ func advance_turn() -> void:
 	dark_actions_manager.tick_cooldowns()
 
 	# 5) doom income
-	doom += doom_income
+	if doom_income != 0:
+		var doom_ctx := EffectContext.make(self, null, Balance.PLAYER_FACTION)
+		effects_system.apply({"doom": doom_income}, doom_ctx)
 
 	# =========================
 	# D) Souboje (po world ticku)
