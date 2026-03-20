@@ -340,8 +340,22 @@ func advance_turn() -> void:
 	if player_start_region_id >= 0:
 		var start_region: Region = region_manager.get_region(player_start_region_id)
 		if start_region != null:
+			# Případ A: nepřítel již vlastní region (po bitvě nebo pohybu bez odporu)
 			if start_region.owner_faction_id != Balance.PLAYER_FACTION:
 				_start_region_captured = true
+			# Případ B: hráč stále vlastní region, ale nepřátelská armáda
+			# je uvnitř a hráč nemá žádnou obrannou armádu
+			else:
+				var enemies: Array = query.units.enemies_in_region(
+					player_start_region_id, Balance.PLAYER_FACTION, true)
+				if enemies.size() > 0:
+					var defenders: Array = []
+					for u in query.units.in_region(player_start_region_id, false):
+						if u.faction_id == Balance.PLAYER_FACTION \
+								and u.type == "army":
+							defenders.append(u)
+					if defenders.size() == 0:
+						_start_region_captured = true
 
 	# --- End conditions (WIN/LOSE) ---
 	var end_res := check_end_conditions()
