@@ -85,9 +85,10 @@ func _apply_globals(e: Dictionary, gs: GameStateSingleton, logs: Array[Dictionar
 	if e.has("doom_income"):
 		gs.doom_income += int(e["doom_income"])
 
-	# TODO: org passive effect — pridat az bude awareness implementovano v GameState
 	if e.has("awareness"):
-		push_warning("EffectsSystem: awareness not yet implemented")
+		gs.awareness = clamp(
+			gs.awareness + int(e["awareness"]),
+			0, Balance.AWARENESS_MAX)
 
 	# TODO: org passive effect — OrgManager bude poskytovat bonus pri vyhodnoceni mise
 	if e.has("mission_bonus"):

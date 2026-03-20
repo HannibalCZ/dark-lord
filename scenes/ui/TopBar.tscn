@@ -124,6 +124,29 @@ text = "0%"
 [node name="VSeparator3" type="VSeparator" parent="HBoxContainer"]
 layout_mode = 2
 
+[node name="AwarenessSection" type="HBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AwarenessIcon" type="Label" parent="HBoxContainer/AwarenessSection"]
+layout_mode = 2
+text = "\U0001f441"
+
+[node name="AwarenessBar" type="ProgressBar" parent="HBoxContainer/AwarenessSection"]
+layout_mode = 2
+custom_minimum_size = Vector2(100, 12)
+size_flags_horizontal = 3
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="AwarenessValue" type="Label" parent="HBoxContainer/AwarenessSection"]
+layout_mode = 2
+text = "0%"
+
+[node name="VSeparator5" type="VSeparator" parent="HBoxContainer"]
+layout_mode = 2
+
 [node name="ControlSection" type="HBoxContainer" parent="HBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
