@@ -14,6 +14,10 @@ func _on_council_events_ready(events: Array[EventData]) -> void:
 	if events.is_empty():
 		return
 	_populate(events)
+	if GameState.game_over:
+		close_button.text = "Zavrit"
+	else:
+		close_button.text = "Rozumim"
 	show()
 
 # ---------------------------
