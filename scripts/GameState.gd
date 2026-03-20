@@ -335,7 +335,14 @@ func advance_turn() -> void:
 	# zaloguj vše najednou (konsistentně)
 	for e in entries:
 		_log(e)
-	
+
+	# Zkontroluj zda startovní region stále patří hráči
+	if player_start_region_id >= 0:
+		var start_region: Region = region_manager.get_region(player_start_region_id)
+		if start_region != null:
+			if start_region.owner_faction_id != Balance.PLAYER_FACTION:
+				_start_region_captured = true
+
 	# --- End conditions (WIN/LOSE) ---
 	var end_res := check_end_conditions()
 	if game_over:
