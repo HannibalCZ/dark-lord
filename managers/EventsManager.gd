@@ -25,6 +25,7 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.combat_resolved.connect(_on_combat_resolved)
 	EventBus.org_destroyed.connect(_on_org_destroyed)
 	EventBus.org_doctrine_changed.connect(_on_org_doctrine_changed)
+	GameState.game_ended.connect(_on_game_ended)
 
 # ---------------------------
 # Voláno na začátku tahu (Rada zasvěcených).
@@ -306,6 +307,36 @@ func _filter_events(all_events: Array[EventData]) -> Array[EventData]:
 		result = result.slice(0, Balance.COUNCIL_MAX_TOTAL)
 
 	return result
+
+# ---------------------------
+# Konec hry — okamzity event do Rady zasvecených
+# ---------------------------
+func _on_game_ended(result: Dictionary) -> void:
+	var is_win: bool = result.get("outcome", "") == "win"
+	var reason: String = result.get("reason", "")
+	var event := EventData.create(
+		Balance.ADVISOR_VEZIR if is_win else Balance.ADVISOR_KAPITAN,
+		Balance.EVENT_CRITICAL,
+		_build_end_game_narrative(is_win, reason),
+		reason
+	)
+	EventBus.council_events_ready.emit([event])
+
+
+func _build_end_game_narrative(is_win: bool, reason: String) -> String:
+	if is_win:
+		return (
+			"Pane, je hotovo. Svet se sklonil pred vasi vuli. "
+			+ "%s Temnota zvitezila — ne silou, ale trpelivosti "
+			+ "a lsti. Vase jmeno bude sepskat po generace."
+		) % reason
+	else:
+		return (
+			"Pane — padli jsme. %s Nepritel obsadil nasi "
+			+ "pevnost. Neni kam ustoupit. Byl to cestny boj, "
+			+ "ale nestacilo to."
+		) % reason
+
 
 # ---------------------------
 # Signal handler — sbírá výsledky hráčových misí přes EventBus
