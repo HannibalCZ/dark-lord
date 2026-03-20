@@ -8,6 +8,7 @@ extends PanelContainer
 @onready var units_label     : Label         = $HBoxContainer/Units/UnitsLabel
 @onready var heat_bar        : ProgressBar   = $HBoxContainer/HeatSection/HeatBar
 @onready var heat_value      : Label         = $HBoxContainer/HeatSection/HeatValue
+@onready var control_value   : Label         = $HBoxContainer/ControlSection/ControlValue
 @onready var turn_label      : Label         = $HBoxContainer/TurnLabel
 @onready var next_turn_btn   : Button        = $HBoxContainer/NextTurnButton
 
@@ -21,6 +22,7 @@ func _ready() -> void:
 	add_theme_stylebox_override("panel", bg)
 
 	GameState.connect("game_updated", Callable(self, "_refresh"))
+	GameState.game_ended.connect(_on_game_ended)
 	next_turn_btn.pressed.connect(_on_next_turn_pressed)
 	_refresh()
 
@@ -39,6 +41,7 @@ func _refresh() -> void:
 	]
 
 	_update_heat_bar(GameState.heat)
+	_update_control_count()
 	turn_label.text = "Tah: %d" % GameState.turn
 
 
@@ -68,6 +71,24 @@ func _update_heat_bar(value: int) -> void:
 	else:
 		style.bg_color = Color("#4caf50")
 	heat_bar.add_theme_stylebox_override("fill", style)
+
+
+func _update_control_count() -> void:
+	var controlled: int = GameState.query.regions.count_player_controlled_civilized()
+	var total: int = GameState.query.regions.count_total_civilized()
+	control_value.text = "%d/%d" % [controlled, total]
+	var ratio: float = float(controlled) / float(total) if total > 0 else 0.0
+	if ratio >= 0.67:
+		control_value.add_theme_color_override("font_color", Color("#4caf50"))
+	elif ratio >= 0.33:
+		control_value.add_theme_color_override("font_color", Color("#ff9800"))
+	else:
+		control_value.add_theme_color_override("font_color", Color("#aaaaaa"))
+
+
+func _on_game_ended(result: Dictionary) -> void:
+	next_turn_btn.disabled = true
+	next_turn_btn.tooltip_text = "Hra skoncila - %s" % result.get("outcome", "")
 
 
 func _on_next_turn_pressed() -> void:
