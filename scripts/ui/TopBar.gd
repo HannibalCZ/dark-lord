@@ -8,6 +8,8 @@ extends PanelContainer
 @onready var units_label     : Label         = $HBoxContainer/Units/UnitsLabel
 @onready var heat_bar        : ProgressBar   = $HBoxContainer/HeatSection/HeatBar
 @onready var heat_value      : Label         = $HBoxContainer/HeatSection/HeatValue
+@onready var awareness_bar   : ProgressBar   = $HBoxContainer/AwarenessSection/AwarenessBar
+@onready var awareness_value : Label         = $HBoxContainer/AwarenessSection/AwarenessValue
 @onready var control_value   : Label         = $HBoxContainer/ControlSection/ControlValue
 @onready var turn_label      : Label         = $HBoxContainer/TurnLabel
 @onready var next_turn_btn   : Button        = $HBoxContainer/NextTurnButton
@@ -41,6 +43,7 @@ func _refresh() -> void:
 	]
 
 	_update_heat_bar(GameState.heat)
+	_update_awareness_bar(GameState.awareness)
 	_update_control_count()
 	turn_label.text = "Tah: %d" % GameState.turn
 
@@ -71,6 +74,21 @@ func _update_heat_bar(value: int) -> void:
 	else:
 		style.bg_color = Color("#4caf50")
 	heat_bar.add_theme_stylebox_override("fill", style)
+
+
+func _update_awareness_bar(value: int) -> void:
+	awareness_bar.value = value
+	awareness_value.text = "%d%%" % value
+	var style := StyleBoxFlat.new()
+	if value >= 100:
+		style.bg_color = Color("#9c27b0")
+	elif value >= 67:
+		style.bg_color = Color("#f44336")
+	elif value >= 34:
+		style.bg_color = Color("#ff9800")
+	else:
+		style.bg_color = Color("#4caf50")
+	awareness_bar.add_theme_stylebox_override("fill", style)
 
 
 func _update_control_count() -> void:

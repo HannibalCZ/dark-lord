@@ -6,6 +6,9 @@ const CORRUPTION_THRESHOLD = 50
 
 const CORRUPTION_CONTROLLER_PHASE := 3
 
+# Awareness
+const AWARENESS_MAX = 100
+
 # Heat stage thresholdy
 const HEAT_STAGE_1 = 25
 const HEAT_STAGE_2 = 50
