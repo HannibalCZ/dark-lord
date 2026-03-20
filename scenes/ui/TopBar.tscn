@@ -124,6 +124,23 @@ text = "0%"
 [node name="VSeparator3" type="VSeparator" parent="HBoxContainer"]
 layout_mode = 2
 
+[node name="ControlSection" type="HBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ControlIcon" type="Label" parent="HBoxContainer/ControlSection"]
+layout_mode = 2
+text = "\u2691"
+theme_override_font_sizes/font_size = 16
+
+[node name="ControlValue" type="Label" parent="HBoxContainer/ControlSection"]
+layout_mode = 2
+text = "0/8"
+theme_override_font_sizes/font_size = 18
+
+[node name="VSeparator4" type="VSeparator" parent="HBoxContainer"]
+layout_mode = 2
+
 [node name="TurnLabel" type="Label" parent="HBoxContainer"]
 layout_mode = 2
 text = "Tah: 1"
