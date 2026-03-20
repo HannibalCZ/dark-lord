@@ -59,6 +59,33 @@ func regions_owned_by(faction_id: String) -> Array[Region]:
 func count_owned_by(faction_id: String) -> int:
 	return regions_owned_by(faction_id).size()
 
+func count_player_controlled_civilized() -> int:
+	var pid := Balance.PLAYER_FACTION
+	var total: int = 0
+	for r: Region in by_id:
+		if r == null:
+			continue
+		if r.region_kind != Balance.WIN_REGION_KIND:
+			continue
+		# vojenská kontrola
+		if r.owner_faction_id == pid:
+			total += 1
+			continue
+		# korupční kontrola — přímý výpočet fáze, ne přes by_controller cache
+		var phase: int = r.get_corruption_phase_for(pid)
+		if phase >= Balance.WIN_CORRUPTION_PHASE:
+			total += 1
+	return total
+
+func count_total_civilized() -> int:
+	var total: int = 0
+	for r: Region in by_id:
+		if r == null:
+			continue
+		if r.region_kind == Balance.WIN_REGION_KIND:
+			total += 1
+	return total
+
 func count_player_owned_or_controlled() -> int:
 	var pid := Balance.PLAYER_FACTION
 	var owned: Array = by_owner.get(pid, [])
