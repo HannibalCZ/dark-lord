@@ -6,7 +6,7 @@
   },
   "regions": [
 	{ "id": 0,  "name": "Bažiny zatracených", "owner_faction_id": "player",   "region_type": "wasteland", "region_kind": "wildlands" },
-	{ "id": 1,  "name": "Hory stínů",         "owner_faction_id": "neutral",  "region_type": "mountains", "region_kind": "wildlands",
+	{ "id": 1,  "name": "Hory stínů",         "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wildlands",
 	  "secret": { "id": "ancient_ruins", "known": true, "state": "none", "progress": 0 }
 	},
 	{ "id": 2,  "name": "Temné pláně",        "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wildlands",

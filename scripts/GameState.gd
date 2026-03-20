@@ -29,6 +29,8 @@ var doom:int = 0
 var doom_income:int = 0
 var game_over: bool = false
 var game_over_result: Dictionary = {}
+var player_start_region_id: int = -1
+var _start_region_captured: bool = false
 var awareness: int = 0      # stub — MVP nemá awareness mechaniku
 var prev_awareness: int = 0 # předchozí hodnota pro EventsManager
 var pending_events: Array[EventData] = []  # eventy čekající na zobrazení v Radě zasvěcených
@@ -98,7 +100,13 @@ func load_scenario(path: String) -> void:
 	# 1) RESET managers that are scenario-driven
 	game_over = false
 	game_over_result = {}
+	_start_region_captured = false
 	old_heat = heat
+
+	# Startovní region hráče
+	player_start_region_id = int(data.get("player_start_region_id", -1))
+	if player_start_region_id == -1:
+		push_warning("Scenario neobsahuje player_start_region_id")
 	
 	unit_manager.init_empty()
 	faction_manager.init_empty()
@@ -406,30 +414,32 @@ func check_end_conditions() -> Dictionary:
 	if game_over:
 		return game_over_result
 
-	# LOSE: heat
-	if heat >= Balance.HEAT_MAX:
-		game_over = true
-		game_over_result = {
-			"ok": false,
-			"outcome": "lose",
-			"reason": "HEAT dosáhl 100. Začíná závěrečná křížová výprava."
-		}
-		emit_signal("game_ended", game_over_result)
-		return game_over_result
-
-	# WIN: ovládáš dostatek regionů
-	var cnt: int = query.regions.count_player_owned_or_controlled()
-	if cnt >= Balance.WIN_REGIONS_REQUIRED:
+	# WIN: 2/3 civilizovaných regionů pod kontrolou
+	var controlled: int = query.regions.count_player_controlled_civilized()
+	var total_civ: int = query.regions.count_total_civilized()
+	if controlled >= Balance.WIN_REGIONS_REQUIRED:
 		game_over = true
 		game_over_result = {
 			"ok": true,
 			"outcome": "win",
-			"reason": "Ovládáš (vlastnictvím nebo korupcí) %d regionů." % cnt
+			"reason": "Ovládas %d z %d civilizovanych regionu." % [controlled, total_civ]
 		}
 		emit_signal("game_ended", game_over_result)
 		return game_over_result
 
-	return { "ok": false, "outcome": "none", "reason": "" }
+	# LOSE: startovní region obsazen nepřítelem
+	# flag _start_region_captured nastavuje CombatManager (Task 2)
+	if _start_region_captured:
+		game_over = true
+		game_over_result = {
+			"ok": false,
+			"outcome": "lose",
+			"reason": "Tvuj lair padl do rukou nepritele."
+		}
+		emit_signal("game_ended", game_over_result)
+		return game_over_result
+
+	return {"ok": false, "outcome": "none", "reason": ""}
 
 # ---------------------------
 func _defeat_and_cycle() -> String:

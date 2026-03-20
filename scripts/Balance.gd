@@ -13,7 +13,9 @@ const HEAT_STAGE_3 = 76
 const HEAT_MAX = 100  # stage 4 + podmínka prohry
 
 # Podmínka výhry
-const WIN_REGIONS_REQUIRED = 8
+const WIN_REGIONS_REQUIRED = 6  # 2/3 z 8 civilizovaných regionů (zaokrouhleno nahoru)
+const WIN_REGION_KIND = "civilized"  # pouze regiony s tímto kind se počítají pro výhru
+const WIN_CORRUPTION_PHASE = 3       # minimální fáze korupce pro "pod kontrolou"
 
 # Doupata
 const LAIR_INFLUENCE_CONTROL_THRESHOLD = 20

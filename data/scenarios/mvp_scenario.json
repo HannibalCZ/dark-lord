@@ -3,6 +3,7 @@
 	"name": "MVP Scenario",
 	"map_path": "res://data/maps/mvp_map.json"
   },
+  "player_start_region_id": 0,
   "globals": {
 	"turn": 1,
 	"heat": 20,
