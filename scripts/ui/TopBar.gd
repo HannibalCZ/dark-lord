@@ -10,6 +10,7 @@ extends PanelContainer
 @onready var heat_value      : Label         = $HBoxContainer/HeatSection/HeatValue
 @onready var awareness_bar   : ProgressBar   = $HBoxContainer/AwarenessSection/AwarenessBar
 @onready var awareness_value : Label         = $HBoxContainer/AwarenessSection/AwarenessValue
+@onready var infamy_value    : Label         = $HBoxContainer/InfamySection/InfamyValue
 @onready var control_value   : Label         = $HBoxContainer/ControlSection/ControlValue
 @onready var turn_label      : Label         = $HBoxContainer/TurnLabel
 @onready var next_turn_btn   : Button        = $HBoxContainer/NextTurnButton
@@ -43,6 +44,7 @@ func _refresh() -> void:
 	]
 
 	_update_heat_bar(GameState.heat)
+	_update_infamy(int(faction.resources.get("infamy", 0)))
 	_update_awareness_bar(GameState.awareness)
 	_update_control_count()
 	turn_label.text = "Tah: %d" % GameState.turn
@@ -89,6 +91,18 @@ func _update_awareness_bar(value: int) -> void:
 	else:
 		style.bg_color = Color("#4caf50")
 	awareness_bar.add_theme_stylebox_override("fill", style)
+
+
+func _update_infamy(value: int) -> void:
+	infamy_value.text = str(value)
+	if value >= 75:
+		infamy_value.add_theme_color_override("font_color", Color("#9c27b0"))
+	elif value >= 50:
+		infamy_value.add_theme_color_override("font_color", Color("#e94560"))
+	elif value >= 25:
+		infamy_value.add_theme_color_override("font_color", Color("#ff9800"))
+	else:
+		infamy_value.add_theme_color_override("font_color", Color("#aaaaaa"))
 
 
 func _update_control_count() -> void:

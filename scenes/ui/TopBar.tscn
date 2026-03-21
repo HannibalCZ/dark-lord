@@ -124,6 +124,23 @@ text = "0%"
 [node name="VSeparator3" type="VSeparator" parent="HBoxContainer"]
 layout_mode = 2
 
+[node name="InfamySection" type="HBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="InfamyIcon" type="Label" parent="HBoxContainer/InfamySection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "\u2620"
+
+[node name="InfamyValue" type="Label" parent="HBoxContainer/InfamySection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "0"
+
+[node name="VSeparator6" type="VSeparator" parent="HBoxContainer"]
+layout_mode = 2
+
 [node name="AwarenessSection" type="HBoxContainer" parent="HBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
