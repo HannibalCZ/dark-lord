@@ -662,7 +662,7 @@ const ORG = {
 			},
 			"ritual_empowerment": {
 				"display_name": "Rituální posílení",
-				"effects": { "mana": 2, "dark_action_empowered": true }
+				"effects": { "mana": 2, "infamy": 1 }
 			}
 		}
 	}

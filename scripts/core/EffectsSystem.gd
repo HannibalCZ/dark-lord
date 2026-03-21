@@ -95,9 +95,8 @@ func _apply_globals(e: Dictionary, gs: GameStateSingleton, logs: Array[Dictionar
 	# při výpočtu šance úspěchu mise.
 	# EffectsSystem ho dostane pouze pokud org aplikuje end-of-turn efekty — tam se ignoruje.
 
-	# TODO: org passive effect — DarkActionsManager bude cist z OrgManager zda je region empowered
-	if e.has("dark_action_empowered"):
-		push_warning("EffectsSystem: dark_action_empowered not yet implemented")
+	# dark_action_empowered — nahrazeno doktrínou "ritual_empowerment"
+	# která generuje +1 infamy/tah přes standardní "infamy" klíč v EffectsSystem
 
 
 func _apply_region(e: Dictionary, region: Region, source_faction_id: String, gs: GameStateSingleton, logs: Array[Dictionary]) -> void:
