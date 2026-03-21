@@ -90,9 +90,10 @@ func _apply_globals(e: Dictionary, gs: GameStateSingleton, logs: Array[Dictionar
 			gs.awareness + int(e["awareness"]),
 			0, Balance.AWARENESS_MAX)
 
-	# TODO: org passive effect — OrgManager bude poskytovat bonus pri vyhodnoceni mise
-	if e.has("mission_bonus"):
-		push_warning("EffectsSystem: mission_bonus not yet implemented")
+	# mission_bonus se nezpracovává zde —
+	# aplikuje se přímo v MissionManager._compute_mission_success()
+	# při výpočtu šance úspěchu mise.
+	# EffectsSystem ho dostane pouze pokud org aplikuje end-of-turn efekty — tam se ignoruje.
 
 	# TODO: org passive effect — DarkActionsManager bude cist z OrgManager zda je region empowered
 	if e.has("dark_action_empowered"):

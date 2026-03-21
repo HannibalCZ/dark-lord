@@ -119,7 +119,15 @@ func _compute_mission_success(mission_key: String, unit: Unit, region: Region) -
 		else:
 			region_delta += delta
 
-	# 3) spočítat výslednou šanci
+	# 3) mission_bonus ze Shadow Network doktríny "informants"
+	var org: Dictionary = game_state.org_manager.get_org_in_region(region.id)
+	if not org.is_empty():
+		if org["org_type"] == "shadow_network":
+			var effects: Dictionary = Balance.get_org_effects(org["org_type"], org["doctrine"])
+			if effects.has("mission_bonus"):
+				region_delta += float(effects["mission_bonus"]) / 100.0
+
+	# 4) spočítat výslednou šanci
 	var total_chance: float = base + region_delta + unit_delta
 	total_chance = clamp(total_chance, Balance.MISSION_CHANCE_MIN, Balance.MISSION_CHANCE_MAX)
 
