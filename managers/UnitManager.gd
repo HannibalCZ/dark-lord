@@ -2,16 +2,10 @@ extends Resource
 class_name UnitManager
 
 var game_state: GameStateSingleton
-var region_manager
-var faction_manager
 
 var units: Array[Unit] = []
 var unit_limit: int = 3
 var _id_counter:int = 0
-
-func setup(_region_manager, _faction_manager) -> void:
-	region_manager = _region_manager
-	faction_manager = _faction_manager
 
 func init_empty() -> void:
 	units.clear()
@@ -57,7 +51,7 @@ func recruit_unit(faction_id:String, unit_key:String, spawn_region_id:int) -> Di
 		return _result_err("Neznámý typ jednotky: %s" % unit_key)
 
 	# 3) frakce
-	var fac: Faction = faction_manager.get_faction(faction_id)
+	var fac: Faction = game_state.faction_manager.get_faction(faction_id)
 	if fac == null:
 		return _result_err("Neznámá frakce: %s" % faction_id)
 
@@ -101,7 +95,7 @@ func spawn_unit_free(faction_id:String, unit_key:String, spawn_region_id:int) ->
 		return _result_err("Lair: neznámý typ jednotky: %s" % unit_key)
 
 	# 2) zkontroluj frakci
-	var fac: Faction = faction_manager.get_faction(faction_id)
+	var fac: Faction = game_state.faction_manager.get_faction(faction_id)
 	if fac == null:
 		return _result_err("Lair: neznámá frakce: %s" % faction_id)
 
@@ -130,20 +124,7 @@ func _next_unit_id() -> int:
 	return _id_counter
 
 func can_move(unit_id:int, target_region_id:int) -> Dictionary:
-	if game_state != null and game_state.query != null:
-		return game_state.query.units.can_move(unit_id, target_region_id)
-	# fallback původní logika (dočasně)
-	var u := game_state.query.units.get_by_id(unit_id)
-	if u == null:
-		return { "ok": false, "reason": "Jednotka neexistuje." }
-	if u.state == "lost":
-		return { "ok": false, "reason": "Jednotka je ztracena." }
-	if u.moves_left <= 0:
-		return { "ok": false, "reason": "Jednotce došly tahy." }
-	if not region_manager.are_adjacent(u.region_id, target_region_id):
-		return { "ok": false, "reason": "Cílový region není sousední." }
-
-	return { "ok": true }
+	return game_state.query.units.can_move(unit_id, target_region_id)
 
 func apply_post_move_effects(unit_id:int, from_region:int, to_region:int) -> Dictionary:
 	var u : Unit = null
@@ -153,7 +134,7 @@ func apply_post_move_effects(unit_id:int, from_region:int, to_region:int) -> Dic
 	if u == null:
 		return { "ok": false, "reason": "Jednotka neexistuje." }
 
-	var r: Region = region_manager.get_region(to_region)
+	var r: Region = game_state.region_manager.get_region(to_region)
 	if r == null:
 		return { "ok": false, "reason": "Cílový region neexistuje." }
 
@@ -198,8 +179,8 @@ func move_unit(unit_id:int, target_region_id:int) -> Dictionary:
 	# 3) post-move efekty (např. změna vlastnictví regionu)
 	var post: Dictionary = apply_post_move_effects(unit_id, from_region_id, target_region_id)
 
-	var from_r : Region = region_manager.get_region(from_region_id)
-	var to_r : Region = region_manager.get_region(target_region_id)
+	var from_r : Region = game_state.region_manager.get_region(from_region_id)
+	var to_r   : Region = game_state.region_manager.get_region(target_region_id)
 	var from_name := from_r.name if from_r != null else str(from_region_id)
 	var to_name := to_r.name if to_r != null else str(target_region_id)
 
