@@ -59,7 +59,6 @@ func _ready() -> void:
 	query.rebuild_indexes()
 	commands = GameCommands.new(self)
 	
-	unit_manager.setup(region_manager, faction_manager)
 	# případné navázání signálů (UI naslouchá přes GameState)
 	spell_manager.magic_used.connect(func(): emit_signal("game_updated"))
 	building_manager.buildings_changed.connect(func(): emit_signal("game_updated"))
