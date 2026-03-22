@@ -322,10 +322,12 @@ func advance_turn() -> void:
 	# =========================
 	# F) Rada zasvěcených — generuj eventy z tohoto tahu
 	#    MUSÍ být před old_heat = heat (EventsManager čte starou vs novou hodnotu)
-	#    Tah 1 přeskočíme — uvítací event byl zobrazen při startu hry
+	#    generate_events_for_turn() voláme VŽDY — _collected_player_results.clear()
+	#    se musí provést i v tahu 1, jinak se výsledky tahu 1 mísí s tahem 2.
+	#    Emit do UI přeskočíme v tahu 1 — uvítací event byl zobrazen při startu hry.
 	# =========================
+	pending_events = events_manager.generate_events_for_turn()
 	if turn > 1:
-		pending_events = events_manager.generate_events_for_turn()
 		EventBus.council_events_ready.emit(pending_events)
 
 	old_heat = heat
