@@ -45,12 +45,19 @@ func _pick_profile(u: Unit) -> String:
 	if not fixed.is_empty():
 		return fixed
 
-	# 2) Speciální typy s pevným profilem
+	# 2) Speciální typy s pevným nebo dynamickým profilem
 	if u.unit_key == "inquisitor":
 		if game_state.awareness >= Balance.AWARENESS_INQUISITOR_THRESHOLD:
 			return "investigator"        # globální pátrání
 		else:
 			return "investigator_local"  # pouze vlastní provincie
+
+	if u.unit_key == "orc_band":
+		var lair_region: Region = _find_lair_region_for_unit(u)
+		if lair_region != null and lair_region.lair_control == "player":
+			return "lair_raider"   # lair pod hráčovým vlivem → útočí na civilizované regiony
+		else:
+			return "defender"      # lair je neutral/ai → stojí na místě a brání
 
 	# 3) Faction behavior: paladin_army a ostatní bez fixed profile
 	var faction: Faction = game_state.faction_manager.get_faction(u.faction_id)
@@ -117,3 +124,16 @@ func _ai_execute_action(u: Unit, target_id: int, prof: Dictionary) -> void:
 	if not game_state.mission_manager.can_do_mission(u, region, action_key):
 		return
 	game_state.mission_manager.plan_ai_mission(u, region, action_key)
+
+# Najde region s lairem jehož faction_id odpovídá frakci jednotky.
+# Vrátí první takový region nebo null — používá se pro určení stavu lairu orc_band.
+func _find_lair_region_for_unit(u: Unit) -> Region:
+	for region in game_state.region_manager.regions:
+		if not region.has_lair():
+			continue
+		var lair_conf: Dictionary = Balance.LAIR.get(region.lair_id, {})
+		if lair_conf.is_empty():
+			continue
+		if String(lair_conf.get("faction_id", "")) == u.faction_id:
+			return region
+	return null

@@ -140,7 +140,7 @@ func _matches_filters(region_id: int, actor_faction_id: String, filters: Diction
 		if String(r.region_kind) != String(filters["region_kind"]):
 			return false
 
-	# owner_rule: any/self/not_self
+	# owner_rule: any/self/not_self/not_player_or_lair_faction
 	var owner_rule: String = String(filters.get("owner_rule", "any"))
 	match owner_rule:
 		"any":
@@ -149,6 +149,12 @@ func _matches_filters(region_id: int, actor_faction_id: String, filters: Diction
 			if r.owner_faction_id != actor_faction_id:
 				return false
 		"not_self":
+			if r.owner_faction_id == actor_faction_id:
+				return false
+		"not_player_or_lair_faction":
+			# region nesmí patřit hráči ani frakci aktéra (= lair faction)
+			if r.owner_faction_id == Balance.PLAYER_FACTION:
+				return false
 			if r.owner_faction_id == actor_faction_id:
 				return false
 		_:

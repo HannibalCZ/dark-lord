@@ -364,7 +364,8 @@ const UNIT = {
 		"upkeep_cost": { "gold": 2 },
 		"moves": 1,
 		"can_do": ["raid","explore"],
-		"ai_profile": "raider",   # fixní profil — vždy raider bez ohledu na heat/faction behavior
+		# ai_profile záměrně chybí — _pick_profile() v AIManager řídí chování dynamicky
+		# podle lair_control regionu lairu (defender vs lair_raider)
 	},
 	"vampire": {
 		"display_name": "Upír",
@@ -458,6 +459,17 @@ const AI_PROFILE = {
 		},
 		"move_towards_target": true,
 		"action_at_target": "purge"
+	},
+	"lair_raider": {
+		"target": {
+			"select": "nearest",
+			"filters": {
+				"region_kind": "civilized",
+				"owner_rule": "not_player_or_lair_faction"
+			}
+		},
+		"move_towards_target": true,
+		"action_at_target": "raid"
 	}
 }
 

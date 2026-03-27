@@ -543,28 +543,33 @@ func process_lairs_end_of_turn() -> void:
 		if spawn_unit_id == "":
 			continue
 
-		var max_units:int = int(lair_conf.get("max_units", 0))
+		var max_units: int = int(lair_conf.get("max_units", 0))
 		if max_units <= 0:
 			continue
 
-		# spočítáme, kolik jednotek z lairu už v regionu je
-		var count_in_region:int = 0
-		for u in unit_manager.units:
-			if u.region_id == region.id and u.state != "lost":
-				count_in_region += 1
+		var lair_faction_id: String = String(lair_conf.get("faction_id", "neutral"))
+
+		# Počítáme pouze jednotky patřící frakci lairu v tomto regionu
+		var count_in_region: int = unit_manager.units.filter(
+			func(u): return u.region_id == region.id
+				and u.faction_id == lair_faction_id
+				and u.state != "lost"
+		).size()
 
 		if count_in_region >= max_units:
 			continue
 
-		# pro jednoduchost spawni 1 jednotku KAŽDÉ KOLO dokud nejsi na limitu
-		var faction_id:String = lair_conf.get("faction_id", "neutral")
-		var spawn_res := unit_manager.spawn_unit_free(faction_id, spawn_unit_id, region.id)
+		# spawn_rate: spawni jen každých N tahů
+		var spawn_rate: int = int(lair_conf.get("spawn_rate", 1))
+		region.lair_spawn_counter += 1
+		if region.lair_spawn_counter < spawn_rate:
+			continue
+		region.lair_spawn_counter = 0
+
+		var spawn_res := unit_manager.spawn_unit_free(lair_faction_id, spawn_unit_id, region.id)
 		for le in spawn_res.get("logs"):
 			_log(le)
 		_process_domain_events(spawn_res.get("events"))
-		
-		# můžeš si do jednotky uložit odkud pochází:
-		#new_unit.source_lair_id = region.lair_id
 
 func process_ai_spawning() -> void:
 	for faction_id in Balance.AI_SPAWN:
