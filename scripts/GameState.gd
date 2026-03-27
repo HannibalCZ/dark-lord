@@ -554,14 +554,10 @@ func process_lairs_end_of_turn() -> void:
 
 		var lair_faction_id: String = String(lair_conf.get("faction_id", "neutral"))
 
-		# Počítáme pouze jednotky patřící frakci lairu v tomto regionu
-		var count_in_region: int = unit_manager.units.filter(
-			func(u): return u.region_id == region.id
-				and u.faction_id == lair_faction_id
-				and u.state != "lost"
-		).size()
+		# Počítáme živé jednotky frakce lairu globálně (přes UnitQuery cache)
+		var count_alive: int = query.units.active_count_for_faction(lair_faction_id)
 
-		if count_in_region >= max_units:
+		if count_alive >= max_units:
 			continue
 
 		# spawn_rate: spawni jen každých N tahů
