@@ -263,7 +263,16 @@ func _collect_heat_awareness_events(events: Array[EventData]) -> void:
 			summary
 		))
 
-	# Awareness (stub — v MVP zatím vždy 0)
+	# Awareness — práh 50 (Inkvizitoři zostřují pohled)
+	if old_a < 50 and new_a >= 50:
+		events.append(EventData.create(
+			Balance.ADVISOR_VEZIR,
+			Balance.EVENT_IMPORTANT,
+			"Pane, nase aktivity zacaly pritahovat nebezpecnou pozornost. Inkvizitoři zostřují svůj pohled — doporucuji opatrnost.",
+			"Awareness prekrocila 50 — Inkvizitoři zmenili chovani."
+		))
+
+	# Awareness — obecná změna
 	if new_a != old_a:
 		var priority: String = Balance.EVENT_IMPORTANT if new_a > old_a else Balance.EVENT_ROUTINE
 		var narrative: String = (

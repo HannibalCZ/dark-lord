@@ -131,7 +131,22 @@ func apply_economy_cycle() -> Array[Dictionary]:
 			]
 		})
 
+	_apply_corruption_awareness()
+
 	return logs
+
+func _apply_corruption_awareness() -> void:
+	for region in game_state.region_manager.regions:
+		if region == null:
+			continue
+		var phase: int = region.get_corruption_phase_for(Balance.PLAYER_FACTION)
+		if phase < Balance.AWARENESS_CORRUPTION_PHASE_MIN:
+			continue
+		var delta: int = Balance.AWARENESS_CORRUPTION_PH3
+		if phase >= 4:
+			delta = Balance.AWARENESS_CORRUPTION_PH4
+		var ctx := EffectContext.make(game_state, null, Balance.PLAYER_FACTION)
+		game_state.effects_system.apply({"awareness": delta}, ctx)
 
 func _tick_all_region_tags(regions: Array) -> void:
 	for region in regions:

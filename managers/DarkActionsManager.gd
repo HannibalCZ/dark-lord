@@ -141,6 +141,11 @@ func cast(faction_id:String, action_key:String, region_id:int = -1) -> Dictionar
 		"text": "🔮 Seslána temná akce: %s" % display_name
 	})
 
+	var global_fx: Dictionary = Balance.DARK_ACTION_GLOBAL_EFFECTS
+	if not global_fx.is_empty():
+		var gctx := EffectContext.make(game_state, null, Balance.PLAYER_FACTION)
+		game_state.effects_system.apply(global_fx, gctx)
+
 	return {
 		"ok": true,
 		"action": action_key,
