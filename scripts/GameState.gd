@@ -319,6 +319,9 @@ func advance_turn() -> void:
 	# HEAT reakce
 	_check_heat_thresholds(old_heat, heat)
 
+	# AI spawn (po heat thresholdech, aby paladin viděl aktuální stav)
+	process_ai_spawning()
+
 	# =========================
 	# F) Rada zasvěcených — generuj eventy z tohoto tahu
 	#    MUSÍ být před old_heat = heat (EventsManager čte starou vs novou hodnotu)
@@ -562,6 +565,67 @@ func process_lairs_end_of_turn() -> void:
 		
 		# můžeš si do jednotky uložit odkud pochází:
 		#new_unit.source_lair_id = region.lair_id
+
+func process_ai_spawning() -> void:
+	for faction_id in Balance.AI_SPAWN:
+		var cfg: Dictionary = Balance.AI_SPAWN[faction_id]
+		var faction: Faction = faction_manager.get_faction(faction_id)
+		if faction == null:
+			continue
+
+		var trigger_value: int = heat if cfg["trigger"] == "heat" else awareness
+		faction.ai_regular_spawns_enabled = trigger_value >= int(cfg["threshold"])
+
+		if not faction.ai_regular_spawns_enabled:
+			faction.spawn_counter = 0
+			continue
+
+		var current_count: int = _count_faction_units(faction_id, String(cfg["unit_key"]))
+		if current_count >= int(cfg["unit_limit"]):
+			continue
+
+		faction.spawn_counter += 1
+		if faction.spawn_counter < int(cfg["spawn_rate"]):
+			continue
+
+		faction.spawn_counter = 0
+		_spawn_faction_unit(faction_id, String(cfg["unit_key"]))
+
+func _count_faction_units(faction_id: String, unit_key: String) -> int:
+	var count: int = 0
+	for u in unit_manager.units:
+		if u.faction_id == faction_id \
+				and u.unit_key == unit_key \
+				and u.state != "lost":
+			count += 1
+	return count
+
+func _spawn_faction_unit(faction_id: String, unit_key: String) -> void:
+	var region_id: int = -1
+
+	# 1) první region ve vlastnictví frakce
+	for region in region_manager.regions:
+		if region.owner_faction_id == faction_id:
+			region_id = region.id
+			break
+
+	# 2) fallback: region kde má frakce živou jednotku
+	if region_id < 0:
+		for u in unit_manager.units:
+			if u.faction_id == faction_id and u.state != "lost":
+				region_id = u.region_id
+				break
+
+	# 3) nikde — přeskočíme
+	if region_id < 0:
+		push_warning("process_ai_spawning: frakce '%s' nema zadny region ani jednotku, spawn preskocen." % faction_id)
+		return
+
+	var spawn_res := unit_manager.spawn_unit_free(faction_id, unit_key, region_id)
+	for le in spawn_res.get("logs", []):
+		_log(le)
+	_process_domain_events(spawn_res.get("events", []))
+	EventBus.ai_unit_spawned.emit(faction_id, unit_key, region_id)
 
 func apply_command_result(res: Dictionary) -> Dictionary:
 	# jednotné místo: logs + events + UI signal

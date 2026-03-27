@@ -28,6 +28,7 @@ var unit_limit: int = 1
 
 var ai_regular_spawns_enabled: bool = false
 var ai_spawn_unit: String = ""
+var spawn_counter: int = 0
 
 func change_resource(kind:String, amount:float) -> void:
 	if not resources.has(kind):
