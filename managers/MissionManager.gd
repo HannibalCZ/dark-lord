@@ -193,6 +193,12 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 		# jednotka je zaneprázdněná pouze během plánování
 		unit.state = "healthy"
 
+		if unit.faction_id == Balance.PLAYER_FACTION:
+			var global_fx: Dictionary = Balance.MISSION_GLOBAL_SUCCESS_EFFECTS
+			if not global_fx.is_empty():
+				var gctx := EffectContext.make(game_state, null, Balance.PLAYER_FACTION)
+				game_state.effects_system.apply(global_fx, gctx)
+
 		return {
 			"ok": true,
 			"type": "mission_success",
@@ -213,6 +219,12 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 
 		# jednotka je ztracená
 		unit.state = "lost"
+
+		if unit.faction_id == Balance.PLAYER_FACTION:
+			var global_fx: Dictionary = Balance.MISSION_GLOBAL_FAIL_EFFECTS
+			if not global_fx.is_empty():
+				var gctx := EffectContext.make(game_state, null, Balance.PLAYER_FACTION)
+				game_state.effects_system.apply(global_fx, gctx)
 
 		return {
 			"ok": false,

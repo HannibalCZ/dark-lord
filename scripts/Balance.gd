@@ -602,6 +602,14 @@ const LAIR = {
 	},
 }
 
+# --- Awareness zdroje ---
+const MISSION_GLOBAL_SUCCESS_EFFECTS = {"awareness": 1}
+const MISSION_GLOBAL_FAIL_EFFECTS    = {"awareness": 2}
+const DARK_ACTION_GLOBAL_EFFECTS     = {"awareness": 1}
+const AWARENESS_CORRUPTION_PH3       = 1
+const AWARENESS_CORRUPTION_PH4       = 2
+const AWARENESS_CORRUPTION_PHASE_MIN = 3
+
 # --- Rada zasvěcených ---
 const ADVISOR_KAPITAN = "kapitan"
 const ADVISOR_VEZIR   = "vezir"
