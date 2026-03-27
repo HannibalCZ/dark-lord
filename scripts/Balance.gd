@@ -8,6 +8,7 @@ const CORRUPTION_CONTROLLER_PHASE := 3
 
 # Awareness
 const AWARENESS_MAX = 100
+const AWARENESS_INQUISITOR_THRESHOLD = 50
 
 # Heat stage thresholdy
 const HEAT_STAGE_1 = 25
@@ -446,6 +447,14 @@ const AI_PROFILE = {
 		"target": {
 			"select": "highest_corruption"
 			# žádné filters — hledá v celém světě region s nejvyšší hráčskou korupcí
+		},
+		"move_towards_target": true,
+		"action_at_target": "purge"
+	},
+	"investigator_local": {
+		"target": {
+			"select": "highest_corruption",
+			"filters": { "owner_rule": "self" }
 		},
 		"move_towards_target": true,
 		"action_at_target": "purge"
