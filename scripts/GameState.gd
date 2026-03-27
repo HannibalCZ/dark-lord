@@ -327,8 +327,8 @@ func advance_turn() -> void:
 	#    Emit do UI přeskočíme v tahu 1 — uvítací event byl zobrazen při startu hry.
 	# =========================
 	pending_events = events_manager.generate_events_for_turn()
-	if turn > 1:
-		EventBus.council_events_ready.emit(pending_events)
+	#if turn > 1:
+	EventBus.council_events_ready.emit(pending_events)
 
 	old_heat = heat
 	prev_awareness = awareness

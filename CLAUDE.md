@@ -3,7 +3,7 @@
 ## O hře
 Tahová strategie kde hráč hraje za Temného pána ovládajícího svět skrze stínové organizace, agenty a temné rituály. Hráč nevládne otevřeně — operuje ze stínu. Síly dobra (AI frakce) reagují na Heat, Infamy a Awareness.
 
-GDD: `dark_lord_gdd_v8.docx` (referenční dokument pro veškerý design)
+GDD: `dark_lord_gdd_v14.docx` (referenční dokument pro veškerý design)
 
 ## Stack
 - Godot 4.x, GDScript
@@ -47,6 +47,7 @@ Každý manažer vlastní svou doménu. Nekomunikují přímo — používají `
 | `BuildingManager` | Budovy v regionech |
 | `SpellManager` | Kouzla a rituály |
 | `LogManager` | Herní log — co se stalo v tahu |
+| `OrgManager` | Stínové organizace — zakládání, doktríny, pasivní efekty |
 
 ### EventBus (`scripts/core/EventBus.gd`)
 Centrální signálová sběrnice. Veškerá mezimanažerská komunikace jde přes signály na EventBusu — ne přímými voláními.
@@ -62,6 +63,27 @@ RegionManager.on_region_corrupted(region_id)
 ### EffectsSystem (`scripts/core/EffectsSystem.gd`)
 Zpracovává efekty akcí (výsledky misí, Dark Actions, kouzla). Efekty jsou data-driven přes `EffectContext`.
 
+### EffectsSystem je jediné místo kde se mění herní stav
+Veškeré změny gold, mana, research, heat, doom, awareness, infamy
+jdou výhradně přes EffectsSystem.apply(). Manažeři orchestrují
+KDY a CO — nikdy nemění proměnné přímo.
+
+Pro globální efekty bez regionu:
+```gdscript
+var ctx := EffectContext.make(game_state, null, faction_id)
+effects_system.apply({"gold": amount}, ctx)
+```
+
+Výjimky s TODO komentářem v kódu:
+- `dark_actions_left` — AP systém zatím mimo EffectsSystem
+- `unit_limit` — strukturální limit zatím mimo EffectsSystem
+
+### Ekonomické vs. neekonomické efekty organizací
+EconomicManager vlastní gold/mana změny včetně org příjmů.
+OrgManager předává EffectsSystem pouze neekonomické efekty
+(heat, awareness, infamy). Nikdy neaplikuj gold/mana org efektů
+přes EffectsSystem — způsobí double-application.
+
 ### Command/Query pattern (`scripts/core/command/`, `scripts/core/query/`)
 - `GameCommand` — mutace stavu (akce které mění hru)
 - `GameQuery`, `RegionQuery`, `UnitQuery` — čtení stavu bez side effects
@@ -74,11 +96,11 @@ Zpracovává efekty akcí (výsledky misí, Dark Actions, kouzla). Efekty jsou d
 ## Herní smyčka (Game Loop)
 
 ```
-1. RADA ZASVĚCENÝCH     ← eventy z minulého tahu (TODO)
-2. PLÁNOVÁNÍ HRÁČE      ← pohyb agentů, mise, dark actions, stavba
-3. AI FÁZE              ← AIManager vykoná akce všech frakcí
-4. VYHODNOCENÍ          ← mise, boje, organizace, ekonomika
-5. ZPĚTNÁ VAZBA         ← LogManager, UI update
+1. RADA ZASVĚCENÝCH     <- eventy z minulého tahu
+2. PLÁNOVÁNÍ HRÁČE      <- pohyb agentů, mise, dark actions, stavba
+3. AI FÁZE              <- AIManager vykoná akce všech frakcí
+4. VYHODNOCENÍ          <- mise, boje, organizace, ekonomika
+5. ZPĚTNÁ VAZBA         <- LogManager, UI update
 ```
 
 Tah je **simultánní** — hráč plánuje, pak se vše vyhodnotí najednou s AI.
@@ -89,7 +111,7 @@ Tah je **simultánní** — hráč plánuje, pak se vše vyhodnotí najednou s A
 
 ### Region (`scripts/models/RegionData.gd`)
 Pohyb je definován přes **sousedství** (`neighbors: Array[int]`), ne přes souřadnice.
-MVP používá čtvercovou mřížku 4×3 (12 regionů), ale architektura musí být připravena na přechod na graf uzlů (Crusader Kings styl).
+MVP používá čtvercovou mřížku 4x3 (12 regionů), ale architektura musí být připravena na přechod na graf uzlů (Crusader Kings styl).
 
 Typy regionů: `CITY`, `VILLAGE`, `WILDERNESS`, `MANA_SOURCE`, `RUIN`
 
@@ -103,31 +125,59 @@ Data-driven. Každá mise má `success_chance`, `success_effects[]`, `fail_effec
 
 ## Stav implementace
 
-### Hotovo (základně)
-- [x] Mapa a regiony
+### Hotovo
+- [x] Mapa a regiony (12 regionů, neighbors-based pohyb)
 - [x] Agenti a pohyb
-- [x] Mise agentů
-- [x] Game loop (tahy, fáze)
-- [x] Zdroje (zlato, mana, RP)
-- [x] Heat / Infamy / Awareness
-- [x] UI / HUD základní struktura
-- [x] AI turn pipeline přesunuta do AIManager (commit 1b7cf88)
-      - AIManager.execute_ai_turn() — vstupní bod, volán z GameState.advance_turn()
-      - MissionManager je čistě sdílená vrstva: plan_ai_mission(), resolve_all(), can_do_mission()
-      - GameState volá ai_manager.execute_ai_turn() místo mission_manager.assign_ai_actions()
-- [x] AI profily odděleny od unit dat — Balance.AI_PROFILE samostatně,
-      jednotky mají allowed_missions místo ai_profile (Task 2)
-- [x] Behavior enum místo boolean flags na Faction (Task 3)
-- [x] AI profily pro paladin_army a inquisitor (Task 4)
-- [x] Narativní eventy — Rada zasvěcených (GDD sekce 12)
+- [x] Mise agentů (data-driven, EffectsSystem pipeline)
+- [x] Game loop (tahy, fáze, advance_turn())
+- [x] Zdroje (zlato, mana, RP, research)
+- [x] Heat / Infamy / Awareness — všechny zobrazeny v TopBar
+- [x] UI / HUD — TopBar se zdroji, ikonkami a progress bary,
+      pravý panel se sekcemi (RegionSection, OrgSection,
+      ActionsSection, MovementSection)
+- [x] AI systém
+      - AIManager.execute_ai_turn() — vstupní bod
+      - Balance.AI_PROFILE — čtyři profily (defender, raider,
+        lair_hunter, investigator)
+      - Behavior enum na Faction (PASSIVE/PATROLLING/
+        AGGRESSIVE/COORDINATED)
+      - RegionQuery rozšířen o has_lair a highest_corruption
+- [x] Narativní eventy — Rada zasvěcených
+      - EventData model, EventsManager, CouncilPanel
+      - Sbírá: pohyby AI, výsledky misí, změny Heat,
+        výsledky bitev, zničení organizací
+      - Závěrečné eventy při výhře/prohře
+- [x] Stínové organizace
+      - Balance.ORG — tři typy, šest doktrín
+      - OrgManager — zakládání, pasivní efekty,
+        set_doctrine(), get_org_display_data()
+      - Zakládání přes Dark Action (agent jako cena)
+      - Zničení přes purge misi nebo vojenské obsazení
+      - OrgSection v pravém panelu MapTab
+      - mission_bonus (Shadow Network) funkční
+      - infamy generování (Kult) funkční
+- [x] Vítězné a prohrané podmínky
+      - Výhra: 2/3 civilizovaných regionů (region_kind ==
+        "civilized") pod kontrolou (vojensky nebo korupce fáze >= 3)
+      - Prohra: obsazení startovního regionu nepřítelem
+      - Počítadlo v TopBar, blokování tlačítka po konci hry
+      - Závěrečné eventy v Radě zasvěcených
+- [x] Technický dluh
+      - UnitManager odstraněny přímé reference na jiné manažery
+      - Veškeré herní efekty přes EffectsSystem
 
-### Zbývá implementovat
-- [ ] Stínové organizace + doktríny (GDD sekce 4.3–4.4)
-- [ ] Mid-game krize — Zrada, RDL, Inkvizitorská kampaň (GDD sekce 14)
+### Zbývá implementovat (MVP scope)
 - [ ] Dark Lord progression strom (GDD sekce 15)
-- [ ] Archetypy + vítězné podmínky (GDD sekce 13)
-- [ ] Artefakty
-- [ ] Combat bonusy (MVP základ existuje, bonusy chybí)
+- [ ] AI vylepšení — Inkvizice strategické chování
+- [ ] Mid-game krize (GDD sekce 14) — odloženo
+- [ ] Archetypy (GDD sekce 13) — odloženo
+- [ ] Artefakty (GDD sekce 15.4) — odloženo
+
+### Známé TODO v kódu
+- DarkActionsManager: AP cost přes EffectsSystem (klíč "ap")
+- BuildingManager: unit_limit přes EffectsSystem
+- CombatManager: N-way combat (MVP předpokládá 2 frakce)
+- MapTab: Region.display_name a get_corruption_percent() chybí
 
 ---
 
@@ -157,6 +207,8 @@ Data-driven. Každá mise má `success_chance`, `success_effects[]`, `fail_effec
 ## Poznámky pro Claude Code
 
 - Před každou větší změnou se zeptej na aktuální stav relevantního manažera
-- GDD je autoritativní zdroj pro design — pokud je něco nejasné, odkazuj se na konkrétní sekci
+- GDD `dark_lord_gdd_v14.docx` je autoritativní zdroj pro design
 - MVP combat = porovnání čísel (CombatManager) — netvoř komplexnější systém bez pokynu
 - `MapTab_old.gd` existuje záměrně jako reference — nemaž
+- Balance.ORG struktura: inline efekty pod klíčem doktríny, lookup přes Balance.get_org_effects()
+- Organizace se zakládají přes Dark Action — ne misí
