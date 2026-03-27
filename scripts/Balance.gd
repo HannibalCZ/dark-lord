@@ -676,5 +676,23 @@ const ORG = {
 	}
 }
 
+# --- AI Spawning ---
+const AI_SPAWN = {
+	"paladin": {
+		"unit_key":   "paladin_army",
+		"trigger":    "heat",
+		"threshold":  76,
+		"spawn_rate": 4,
+		"unit_limit": 3
+	},
+	"elf": {
+		"unit_key":   "inquisitor",
+		"trigger":    "awareness",
+		"threshold":  70,
+		"spawn_rate": 3,
+		"unit_limit": 2
+	}
+}
+
 static func get_org_effects(org_type: String, doctrine: String) -> Dictionary:
 	return ORG[org_type]["doctrines"][doctrine]["effects"]

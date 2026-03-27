@@ -18,6 +18,9 @@ var _collected_combat_results: Array[Dictionary] = []
 # Znicene organizace z aktuálního tahu — sbíráme přes EventBus.
 var _collected_org_events: Array[Dictionary] = []
 
+# Spawn eventů AI jednotek z aktuálního tahu — sbíráme přes EventBus.
+var _collected_spawn_events: Array[Dictionary] = []
+
 # ---------------------------
 func init(gs: GameStateSingleton) -> void:
 	game_state = gs
@@ -25,6 +28,7 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.combat_resolved.connect(_on_combat_resolved)
 	EventBus.org_destroyed.connect(_on_org_destroyed)
 	EventBus.org_doctrine_changed.connect(_on_org_doctrine_changed)
+	EventBus.ai_unit_spawned.connect(_on_ai_unit_spawned)
 	GameState.game_ended.connect(_on_game_ended)
 
 # ---------------------------
@@ -38,6 +42,7 @@ func generate_events_for_turn() -> Array[EventData]:
 	_collect_combat_events(events)
 	_collect_heat_awareness_events(events)
 	_collect_org_events(events)
+	_collect_spawn_events(events)
 
 	_collected_player_results.clear()
 
@@ -405,6 +410,51 @@ func _collect_org_events(events: Array[EventData]) -> void:
 # ---------------------------
 func _on_org_destroyed(region_id: int) -> void:
 	_collected_org_events.append({ "region_id": region_id })
+
+# ---------------------------
+# ZDROJ 6 — Spawn AI jednotek (Temny kapitan)
+# ---------------------------
+func _collect_spawn_events(events: Array[EventData]) -> void:
+	for e in _collected_spawn_events:
+		var faction_id: String = String(e.get("faction_id", "?"))
+		var unit_key:   String = String(e.get("unit_key", "?"))
+		var region_id:  int    = int(e.get("region_id", -1))
+
+		var faction: Faction = (
+			game_state.faction_manager.get_faction(faction_id)
+			if game_state != null else null
+		)
+		var faction_name: String = faction.name if faction != null else faction_id
+
+		var region: Region = (
+			game_state.region_manager.get_region(region_id)
+			if region_id >= 0 else null
+		)
+		var region_name: String = region.name if region != null else "neznamem miste"
+
+		var unit_cfg: Dictionary = Balance.UNIT.get(unit_key, {})
+		var unit_name: String = String(unit_cfg.get("display_name", unit_key))
+
+		events.append(EventData.create(
+			Balance.ADVISOR_KAPITAN,
+			Balance.EVENT_IMPORTANT,
+			"Pane, %s posiluje sve rady. Nova jednotka (%s) byla spatrena v %s." % [
+				faction_name, unit_name, region_name
+			],
+			"%s: spawnovana jednotka %s v %s." % [faction_name, unit_key, region_name]
+		))
+
+	_collected_spawn_events.clear()
+
+# ---------------------------
+# Signal handler — AI unit spawned
+# ---------------------------
+func _on_ai_unit_spawned(faction_id: String, unit_key: String, region_id: int) -> void:
+	_collected_spawn_events.append({
+		"faction_id": faction_id,
+		"unit_key":   unit_key,
+		"region_id":  region_id
+	})
 
 # ---------------------------
 # Signal handler — zmena doktríny organizace (ROUTINE — jen do logu)
