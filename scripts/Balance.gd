@@ -13,8 +13,9 @@ const AWARENESS_INQUISITOR_THRESHOLD = 50
 # Heat stage thresholdy
 const HEAT_STAGE_1 = 25
 const HEAT_STAGE_2 = 50
-const HEAT_STAGE_3 = 76
+const HEAT_STAGE_3 = 85
 const HEAT_MAX = 100  # stage 4 + podmínka prohry
+const HEAT_DECAY_PER_TURN = 1  # přirozené snižování Heat každý tah
 
 # Podmínka výhry
 const WIN_REGIONS_REQUIRED = 6  # 2/3 z 8 civilizovaných regionů (zaokrouhleno nahoru)
@@ -100,7 +101,7 @@ const MISSION = {
 			"mana": 0,
 			"gold": 0,
 		},
-		"success": { "heat":8, "gold":5, "defense":-15, "tags": ["blockade"] },
+		"success": { "heat":6, "gold":5, "defense":-15, "tags": ["blockade"] },
 		"fail":    { "heat": 4 },
 		"ui_icon": "res://ui/icons/missions/sabotage.png",
 		"ui_order": 1
@@ -136,8 +137,8 @@ const MISSION = {
 			"mana": 0,
 			"gold": 0,
 		},
-		"success": { 
-			"heat":20, "gold":12, "defense":-5, 
+		"success": {
+			"heat":10, "gold":12, "defense":-5,
 			"tags": ["raid"]},
 		"fail":    {"heat": 8},
 		"ui_icon": "res://ui/icons/missions/raid.png",
@@ -239,8 +240,8 @@ const DARK_ACTIONS = {
 		"mana_cost": 10,
 		"ap_cost": 1,
 		"cooldown": 2,
-		"effects": { 
-			"heat":2,  
+		"effects": {
+			"heat":3,
 			"tags": ["fear_boost"]}
 	},
 	"decoy": {
@@ -250,8 +251,8 @@ const DARK_ACTIONS = {
 		"mana_cost": 10,
 		"ap_cost": 1,
 		"cooldown": 4,
-		"effects": { 
-			"heat": 3, 
+		"effects": {
+			"heat": 4,
 			"tags": ["decoy"]}
 	},
 	"infernal_pact": {
@@ -276,7 +277,7 @@ const DARK_ACTIONS = {
 		"ap_cost": 1,
 		"cooldown": 4,
 		"effects": {
-			"heat": -15,             # výrazně sníží pozornost
+			"heat": -8,              # sníží pozornost
 			"doom": 2                # ale popostrčí blíž apokalypse
 		}
 	},
@@ -702,7 +703,7 @@ const AI_SPAWN = {
 	"paladin": {
 		"unit_key":   "paladin_army",
 		"trigger":    "heat",
-		"threshold":  76,
+		"threshold":  85,
 		"spawn_rate": 4,
 		"unit_limit": 3
 	},

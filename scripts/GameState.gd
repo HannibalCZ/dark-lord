@@ -315,7 +315,12 @@ func advance_turn() -> void:
 	# reset moves na nový tah (až po všech efektech a combat)
 	for u in unit_manager.units:
 		u.moves_left = u.moves_per_turn
-	
+
+	# Heat decay — přirozené snižování každý tah (po všech zdrojích, před prahy)
+	if heat > 0:
+		var decay_ctx := EffectContext.make(self, null, Balance.PLAYER_FACTION)
+		effects_system.apply({"heat": -Balance.HEAT_DECAY_PER_TURN}, decay_ctx)
+
 	# HEAT reakce
 	_check_heat_thresholds(old_heat, heat)
 
