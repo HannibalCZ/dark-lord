@@ -47,7 +47,10 @@ func _pick_profile(u: Unit) -> String:
 
 	# 2) Speciální typy s pevným profilem
 	if u.unit_key == "inquisitor":
-		return "investigator"
+		if game_state.awareness >= Balance.AWARENESS_INQUISITOR_THRESHOLD:
+			return "investigator"        # globální pátrání
+		else:
+			return "investigator_local"  # pouze vlastní provincie
 
 	# 3) Faction behavior: paladin_army a ostatní bez fixed profile
 	var faction: Faction = game_state.faction_manager.get_faction(u.faction_id)
