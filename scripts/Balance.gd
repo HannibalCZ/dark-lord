@@ -635,6 +635,7 @@ const AWARENESS_CORRUPTION_PHASE_MIN = 3
 # --- Rada zasvěcených ---
 const ADVISOR_KAPITAN = "kapitan"
 const ADVISOR_VEZIR   = "vezir"
+const ADVISOR_ZVEDKA  = "zvedka"
 
 const EVENT_CRITICAL  = "critical"
 const EVENT_IMPORTANT = "important"
