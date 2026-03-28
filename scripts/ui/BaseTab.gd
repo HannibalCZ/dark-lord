@@ -46,5 +46,7 @@ func _refresh() -> void:
 	# Tlačítko – Orčí banda
 	var orc_btn := Button.new()
 	orc_btn.text = "Povolat Orčí bandu (15 surovin)"
-	orc_btn.pressed.connect(func(): GameState.unit_manager.recruit_unit(Balance.PLAYER_FACTION, "orc_band", 0))
+	var current_units: int = GameState.unit_manager.get_active_unit_count_for(Balance.PLAYER_FACTION)
+	orc_btn.disabled = current_units >= GameState.unit_manager.unit_limit
+	orc_btn.pressed.connect(func(): GameState.exec(GameState.unit_manager.recruit_unit(Balance.PLAYER_FACTION, "orc_band", 0)))
 	container.add_child(orc_btn)

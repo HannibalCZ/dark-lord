@@ -334,7 +334,9 @@ func _on_game_ended(result: Dictionary) -> void:
 		_build_end_game_narrative(is_win, reason),
 		reason
 	)
-	EventBus.council_events_ready.emit([event])
+	var end_events: Array[EventData] = []
+	end_events.append(event)
+	EventBus.council_events_ready.emit(end_events)
 
 
 func _build_end_game_narrative(is_win: bool, reason: String) -> String:
