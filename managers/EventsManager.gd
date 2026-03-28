@@ -21,6 +21,9 @@ var _collected_org_events: Array[Dictionary] = []
 # Spawn eventů AI jednotek z aktuálního tahu — sbíráme přes EventBus.
 var _collected_spawn_events: Array[Dictionary] = []
 
+# Výsledky AI purge misí z aktuálního tahu — sbíráme přes EventBus.
+var _collected_ai_mission_results: Array[Dictionary] = []
+
 # ---------------------------
 func init(gs: GameStateSingleton) -> void:
 	game_state = gs
@@ -39,6 +42,7 @@ func generate_events_for_turn() -> Array[EventData]:
 
 	_collect_movement_events(events)
 	_collect_mission_events(events)
+	_collect_ai_mission_events(events)
 	_collect_combat_events(events)
 	_collect_heat_awareness_events(events)
 	_collect_org_events(events)
@@ -226,8 +230,7 @@ func _collect_combat_events(events: Array[EventData]) -> void:
 	_collected_combat_results.clear()
 
 # ---------------------------
-# ZDROJ 4 — Změny Heat a Awareness (Stínový vezír)
-# (přečíslováno — původně ZDROJ 3)
+# ZDROJ 4 — Změny Heat a Awareness v jedné zprávě (Stínový vezír)
 # ---------------------------
 func _collect_heat_awareness_events(events: Array[EventData]) -> void:
 	var old_h: int = game_state.old_heat
@@ -235,63 +238,48 @@ func _collect_heat_awareness_events(events: Array[EventData]) -> void:
 	var old_a: int = game_state.prev_awareness
 	var new_a: int = game_state.awareness
 
-	# Heat
-	if new_h != old_h:
-		var crossed: bool = (
-			(old_h < Balance.HEAT_STAGE_1 and new_h >= Balance.HEAT_STAGE_1) or
-			(old_h < Balance.HEAT_STAGE_2 and new_h >= Balance.HEAT_STAGE_2) or
-			(old_h < Balance.HEAT_STAGE_3 and new_h >= Balance.HEAT_STAGE_3) or
-			(old_h < Balance.HEAT_MAX     and new_h >= Balance.HEAT_MAX)
-		)
+	var heat_changed: bool = new_h != old_h
+	var awareness_changed: bool = new_a != old_a
 
-		var priority: String = Balance.EVENT_IMPORTANT if crossed else Balance.EVENT_ROUTINE
+	if not heat_changed and not awareness_changed:
+		return
 
-		var narrative: String
-		if crossed:
-			narrative = (
-				"Pane, síly dobra překročily nový práh bdělosti — Heat dosáhl %d. "
-				+ "Jejich odezva se stupňuje a operace se komplikují. "
-				+ "Doporučuji zvýšenou opatrnost při dalších krocích."
-			) % new_h
-		else:
-			narrative = (
-				"Úroveň pozornosti sil dobra se změnila z %d na %d, Pane. "
-				+ "Situace je zatím pod kontrolou, avšak sledujeme ji nadále."
-			) % [old_h, new_h]
+	var heat_crossed: bool = (
+		(old_h < Balance.HEAT_STAGE_1 and new_h >= Balance.HEAT_STAGE_1) or
+		(old_h < Balance.HEAT_STAGE_2 and new_h >= Balance.HEAT_STAGE_2) or
+		(old_h < Balance.HEAT_STAGE_3 and new_h >= Balance.HEAT_STAGE_3) or
+		(old_h < Balance.HEAT_MAX     and new_h >= Balance.HEAT_MAX)
+	)
 
-		var summary: String = "Heat: %d → %d." % [old_h, new_h]
+	var priority: String = Balance.EVENT_IMPORTANT if (heat_crossed or new_a > old_a) else Balance.EVENT_ROUTINE
 
-		events.append(EventData.create(
-			Balance.ADVISOR_VEZIR,
-			priority,
-			narrative,
-			summary
-		))
+	var narrative: String
+	var summary: String
 
-	# Awareness — práh 50 (Inkvizitoři zostřují pohled)
-	if old_a < 50 and new_a >= 50:
-		events.append(EventData.create(
-			Balance.ADVISOR_VEZIR,
-			Balance.EVENT_IMPORTANT,
-			"Pane, nase aktivity zacaly pritahovat nebezpecnou pozornost. Inkvizitoři zostřují svůj pohled — doporucuji opatrnost.",
-			"Awareness prekrocila 50 — Inkvizitoři zmenili chovani."
-		))
+	if heat_changed and awareness_changed:
+		narrative = (
+			"Pane, situace se vyviji. Nase aktivity pritahuji pozornost — "
+			+ "Heat dosahl %d, Awareness dosahuje %d. Doporucuji opatrnost."
+		) % [new_h, new_a]
+		summary = "Heat: %d → %d, Awareness: %d → %d." % [old_h, new_h, old_a, new_a]
+	elif heat_changed:
+		narrative = (
+			"Pane, reakce sil dobra sili. Heat dosahl %d. Sledujte jejich pohyby."
+		) % new_h
+		summary = "Heat: %d → %d." % [old_h, new_h]
+	else:
+		narrative = (
+			"Pane, nase stopy jsou stale viditelnějsi. Awareness dosahuje %d. "
+			+ "Inkvizitoři zostřuji svuj pohled."
+		) % new_a
+		summary = "Awareness: %d → %d." % [old_a, new_a]
 
-	# Awareness — obecná změna
-	if new_a != old_a:
-		var priority: String = Balance.EVENT_IMPORTANT if new_a > old_a else Balance.EVENT_ROUTINE
-		var narrative: String = (
-			"Pane, míra obecného podezření světa se změnila z %d na %d. "
-			+ "Naše aktivity nezůstávají zcela nepovšimnuty."
-		) % [old_a, new_a]
-		var summary: String = "Awareness: %d → %d." % [old_a, new_a]
-
-		events.append(EventData.create(
-			Balance.ADVISOR_VEZIR,
-			priority,
-			narrative,
-			summary
-		))
+	events.append(EventData.create(
+		Balance.ADVISOR_VEZIR,
+		priority,
+		narrative,
+		summary
+	))
 
 # ---------------------------
 # Filtrování výsledku
@@ -355,6 +343,44 @@ func _build_end_game_narrative(is_win: bool, reason: String) -> String:
 
 
 # ---------------------------
+# ZDROJ 2b — AI purge mise (Zvědka)
+# ---------------------------
+func _collect_ai_mission_events(events: Array[EventData]) -> void:
+	for result in _collected_ai_mission_results:
+		var region_id: int = int(result.get("region_id", -1))
+		var region: Region = (
+			game_state.region_manager.get_region(region_id)
+			if region_id >= 0 else null
+		)
+		var region_name: String = region.name if region != null else "neznámém místě"
+		var success: bool = result.get("ok", false)
+
+		var narrative: String
+		var summary: String
+
+		if success:
+			narrative = (
+				"Pane, inkvizitor zasahl v regionu %s. "
+				+ "Korupce byla potlacena — nas vliv v tomto kraji byl oslaben."
+			) % region_name
+			summary = "AI purge uspel v %s." % region_name
+		else:
+			narrative = (
+				"Pane, inkvizitor se pokusil o zasah v regionu %s, ale byl odrazen. "
+				+ "Nase pozice zde zatim drzi."
+			) % region_name
+			summary = "AI purge selhal v %s." % region_name
+
+		events.append(EventData.create(
+			Balance.ADVISOR_ZVEDKA,
+			Balance.EVENT_IMPORTANT,
+			narrative,
+			summary
+		))
+
+	_collected_ai_mission_results.clear()
+
+# ---------------------------
 # Signal handler — sbírá výsledky hráčových misí přes EventBus
 # ---------------------------
 func _on_mission_resolved(data: Dictionary) -> void:
@@ -369,8 +395,10 @@ func _on_mission_resolved(data: Dictionary) -> void:
 	if unit == null:
 		return
 
-	# Pouze hráčovy mise
+	# Pouze hráčovy mise — AI purge zachytáváme zvlášť
 	if unit.faction_id != Balance.PLAYER_FACTION:
+		if data.get("mission_key") == "purge":
+			_collected_ai_mission_results.append(data)
 		return
 
 	# Fatální = agent skončil ve stavu "lost"
