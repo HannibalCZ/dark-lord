@@ -20,6 +20,7 @@ var button: Button
 var _is_selected: bool = false
 var _is_hovered: bool = false
 var _tag_pulsing: bool = false
+var _is_movement_target: bool = false
 
 const ICON_W := 16
 const ICON_H := 16
@@ -57,6 +58,13 @@ func set_selected(sel: bool) -> void:
 		TweenHelper.bounce(self)  # malý bounce při výběru
 	else:
 		TweenHelper.tile_deselect(highlight)
+
+func set_movement_target(active: bool) -> void:
+	_is_movement_target = active
+	if active:
+		highlight.color = Color(0.2, 0.7, 0.3, 0.35)
+	else:
+		_update_highlight()
 
 func _update_highlight() -> void:
 	if _is_selected:
