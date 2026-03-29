@@ -370,6 +370,12 @@ func _format_effects_preview(effects: Dictionary) -> String:
 		parts.append("%+d obrana" % effects["defense"])
 	if effects.has("corruption") and effects["corruption"] != 0:
 		parts.append("%+d korupce" % effects["corruption"])
+	if effects.has("purge_corruption_all") and effects["purge_corruption_all"] != 0:
+		parts.append("ocista korupce (%+d)" % effects["purge_corruption_all"])
+	if effects.has("secret_progress") and effects["secret_progress"] != 0:
+		parts.append("postup patrani +%d" % effects["secret_progress"])
+	if effects.has("lair_influence") and effects["lair_influence"] != 0:
+		parts.append("vliv v doupeti +%d" % effects["lair_influence"])
 	if parts.is_empty():
 		return "zadny efekt"
 	return ", ".join(parts)
