@@ -58,6 +58,7 @@ extends Control
 var selected_region_idx: int = -1
 # parallel array — uchovává doctrine key pro každý item v doctrine_picker
 var _doctrine_keys: Array[String] = []
+var _current_movement_target_tile = null
 var tile_scene: PackedScene = preload("res://scenes/ui/RegionTile.tscn")
 
 var mission_success_effects: Label
@@ -131,6 +132,7 @@ func _ready() -> void:
 	# signály — akce
 	mission_confirm.pressed.connect(_on_mission_confirm)
 	move_confirm.pressed.connect(_on_move_confirm)
+	neighbor_select.item_selected.connect(_on_neighbor_item_selected)
 	unit_select.item_selected.connect(_on_unit_selected)
 	dark_action_confirm.pressed.connect(_on_dark_action_confirm)
 	dark_action_select.item_selected.connect(_on_dark_action_selected)
@@ -407,6 +409,7 @@ func _build_grid() -> void:
 	_refresh_tile_selection()
 
 func _on_tile_selected(region_idx: int) -> void:
+	_clear_movement_target_highlight()
 	selected_region_idx = region_idx
 	_refresh_selected_panel()
 	_refresh_tile_selection()
@@ -542,6 +545,7 @@ func _build_mission_menu(region_idx: int = selected_region_idx) -> void:
 	_update_mission_info()
 
 func _build_neighbors_menu(region_idx: int) -> void:
+	_clear_movement_target_highlight()
 	neighbor_select.clear()
 	var neighbors = GameState.query.regions.neighbors(region_idx)
 	if neighbors.is_empty():
@@ -561,6 +565,7 @@ func _set_actions_enabled(enabled: bool) -> void:
 	move_confirm.disabled = not enabled or neighbor_select.get_selected_id() == -1
 
 func _on_unit_selected(_idx: int) -> void:
+	_clear_movement_target_highlight()
 	_update_unit_info()
 	_build_mission_menu()
 	_set_actions_enabled(unit_select.get_selected_id() != -1)
@@ -577,11 +582,26 @@ func _on_mission_confirm() -> void:
 	GameState.exec(GameState.commands.plan_mission(uid, selected_region_idx, key))
 
 func _on_move_confirm() -> void:
+	_clear_movement_target_highlight()
 	var uid = unit_select.get_selected_id()
 	var target = neighbor_select.get_selected_id()
 	if uid == -1 or target == -1:
 		return
 	GameState.exec(GameState.commands.move_unit(uid, target))
+
+func _clear_movement_target_highlight() -> void:
+	if _current_movement_target_tile != null:
+		_current_movement_target_tile.set_movement_target(false)
+		_current_movement_target_tile = null
+
+func _on_neighbor_item_selected(index: int) -> void:
+	_clear_movement_target_highlight()
+	var target_region_id: int = neighbor_select.get_item_id(index)
+	if target_region_id < 0 or target_region_id >= grid.get_child_count():
+		return
+	var tile = grid.get_child(target_region_id)
+	tile.set_movement_target(true)
+	_current_movement_target_tile = tile
 
 func _on_turn_resolved() -> void:
 	_refresh_region_colors()
