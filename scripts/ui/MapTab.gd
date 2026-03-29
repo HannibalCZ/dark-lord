@@ -60,6 +60,9 @@ var selected_region_idx: int = -1
 var _doctrine_keys: Array[String] = []
 var tile_scene: PackedScene = preload("res://scenes/ui/RegionTile.tscn")
 
+var mission_success_effects: Label
+var mission_fail_effects: Label
+
 func _ready() -> void:
 	# Pozadi sekcí
 	var bg_region := StyleBoxFlat.new()
@@ -151,6 +154,27 @@ func _ready() -> void:
 	right_panel.visible = false
 	_set_actions_enabled(false)
 	org_section.visible = false
+
+	mission_success_effects = Label.new()
+	mission_success_effects.name = "MissionSuccessEffects"
+	mission_success_effects.add_theme_font_size_override("font_size", 11)
+	mission_success_effects.add_theme_color_override("font_color", Color("#4caf50"))
+	mission_success_effects.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	mission_success_effects.visible = false
+
+	mission_fail_effects = Label.new()
+	mission_fail_effects.name = "MissionFailEffects"
+	mission_fail_effects.add_theme_font_size_override("font_size", 11)
+	mission_fail_effects.add_theme_color_override("font_color", Color("#f44336"))
+	mission_fail_effects.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	mission_fail_effects.visible = false
+
+	var _mission_parent: Node = mission_info.get_parent()
+	_mission_parent.add_child(mission_success_effects)
+	_mission_parent.add_child(mission_fail_effects)
+	var _mi_idx: int = mission_info.get_index()
+	_mission_parent.move_child(mission_success_effects, _mi_idx + 1)
+	_mission_parent.move_child(mission_fail_effects, _mi_idx + 2)
 
 func _on_game_updated() -> void:
 	if grid.get_child_count() != GameState.region_manager.regions.size():
@@ -264,6 +288,8 @@ func _build_dark_action_description(action_key: String) -> String:
 
 func _update_mission_info() -> void:
 	mission_info.text = ""
+	mission_success_effects.visible = false
+	mission_fail_effects.visible = false
 
 	var key: String = UIHelpers.get_selected_key(mission_select)
 	if key == "":
@@ -320,6 +346,33 @@ func _update_mission_info() -> void:
 	var chance_str = "\n" + "".join(lines)
 
 	mission_info.text = "%s\n%s%s%s" % [name, desc, cost_str, chance_str]
+
+	var success_fx: Dictionary = cfg.get("success", {})
+	var fail_fx: Dictionary    = cfg.get("fail", {})
+	mission_success_effects.text    = "Uspech: %s" % _format_effects_preview(success_fx)
+	mission_fail_effects.text       = "Neuspech: %s" % _format_effects_preview(fail_fx)
+	mission_success_effects.visible = true
+	mission_fail_effects.visible    = true
+
+func _format_effects_preview(effects: Dictionary) -> String:
+	var parts: Array[String] = []
+	if effects.has("gold") and effects["gold"] != 0:
+		parts.append("%+d zlato" % effects["gold"])
+	if effects.has("mana") and effects["mana"] != 0:
+		parts.append("%+d mana" % effects["mana"])
+	if effects.has("heat") and effects["heat"] != 0:
+		parts.append("%+d heat" % effects["heat"])
+	if effects.has("awareness") and effects["awareness"] != 0:
+		parts.append("%+d awareness" % effects["awareness"])
+	if effects.has("infamy") and effects["infamy"] != 0:
+		parts.append("%+d infamy" % effects["infamy"])
+	if effects.has("defense") and effects["defense"] != 0:
+		parts.append("%+d obrana" % effects["defense"])
+	if effects.has("corruption") and effects["corruption"] != 0:
+		parts.append("%+d korupce" % effects["corruption"])
+	if parts.is_empty():
+		return "zadny efekt"
+	return ", ".join(parts)
 
 func _on_mission_resolved(result: Dictionary) -> void:
 	var region_id: int = result.get("region_id", -1)
@@ -432,6 +485,8 @@ func _update_unit_info() -> void:
 	unit_info.text = "Jednotka: %s (%s) | Síla: %d | Zbývá tahů: %d" % [u.name, u.type, u.power, u.moves_left]
 
 func _build_mission_menu(region_idx: int = selected_region_idx) -> void:
+	mission_success_effects.visible = false
+	mission_fail_effects.visible = false
 	var uid: int = unit_select.get_selected_id()
 	if uid == -1:
 		UIHelpers.set_single_placeholder(mission_select, "— vyber jednotku —")
