@@ -134,7 +134,8 @@ func _collect_mission_events(events: Array[EventData]) -> void:
 				+ "Naši agenti odvedli svou práci tiše a efektivně. "
 				+ "Výsledky jsou v souladu s očekáváním."
 			) % [mission_name, region_name]
-			summary = "Mise %s v %s: ÚSPĚCH." % [mission_key, region_name]
+			var fx_str: String = _format_mission_result_effects(mission_cfg.get("success", {}))
+			summary = "Mise %s v %s: USPECH — %s" % [mission_key, region_name, fx_str]
 
 		elif is_fatal:
 			priority  = Balance.EVENT_CRITICAL
@@ -143,7 +144,8 @@ func _collect_mission_events(events: Array[EventData]) -> void:
 				+ "Agent provádějící misi '%s' v oblasti %s byl odhalen nepřítelem a zajat. "
 				+ "Tato ztráta je citelná — doporučuji přijmout opatření."
 			) % [mission_name, region_name]
-			summary = "Mise %s v %s: NEÚSPĚCH — agent zajat." % [mission_key, region_name]
+			var fx_str: String = _format_mission_result_effects(mission_cfg.get("fail", {}))
+			summary = "Mise %s v %s: NEUSPECH — agent zajat — %s" % [mission_key, region_name, fx_str]
 
 		else:
 			priority  = Balance.EVENT_ROUTINE
@@ -151,7 +153,8 @@ func _collect_mission_events(events: Array[EventData]) -> void:
 				"Mise '%s' v oblasti %s selhala, avšak bez větších následků, Pane. "
 				+ "Agent se stáhl v pořádku a čeká na další rozkazy."
 			) % [mission_name, region_name]
-			summary = "Mise %s v %s: NEÚSPĚCH." % [mission_key, region_name]
+			var fx_str: String = _format_mission_result_effects(mission_cfg.get("fail", {}))
+			summary = "Mise %s v %s: NEUSPECH — %s" % [mission_key, region_name, fx_str]
 
 		events.append(EventData.create(
 			Balance.ADVISOR_VEZIR,
@@ -485,6 +488,36 @@ func _on_ai_unit_spawned(faction_id: String, unit_key: String, region_id: int) -
 		"unit_key":   unit_key,
 		"region_id":  region_id
 	})
+
+# ---------------------------
+# Helper — formátuje efekty mise pro mechanical_summary
+# Přijímá Dictionary z Balance.MISSION["success"] nebo ["fail"]
+# ---------------------------
+func _format_mission_result_effects(fx: Dictionary) -> String:
+	var parts: Array[String] = []
+	if fx.has("gold") and fx["gold"] != 0:
+		parts.append("%+d zlato" % fx["gold"])
+	if fx.has("mana") and fx["mana"] != 0:
+		parts.append("%+d mana" % fx["mana"])
+	if fx.has("heat") and fx["heat"] != 0:
+		parts.append("%+d heat" % fx["heat"])
+	if fx.has("awareness") and fx["awareness"] != 0:
+		parts.append("%+d awareness" % fx["awareness"])
+	if fx.has("infamy") and fx["infamy"] != 0:
+		parts.append("%+d infamy" % fx["infamy"])
+	if fx.has("defense") and fx["defense"] != 0:
+		parts.append("%+d obrana" % fx["defense"])
+	if fx.has("corruption") and fx["corruption"] != 0:
+		parts.append("%+d korupce" % fx["corruption"])
+	if fx.has("purge_corruption_all") and fx["purge_corruption_all"] != 0:
+		parts.append("ocista korupce (%+d)" % fx["purge_corruption_all"])
+	if fx.has("secret_progress") and fx["secret_progress"] != 0:
+		parts.append("postup patrani +%d" % fx["secret_progress"])
+	if fx.has("lair_influence") and fx["lair_influence"] != 0:
+		parts.append("vliv v doupeti +%d" % fx["lair_influence"])
+	if parts.is_empty():
+		return "bez measurable efektu"
+	return ", ".join(parts)
 
 # ---------------------------
 # Signal handler — zmena doktríny organizace (ROUTINE — jen do logu)
