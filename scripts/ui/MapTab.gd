@@ -2,6 +2,7 @@ extends Control
 
 # --- Mapa ---
 @onready var map_canvas: Control = $HBoxContainer/MapCanvas
+@onready var connection_layer: Control = $HBoxContainer/MapCanvas/ConnectionLayer
 @onready var right_panel: VBoxContainer = $HBoxContainer/RightPanel
 
 # --- RegionSection ---
@@ -56,6 +57,7 @@ extends Control
 @onready var destroy_button: Button       = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/DestroyButton
 
 var _tile_by_id: Dictionary = {}  # { region_id: int -> RegionTile }
+var _connections: Array = []      # [ {a: Vector2, b: Vector2}, ... ]
 var selected_region_idx: int = -1
 # parallel array — uchovává doctrine key pro každý item v doctrine_picker
 var _doctrine_keys: Array[String] = []
@@ -127,6 +129,7 @@ func _ready() -> void:
 	tags_header.pressed.connect(func(): _toggle_section(tags_content, tags_header))
 	secrets_header.pressed.connect(func(): _toggle_section(secrets_content, secrets_header))
 
+	connection_layer.draw.connect(_on_connection_layer_draw)
 	_build_grid()
 
 	# signály — akce
@@ -627,10 +630,7 @@ func _refresh_borders() -> void:
 		tile.set_owner_border(r.owner_faction_id)
 
 func _draw_connections() -> void:
-	for child in map_canvas.get_children():
-		if child is Line2D:
-			child.queue_free()
-
+	_connections.clear()
 	var drawn: Dictionary = {}
 	for region_id in _tile_by_id:
 		var r: Region = GameState.query.regions.get_by_id(region_id)
@@ -640,19 +640,13 @@ func _draw_connections() -> void:
 			if drawn.has(key):
 				continue
 			drawn[key] = true
-
-			var line := Line2D.new()
-			line.width = 2.0
-			line.default_color = Color(0.4, 0.4, 0.5, 0.6)
-			line.z_index = -1
-
-			var pos_a := Vector2(r.position)
 			var neighbor_r: Region = GameState.query.regions.get_by_id(neighbor_id)
-			var pos_b := Vector2(neighbor_r.position)
+			_connections.append({"a": Vector2(r.position), "b": Vector2(neighbor_r.position)})
+	connection_layer.queue_redraw()
 
-			line.add_point(pos_a)
-			line.add_point(pos_b)
-			map_canvas.add_child(line)
+func _on_connection_layer_draw() -> void:
+	for conn in _connections:
+		connection_layer.draw_line(conn["a"], conn["b"], Color(0.4, 0.4, 0.5, 0.6), 2.0, true)
 
 func _refresh_unit_positions() -> void:
 	for i in _tile_by_id:
