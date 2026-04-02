@@ -2,6 +2,7 @@ extends Control
 
 # --- Mapa ---
 @onready var map_canvas: Control = $HBoxContainer/MapCanvas
+@onready var map_content: Control = $HBoxContainer/MapCanvas/MapContent
 @onready var connection_layer: Control = $HBoxContainer/MapCanvas/ConnectionLayer
 @onready var right_panel: VBoxContainer = $HBoxContainer/RightPanel
 
@@ -63,6 +64,11 @@ var selected_region_idx: int = -1
 var _doctrine_keys: Array[String] = []
 var _current_movement_target_tile = null
 var tile_scene: PackedScene = preload("res://scenes/ui/RegionTile.tscn")
+
+const SCROLL_SPEED    := 250.0
+const EDGE_MARGIN     := 40.0
+const TILE_SIZE_PX    := Vector2(128.0, 128.0)
+var _content_rect     := Rect2()
 
 var mission_success_effects: Label
 var mission_fail_effects: Label
@@ -180,6 +186,67 @@ func _ready() -> void:
 	var _mi_idx: int = mission_info.get_index()
 	_mission_parent.move_child(mission_success_effects, _mi_idx + 1)
 	_mission_parent.move_child(mission_fail_effects, _mi_idx + 2)
+
+	visibility_changed.connect(func(): set_process(is_visible_in_tree()))
+	set_process(is_visible_in_tree())
+
+func _process(delta: float) -> void:
+	_handle_scroll(delta)
+
+func _handle_scroll(delta: float) -> void:
+	var dir := Vector2.ZERO
+
+	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
+		dir.x += 1.0
+	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
+		dir.x -= 1.0
+	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
+		dir.y += 1.0
+	if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
+		dir.y -= 1.0
+
+	var mouse := get_viewport().get_mouse_position()
+	var canvas_rect := map_canvas.get_global_rect()
+	if canvas_rect.has_point(mouse):
+		if mouse.x < canvas_rect.position.x + EDGE_MARGIN:
+			dir.x += 1.0
+		elif mouse.x > canvas_rect.end.x - EDGE_MARGIN:
+			dir.x -= 1.0
+		if mouse.y < canvas_rect.position.y + EDGE_MARGIN:
+			dir.y += 1.0
+		elif mouse.y > canvas_rect.end.y - EDGE_MARGIN:
+			dir.y -= 1.0
+
+	if dir == Vector2.ZERO:
+		return
+
+	map_content.position += dir * SCROLL_SPEED * delta
+	_clamp_map_content()
+	connection_layer.queue_redraw()
+
+func _clamp_map_content() -> void:
+	if _content_rect.size == Vector2.ZERO:
+		return
+	var cs := map_canvas.size
+	map_content.position = Vector2(
+		clamp(map_content.position.x,
+			EDGE_MARGIN - _content_rect.end.x,
+			cs.x - EDGE_MARGIN - _content_rect.position.x),
+		clamp(map_content.position.y,
+			EDGE_MARGIN - _content_rect.end.y,
+			cs.y - EDGE_MARGIN - _content_rect.position.y)
+	)
+
+func _compute_map_bounds() -> void:
+	if _tile_by_id.is_empty():
+		_content_rect = Rect2()
+		return
+	var mn := Vector2(INF, INF)
+	var mx := Vector2(-INF, -INF)
+	for tile: Control in _tile_by_id.values():
+		mn = mn.min(tile.position)
+		mx = mx.max(tile.position + TILE_SIZE_PX)
+	_content_rect = Rect2(mn, mx - mn)
 
 func _on_game_updated() -> void:
 	if _tile_by_id.size() != GameState.region_manager.regions.size():
@@ -396,21 +463,20 @@ func _on_mission_resolved(result: Dictionary) -> void:
 		tile.call_deferred("play_feedback", success)
 
 func _build_grid() -> void:
-	for child in map_canvas.get_children():
-		if child == connection_layer:
-			continue
+	for child in map_content.get_children():
 		child.queue_free()
 	_tile_by_id.clear()
 
 	for i in GameState.region_manager.regions.size():
 		var r: Region = GameState.query.regions.get_by_id(i)
 		var t: Control = tile_scene.instantiate()
-		map_canvas.add_child(t)
+		map_content.add_child(t)
 		t.position = Vector2(r.position) - Vector2(64, 64)
 		t.call_deferred("setup", i, r)
 		t.connect("tile_selected", Callable(self, "_on_tile_selected"))
 		_tile_by_id[i] = t
 
+	_compute_map_bounds()
 	_refresh_unit_positions()
 	_refresh_region_colors()
 	_refresh_tile_selection()
@@ -647,8 +713,9 @@ func _draw_connections() -> void:
 	connection_layer.queue_redraw()
 
 func _on_connection_layer_draw() -> void:
+	var offset := map_content.position
 	for conn in _connections:
-		connection_layer.draw_line(conn["a"], conn["b"], Color(0.4, 0.4, 0.5, 0.6), 2.0, true)
+		connection_layer.draw_line(conn["a"] + offset, conn["b"] + offset, Color(0.4, 0.4, 0.5, 0.6), 2.0, true)
 
 func _refresh_unit_positions() -> void:
 	for i in _tile_by_id:
