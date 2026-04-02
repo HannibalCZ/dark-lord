@@ -7,6 +7,7 @@ var adjacency: Dictionary = {}
 
 var grid_w: int = 4
 var grid_h: int = 3
+var _use_explicit_neighbors: bool = false
 
 func init_regions() -> void:
 	regions.clear()
@@ -14,14 +15,16 @@ func init_regions() -> void:
 
 	load_map_from_json("res://data/maps/mvp_map.json")
 
-	# adjacency se generuje až po načtení regionů
-	generate_grid_adjacency(grid_w, grid_h)
+	# adjacency se generuje až po načtení regionů (pokud není explicitní ze JSON)
+	if not _use_explicit_neighbors:
+		generate_grid_adjacency(grid_w, grid_h)
 
 func init_regions_from_map(map_path: String) -> void:
 	regions.clear()
 	adjacency.clear()
 	load_map_from_json(map_path)
-	generate_grid_adjacency(grid_w, grid_h)
+	if not _use_explicit_neighbors:
+		generate_grid_adjacency(grid_w, grid_h)
 
 func load_map_from_json(path: String) -> void:
 	if not FileAccess.file_exists(path):
@@ -43,6 +46,7 @@ func load_map_from_json(path: String) -> void:
 	var meta: Dictionary = data.get("meta", {})
 	grid_w = int(meta.get("grid_w", 4))
 	grid_h = int(meta.get("grid_h", 3))
+	_use_explicit_neighbors = bool(meta.get("use_explicit_neighbors", false))
 
 	# regions
 	var arr: Array = data.get("regions", [])
@@ -50,8 +54,8 @@ func load_map_from_json(path: String) -> void:
 		push_error("Map has no regions: %s" % path)
 		return
 
-	# očekáváme přesně grid_w * grid_h regionů
-	var expected: int = grid_w * grid_h
+	# pro explicitní mapy počítáme regiony ze seznamu, ne z grid rozměrů
+	var expected: int = arr.size() if _use_explicit_neighbors else grid_w * grid_h
 	regions.resize(expected)
 
 	for item in arr:
@@ -98,6 +102,15 @@ func load_map_from_json(path: String) -> void:
 		if regions[i] == null:
 			regions[i] = Region.new(i, "Region %d" % i, "neutral", "plains")
 			regions[i].region_kind = "civilized"
+
+	# explicitní sousedství ze JSON (druhý průchod — všechny regiony již načteny)
+	if _use_explicit_neighbors:
+		for rd in arr:
+			if typeof(rd) != TYPE_DICTIONARY:
+				continue
+			var id: int = int(rd["id"])
+			var neighbors: Array = rd.get("neighbors", [])
+			adjacency[id] = neighbors
 
 
 func generate_grid_adjacency(w: int, h: int) -> void:

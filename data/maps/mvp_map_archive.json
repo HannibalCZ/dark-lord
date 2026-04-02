@@ -1,0 +1,27 @@
+{
+  "meta": {
+	"name": "MVP Grid 4x3",
+	"grid_w": 4,
+	"grid_h": 3
+  },
+  "regions": [
+	{ "id": 0,  "name": "Bažiny zatracených", "owner_faction_id": "player",   "region_type": "wasteland", "region_kind": "wildlands",  "position": {"x": 60,  "y": 60}  },
+	{ "id": 1,  "name": "Hory stínů",         "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wildlands",  "position": {"x": 210, "y": 60},
+	  "secret": { "id": "ancient_ruins", "known": true, "state": "none", "progress": 0 }
+	},
+	{ "id": 2,  "name": "Temné pláně",        "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wildlands",  "position": {"x": 360, "y": 60},
+	  "lair": { "id": "orc_camp", "control": "neutral", "influence": 0 }
+	},
+	{ "id": 3,  "name": "Kamenný val",        "owner_faction_id": "paladin",  "region_type": "mountains", "region_kind": "civilized",  "position": {"x": 510, "y": 60}  },
+
+	{ "id": 4,  "name": "Zlaté město",        "owner_faction_id": "merchant", "region_type": "town",      "region_kind": "civilized",  "position": {"x": 60,  "y": 210} },
+	{ "id": 5,  "name": "Svatý hvozd",        "owner_faction_id": "elf",      "region_type": "forest",    "region_kind": "civilized",  "position": {"x": 210, "y": 210} },
+	{ "id": 6,  "name": "Horský klášter",     "owner_faction_id": "paladin",  "region_type": "mountains", "region_kind": "civilized",  "position": {"x": 360, "y": 210} },
+	{ "id": 7,  "name": "Tržiště králů",      "owner_faction_id": "merchant", "region_type": "town",      "region_kind": "civilized",  "position": {"x": 510, "y": 210} },
+
+	{ "id": 8,  "name": "Lesní srdce",        "owner_faction_id": "elf",      "region_type": "forest",    "region_kind": "civilized",  "position": {"x": 60,  "y": 360} },
+	{ "id": 9,  "name": "Černé pobřeží",      "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wildlands",  "position": {"x": 210, "y": 360} },
+	{ "id": 10, "name": "Ztracené doly",      "owner_faction_id": "merchant", "region_type": "plains",    "region_kind": "civilized",  "position": {"x": 360, "y": 360} },
+	{ "id": 11, "name": "Prastarý les",       "owner_faction_id": "elf",      "region_type": "forest",    "region_kind": "civilized",  "position": {"x": 510, "y": 360} }
+  ]
+}
