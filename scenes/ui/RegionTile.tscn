@@ -1,7 +1,18 @@
-[gd_scene load_steps=6 format=3 uid="uid://bwg2fwkr5ae6g"]
+[gd_scene load_steps=8 format=3 uid="uid://bwg2fwkr5ae6g"]
 
 [ext_resource type="Script" uid="uid://p224r28ko4ej" path="res://scripts/ui/RegionTile.gd" id="1_3b7ur"]
 [ext_resource type="Texture2D" uid="uid://kjln75mk5yg3" path="res://art/ui/corruption_overlay.png" id="2_jel24"]
+
+[sub_resource type="Shader" id="Shader_circle"]
+code = "shader_type canvas_item;
+void fragment() {
+	vec2 c = UV - vec2(0.5);
+	if (length(c) > 0.5) { discard; }
+	COLOR = texture(TEXTURE, UV);
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_circle"]
+shader = SubResource("Shader_circle")
 [ext_resource type="Texture2D" uid="uid://cyw6jwqalmni0" path="res://art/ui/tag.png" id="2_otno6"]
 [ext_resource type="Texture2D" uid="uid://dm681fk2jwqub" path="res://art/ui/secret.png" id="4_7kug1"]
 [ext_resource type="Texture2D" uid="uid://bgfdu2fb83wwy" path="res://art/ui/orc_camp.png" id="5_jnrrv"]
@@ -22,6 +33,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+material = SubResource("ShaderMaterial_circle")
 
 [node name="CorruptionSprite" type="TextureRect" parent="."]
 layout_mode = 1
@@ -31,6 +43,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_jel24")
+material = SubResource("ShaderMaterial_circle")
 
 [node name="Highlight" type="ColorRect" parent="."]
 layout_mode = 1
