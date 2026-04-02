@@ -1,7 +1,7 @@
 extends Control
 
 # --- Mapa ---
-@onready var grid: GridContainer = $HBoxContainer/RegionsGrid
+@onready var map_canvas: Control = $HBoxContainer/MapCanvas
 @onready var right_panel: VBoxContainer = $HBoxContainer/RightPanel
 
 # --- RegionSection ---
@@ -55,6 +55,7 @@ extends Control
 @onready var doctrine_effects: Label      = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/DoctrineEffects
 @onready var destroy_button: Button       = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/DestroyButton
 
+var _tile_by_id: Dictionary = {}  # { region_id: int -> RegionTile }
 var selected_region_idx: int = -1
 # parallel array — uchovává doctrine key pro každý item v doctrine_picker
 var _doctrine_keys: Array[String] = []
@@ -126,7 +127,6 @@ func _ready() -> void:
 	tags_header.pressed.connect(func(): _toggle_section(tags_content, tags_header))
 	secrets_header.pressed.connect(func(): _toggle_section(secrets_content, secrets_header))
 
-	grid.columns = 4
 	_build_grid()
 
 	# signály — akce
@@ -179,7 +179,7 @@ func _ready() -> void:
 	_mission_parent.move_child(mission_fail_effects, _mi_idx + 2)
 
 func _on_game_updated() -> void:
-	if grid.get_child_count() != GameState.region_manager.regions.size():
+	if _tile_by_id.size() != GameState.region_manager.regions.size():
 		_build_grid()
 		return
 	_refresh_selected_panel()
@@ -384,25 +384,27 @@ func _format_effects_preview(effects: Dictionary) -> String:
 
 func _on_mission_resolved(result: Dictionary) -> void:
 	var region_id: int = result.get("region_id", -1)
-	if region_id < 0 or region_id >= grid.get_child_count():
+	var tile = _tile_by_id.get(region_id)
+	if tile == null:
 		return
 
 	var success: bool = result.get("success", false)
-	var tile = grid.get_child(region_id)
-
 	if tile.has_method("play_feedback"):
 		tile.call_deferred("play_feedback", success)
 
 func _build_grid() -> void:
-	for child in grid.get_children():
+	for child in map_canvas.get_children():
 		child.queue_free()
+	_tile_by_id.clear()
 
 	for i in GameState.region_manager.regions.size():
 		var r: Region = GameState.query.regions.get_by_id(i)
 		var t: Control = tile_scene.instantiate()
-		grid.add_child(t)
+		map_canvas.add_child(t)
+		t.position = Vector2(r.position) - Vector2(64, 64)
 		t.call_deferred("setup", i, r)
 		t.connect("tile_selected", Callable(self, "_on_tile_selected"))
+		_tile_by_id[i] = t
 
 	_refresh_unit_positions()
 	_refresh_region_colors()
@@ -415,8 +417,8 @@ func _on_tile_selected(region_idx: int) -> void:
 	_refresh_tile_selection()
 
 func _refresh_tile_selection() -> void:
-	for i in grid.get_child_count():
-		var tile = grid.get_child(i)
+	for i in _tile_by_id:
+		var tile = _tile_by_id[i]
 		var is_sel = (i == selected_region_idx)
 		tile.call_deferred("set_selected", is_sel)
 
@@ -597,9 +599,9 @@ func _clear_movement_target_highlight() -> void:
 func _on_neighbor_item_selected(index: int) -> void:
 	_clear_movement_target_highlight()
 	var target_region_id: int = neighbor_select.get_item_id(index)
-	if target_region_id < 0 or target_region_id >= grid.get_child_count():
+	var tile = _tile_by_id.get(target_region_id)
+	if tile == null:
 		return
-	var tile = grid.get_child(target_region_id)
 	tile.set_movement_target(true)
 	_current_movement_target_tile = tile
 
@@ -609,16 +611,15 @@ func _on_turn_resolved() -> void:
 	_refresh_selected_panel()
 
 func _refresh_region_colors() -> void:
-	for i in GameState.region_manager.regions.size():
+	for i in _tile_by_id:
 		var r: Region = GameState.query.regions.get_by_id(i)
-		var tile = grid.get_child(i)
-
+		var tile = _tile_by_id[i]
 		if tile.has_method("refresh_from_region"):
 			tile.call_deferred("refresh_from_region", r)
 
 func _refresh_unit_positions() -> void:
-	for i in GameState.region_manager.regions.size():
-		var region_tile = grid.get_child(i)
+	for i in _tile_by_id:
+		var region_tile = _tile_by_id[i]
 
 		var units_here: Array = []
 		var enemy_here: Array = []
@@ -634,10 +635,12 @@ func _refresh_unit_positions() -> void:
 func _on_unit_moved(_unit_id: int, from_region: int, to_region: int) -> void:
 	_refresh_unit_positions()
 	_refresh_region_colors()
-	if from_region < grid.get_child_count():
-		grid.get_child(from_region).call_deferred("play_move_animation")
-	if to_region < grid.get_child_count():
-		grid.get_child(to_region).call_deferred("play_move_animation")
+	var from_tile = _tile_by_id.get(from_region)
+	if from_tile != null:
+		from_tile.call_deferred("play_move_animation")
+	var to_tile = _tile_by_id.get(to_region)
+	if to_tile != null:
+		to_tile.call_deferred("play_move_animation")
 
 # --------------------------
 # DARK ACTIONS UI
