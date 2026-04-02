@@ -21,6 +21,7 @@ var _is_selected: bool = false
 var _is_hovered: bool = false
 var _tag_pulsing: bool = false
 var _is_movement_target: bool = false
+var _border_color: Color = Color.TRANSPARENT
 
 const ICON_W := 16
 const ICON_H := 16
@@ -361,3 +362,20 @@ func _align_right_bottom(icon: TextureRect, count: Label) -> void:
 	#tween.tween_property(player_count, "scale", Vector2.ONE, 0.1)
 	##tween.tween_property(self, "modulate:a", 0.3, 0.15)
 	##tween.tween_property(self, "modulate:a", 1.0, 0.15)
+
+func set_owner_border(faction_id: String) -> void:
+	_border_color = _faction_color(faction_id)
+	queue_redraw()
+
+func _faction_color(faction_id: String) -> Color:
+	match faction_id:
+		"elf":      return Color("4caf50")
+		"paladin":  return Color("cca644")
+		"merchant": return Color("55aadd")
+		"player":   return Color("5e2b8f")
+		"orc":      return Color("8b0000")
+		_:          return Color("888888")
+
+func _draw() -> void:
+	if _border_color.a > 0.0:
+		draw_arc(Vector2(64.0, 64.0), 60.0, 0.0, TAU, 64, _border_color, 4.0, true)

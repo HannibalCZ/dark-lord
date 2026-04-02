@@ -409,6 +409,8 @@ func _build_grid() -> void:
 	_refresh_unit_positions()
 	_refresh_region_colors()
 	_refresh_tile_selection()
+	_draw_connections()
+	_refresh_borders()
 
 func _on_tile_selected(region_idx: int) -> void:
 	_clear_movement_target_highlight()
@@ -608,6 +610,7 @@ func _on_neighbor_item_selected(index: int) -> void:
 func _on_turn_resolved() -> void:
 	_refresh_region_colors()
 	_refresh_unit_positions()
+	_refresh_borders()
 	_refresh_selected_panel()
 
 func _refresh_region_colors() -> void:
@@ -616,6 +619,40 @@ func _refresh_region_colors() -> void:
 		var tile = _tile_by_id[i]
 		if tile.has_method("refresh_from_region"):
 			tile.call_deferred("refresh_from_region", r)
+
+func _refresh_borders() -> void:
+	for region_id in _tile_by_id:
+		var r: Region = GameState.query.regions.get_by_id(region_id)
+		var tile = _tile_by_id[region_id]
+		tile.set_owner_border(r.owner_faction_id)
+
+func _draw_connections() -> void:
+	for child in map_canvas.get_children():
+		if child is Line2D:
+			child.queue_free()
+
+	var drawn: Dictionary = {}
+	for region_id in _tile_by_id:
+		var r: Region = GameState.query.regions.get_by_id(region_id)
+		var neighbors: Array[int] = GameState.query.regions.neighbors(region_id)
+		for neighbor_id in neighbors:
+			var key: int = min(region_id, neighbor_id) * 1000 + max(region_id, neighbor_id)
+			if drawn.has(key):
+				continue
+			drawn[key] = true
+
+			var line := Line2D.new()
+			line.width = 2.0
+			line.default_color = Color(0.4, 0.4, 0.5, 0.6)
+			line.z_index = -1
+
+			var pos_a := Vector2(r.position)
+			var neighbor_r: Region = GameState.query.regions.get_by_id(neighbor_id)
+			var pos_b := Vector2(neighbor_r.position)
+
+			line.add_point(pos_a)
+			line.add_point(pos_b)
+			map_canvas.add_child(line)
 
 func _refresh_unit_positions() -> void:
 	for i in _tile_by_id:
