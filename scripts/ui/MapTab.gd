@@ -397,6 +397,8 @@ func _on_mission_resolved(result: Dictionary) -> void:
 
 func _build_grid() -> void:
 	for child in map_canvas.get_children():
+		if child == connection_layer:
+			continue
 		child.queue_free()
 	_tile_by_id.clear()
 
