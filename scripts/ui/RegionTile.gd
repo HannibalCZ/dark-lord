@@ -33,6 +33,13 @@ func _ready() -> void:
 	button.mouse_entered.connect(_on_mouse_entered)
 	button.mouse_exited.connect(_on_mouse_exited)
 
+	var shader := Shader.new()
+	shader.code = "shader_type canvas_item;\nvoid fragment() {\n\tvec2 c = UV - vec2(0.5);\n\tif (length(c) > 0.5) { discard; }\n\tCOLOR = texture(TEXTURE, UV);\n}"
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	terrain_sprite.material = mat
+	corruption_overlay.material = mat
+
 func setup(id: int, region: Region) -> void:
 	region_id = id
 
