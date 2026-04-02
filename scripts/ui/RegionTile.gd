@@ -8,7 +8,6 @@ var button: Button
 @onready var border_overlay: Panel = $BorderOverlay
 @onready var highlight: ColorRect   = $Highlight
 @onready var overlay: Control          = $Overlay
-@onready var crest: TextureRect        = $Overlay/Crest
 @onready var tag_icon: TextureRect     = $Overlay/TagIcon
 @onready var player_icon: TextureRect  = $Overlay/PlayerIcon
 @onready var player_count: Label       = $Overlay/PlayerCount
@@ -45,9 +44,6 @@ func setup(id: int, region: Region) -> void:
 
 	# terrain podle typu
 	terrain_sprite.texture = load(_get_terrain_texture_path(region.region_type))
-
-	# crest podle ownera / controllera
-	_update_crest(region.owner_faction_id, region.controller_faction_id)
 
 	# tag icon podle toho, zda tagy existují
 	_update_tag_icon(region.tags)
@@ -116,7 +112,6 @@ func _get_terrain_texture_path(region_type: String) -> String:
 			return "res://art/tiles/mountains.png" # need to change
 
 func refresh_from_region(region: Region) -> void:
-	_update_crest(region.owner_faction_id, region.controller_faction_id)
 	_update_tag_icon(region.tags)
 	_update_secret_icon(region)
 	_update_lair_icon(region)
@@ -156,30 +151,6 @@ func _update_lair_icon(region: Region) -> void:
 		lair_icon.visible = true
 	else:
 		lair_icon.visible = false
-
-func _update_crest(owner_id: String, controller_id: String) -> void:
-	# jeden společný sprite pro všechny frakce
-	if crest.texture == null:
-		crest.texture = load("res://art/ui/crest.png")
-	
-	if owner_id == "neutral": crest.visible = false
-	else: crest.visible = true
-	# barva podle OWNera
-	var color := Color.WHITE
-	match owner_id:
-		"elf":      color = Color("4caf50")
-		"paladin":  color = Color("cca644")
-		"merchant": color = Color("55aadd")
-		Balance.PLAYER_FACTION:
-			color = Color("5e2b8f")
-		_:
-			color = Color("aaaaaa")
-
-	# pokud controller != owner -> zkorumpovaný, přidej fialový nádech
-	if controller_id != "" and controller_id != owner_id:
-		color = color.lerp(Color("b45cd1"), 0.5)
-
-	crest.modulate = color
 
 func _on_pressed() -> void:
 	tile_selected.emit(region_id)
