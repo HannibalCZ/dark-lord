@@ -26,6 +26,11 @@ size_flags_vertical = 3
 clip_contents = true
 mouse_filter = 1
 
+[node name="MapContent" type="Control" parent="HBoxContainer/MapCanvas"]
+layout_mode = 3
+anchors_preset = 0
+mouse_filter = 2
+
 [node name="ConnectionLayer" type="Control" parent="HBoxContainer/MapCanvas"]
 layout_mode = 1
 anchors_preset = 15
