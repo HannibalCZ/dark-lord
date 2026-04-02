@@ -109,8 +109,11 @@ func load_map_from_json(path: String) -> void:
 			if typeof(rd) != TYPE_DICTIONARY:
 				continue
 			var id: int = int(rd["id"])
-			var neighbors: Array = rd.get("neighbors", [])
-			adjacency[id] = neighbors
+			var raw: Array = rd.get("neighbors", [])
+			var typed: Array[int] = []
+			for n in raw:
+				typed.append(int(n))
+			adjacency[id] = typed
 
 
 func generate_grid_adjacency(w: int, h: int) -> void:
