@@ -87,6 +87,10 @@ func load_map_from_json(path: String) -> void:
 			r.lair_control = String(ld.get("control", "neutral"))
 			r.lair_influence = int(ld.get("influence", 0))
 
+		# Position (optional, fallback Vector2i.ZERO)
+		var pd: Dictionary = rd.get("position", {})
+		r.position = Vector2i(int(pd.get("x", 0)), int(pd.get("y", 0)))
+
 		regions[id] = r
 
 	# safety: doplň prázdné sloty, pokud JSON nemá všechny regiony
