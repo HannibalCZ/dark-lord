@@ -24,6 +24,9 @@ var _collected_spawn_events: Array[Dictionary] = []
 # Výsledky AI purge misí z aktuálního tahu — sbíráme přes EventBus.
 var _collected_ai_mission_results: Array[Dictionary] = []
 
+# Odemcené progression uzly z aktuálního tahu — sbíráme přes EventBus.
+var _collected_progression_events: Array[Dictionary] = []
+
 # ---------------------------
 func init(gs: GameStateSingleton) -> void:
 	game_state = gs
@@ -32,6 +35,7 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.org_destroyed.connect(_on_org_destroyed)
 	EventBus.org_doctrine_changed.connect(_on_org_doctrine_changed)
 	EventBus.ai_unit_spawned.connect(_on_ai_unit_spawned)
+	EventBus.progression_node_unlocked.connect(_on_progression_node_unlocked)
 	GameState.game_ended.connect(_on_game_ended)
 
 # ---------------------------
@@ -47,6 +51,7 @@ func generate_events_for_turn() -> Array[EventData]:
 	_collect_heat_awareness_events(events)
 	_collect_org_events(events)
 	_collect_spawn_events(events)
+	_collect_progression_events(events)
 
 	_collected_player_results.clear()
 
@@ -518,6 +523,35 @@ func _format_mission_result_effects(fx: Dictionary) -> String:
 	if parts.is_empty():
 		return "bez measurable efektu"
 	return ", ".join(parts)
+
+# ---------------------------
+# ZDROJ 7 — Odemcené progression uzly (Stínový vezír)
+# ---------------------------
+func _collect_progression_events(events: Array[EventData]) -> void:
+	for e in _collected_progression_events:
+		var node_key: String = String(e.get("node_key", ""))
+		var node_cfg: Dictionary = Balance.get_progression_node(node_key)
+		if node_cfg.is_empty():
+			continue
+		var display_name: String = String(node_cfg.get("display_name", node_key))
+		var description: String  = String(node_cfg.get("description", ""))
+
+		events.append(EventData.create(
+			Balance.ADVISOR_VEZIR,
+			Balance.EVENT_IMPORTANT,
+			"Pane, %s bylo odemceno. %s" % [display_name, description],
+			"Progression uzel odemcen: %s." % display_name
+		))
+
+	_collected_progression_events.clear()
+
+# ---------------------------
+# Signal handler — progression uzel odemcen
+# ---------------------------
+func _on_progression_node_unlocked(faction_id: String, node_key: String) -> void:
+	if faction_id != Balance.PLAYER_FACTION:
+		return
+	_collected_progression_events.append({ "node_key": node_key })
 
 # ---------------------------
 # Signal handler — zmena doktríny organizace (ROUTINE — jen do logu)

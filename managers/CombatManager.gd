@@ -66,6 +66,11 @@ func _resolve_region_battle(region_idx: int) -> Dictionary:
 		for u: Unit in by_faction[f]:
 			if u.state != "lost":
 				total += u.power
+		# Progression modifier — army_power (TYP A)
+		# Platí pro všechny frakce — připravuje půdu pro RDL (rival dark lord)
+		var fac = game_state.faction_manager.get_faction(f)
+		if fac != null:
+			total += fac.modifiers.get("army_power", 0)
 		power_by_faction[f] = total
 
 	# 2) vítěz / remíza

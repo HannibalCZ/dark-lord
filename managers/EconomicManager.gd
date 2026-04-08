@@ -23,6 +23,19 @@ func compute_income_and_upkeep(faction_id: String) -> Dictionary:
 		mana_income += float(inc.get("mana_income", 0.0))
 		research_income += float(inc.get("research_income", 0.0))
 
+	# Progression modifier — gold_per_region (TYP A)
+	# fac je již v scope (viz začátek funkce), null check pro jistotu
+	if fac != null:
+		var owned_count: int = 0
+		for region in game_state.region_manager.regions:
+			if region.owner_faction_id == faction_id:
+				owned_count += 1
+		gold_income += fac.modifiers.get("gold_per_region", 0.0) * owned_count
+
+	# Progression modifier — mana_income (TYP A)
+	if fac != null:
+		mana_income += fac.modifiers.get("mana_income", 0.0)
+
 	# UNIT UPKEEP
 	var gold_upkeep := 0.0
 	var mana_upkeep := 0.0
