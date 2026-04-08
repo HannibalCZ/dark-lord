@@ -127,6 +127,12 @@ func _compute_mission_success(mission_key: String, unit: Unit, region: Region) -
 			if effects.has("mission_bonus"):
 				region_delta += float(effects["mission_bonus"]) / 100.0
 
+	# Progression modifier — mission_success (TYP A)
+	# Aplikuje se pouze pro hráčovy mise — konzistentní s mission_bonus ze Shadow Network
+	var player_faction = game_state.faction_manager.get_faction(Balance.PLAYER_FACTION)
+	if player_faction != null and unit.faction_id == Balance.PLAYER_FACTION:
+		region_delta += player_faction.modifiers.get("mission_success", 0.0)
+
 	# 4) spočítat výslednou šanci
 	var total_chance: float = base + region_delta + unit_delta
 	total_chance = clamp(total_chance, Balance.MISSION_CHANCE_MIN, Balance.MISSION_CHANCE_MAX)
