@@ -158,8 +158,7 @@ func _confirm_unlock(node_key: String) -> void:
 	var result: Dictionary = GameState.progression_manager.unlock_node(
 			Balance.PLAYER_FACTION, node_key)
 	if result["ok"]:
-		_refresh_node_states()
-		_refresh_rp()
+		GameState.game_updated.emit()
 	else:
 		push_warning("Unlock failed: " + result["reason"])
 
