@@ -719,3 +719,284 @@ const AI_SPAWN = {
 
 static func get_org_effects(org_type: String, doctrine: String) -> Dictionary:
 	return ORG[org_type]["doctrines"][doctrine]["effects"]
+
+# KONVENCE PROGRESSION EFEKTŮ:
+# TYP A — Modifikátory (mission_success, army_power...):
+#   Mohou být kladné i záporné.
+#   Odemčení uzlu → EffectsSystem změní faction.modifiers
+#   Každý tah → příslušný manažer čte faction.modifiers
+#   EffectsSystem se každý tah NEVOLÁ pro tyto modifikátory
+#
+# TYP B — Zdroje (gold, mana, heat...):
+#   Odemčení uzlu → EffectsSystem aplikuje jednorázově
+#   Každý tah → ProgressionManager volá EffectsSystem
+#   faction.modifiers se pro tyto efekty NEPOUŽÍVÁ
+const PROGRESSION = {
+	# --- TIER 1 — Společný základ ---
+	"dark_will": {
+		"display_name": "Temna vule",
+		"description":  "Zvysi osobni moc Dark Lorda.",
+		"tier": 1, "branch": "common",
+		"cost": { "rp": 3 },
+		"unlock_conditions": {
+			"requires_nodes": [], "excludes_nodes": [],
+			"game_condition": null
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+	"shadow_lair": {
+		"display_name": "Stinovy lair",
+		"description":  "Posili lair Dark Lorda.",
+		"tier": 1, "branch": "common",
+		"cost": { "rp": 3 },
+		"unlock_conditions": {
+			"requires_nodes": [], "excludes_nodes": [],
+			"game_condition": null
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+	"recruiter": {
+		"display_name": "Recruiter",
+		"description":  "Rozsiri kapacitu agentu.",
+		"tier": 1, "branch": "common",
+		"cost": { "rp": 4 },
+		"unlock_conditions": {
+			"requires_nodes": [], "excludes_nodes": [],
+			"game_condition": null
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+	"dark_knowledge": {
+		"display_name": "Temne znalosti",
+		"description":  "Odemkne pokrocile organizace.",
+		"tier": 1, "branch": "common",
+		"cost": { "rp": 4 },
+		"unlock_conditions": {
+			"requires_nodes": [], "excludes_nodes": [],
+			"game_condition": null
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+
+	# --- TIER 2 — Společný základ ---
+	"fear_as_weapon": {
+		"display_name": "Strach jako zbran",
+		"description":  "Korupce zacne pracovat pro Dark Lorda.",
+		"tier": 2, "branch": "common",
+		"cost": { "rp": 5 },
+		"unlock_conditions": {
+			"requires_nodes": [],
+			"excludes_nodes": [],
+			"game_condition": { "type": "regions_corrupted", "min": 2 }
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+	"dark_army": {
+		"display_name": "Temna armada",
+		"description":  "Vojenska sila Dark Lorda roste.",
+		"tier": 2, "branch": "common",
+		"cost": { "rp": 5 },
+		"unlock_conditions": {
+			"requires_nodes": [],
+			"excludes_nodes": [],
+			"game_condition": { "type": "military_victories", "min": 1 }
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+	"ritual_circle": {
+		"display_name": "Ritualni kruh",
+		"description":  "Posili magicke schopnosti.",
+		"tier": 2, "branch": "common",
+		"cost": { "rp": 5 },
+		"unlock_conditions": {
+			"requires_nodes": [],
+			"excludes_nodes": [],
+			"game_condition": { "type": "org_exists", "org_type": "cult", "min_turns": 3 }
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+
+	# --- TIER 3 — Stínová větev ---
+	"master_of_masks": {
+		"display_name": "Mistr masek",
+		"description":  "Agent prevezme identitu NPC.",
+		"tier": 3, "branch": "shadow",
+		"cost": { "rp": 7 },
+		"unlock_conditions": {
+			"requires_nodes": ["fear_as_weapon"],
+			"excludes_nodes": ["whisper_network"],
+			"game_condition": null
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+	"whisper_network": {
+		"display_name": "Sit septu",
+		"description":  "Shadow Network reportuje pohyby AI.",
+		"tier": 3, "branch": "shadow",
+		"cost": { "rp": 7 },
+		"unlock_conditions": {
+			"requires_nodes": ["fear_as_weapon"],
+			"excludes_nodes": ["master_of_masks"],
+			"game_condition": null
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+
+	# --- TIER 3 — Válečnická větev ---
+	"dark_general": {
+		"display_name": "Temny general",
+		"description":  "Armady ignoruji prvni Heat threshold.",
+		"tier": 3, "branch": "military",
+		"cost": { "rp": 7 },
+		"unlock_conditions": {
+			"requires_nodes": ["dark_army"],
+			"excludes_nodes": ["fortress_lord"],
+			"game_condition": null
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+	"fortress_lord": {
+		"display_name": "Hradni pan",
+		"description":  "Lairy jsou tezko dobyvatelne.",
+		"tier": 3, "branch": "military",
+		"cost": { "rp": 7 },
+		"unlock_conditions": {
+			"requires_nodes": ["dark_army"],
+			"excludes_nodes": ["dark_general"],
+			"game_condition": null
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+
+	# --- TIER 3 — Mystická větev ---
+	"seer": {
+		"display_name": "Vestec",
+		"description":  "Nahledni do budoucich akci AI.",
+		"tier": 3, "branch": "mystic",
+		"cost": { "rp": 7 },
+		"unlock_conditions": {
+			"requires_nodes": ["ritual_circle"],
+			"excludes_nodes": ["dark_mirror"],
+			"game_condition": null
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+	"dark_mirror": {
+		"display_name": "Temne zrcadlo",
+		"description":  "Zkopiruje efekt nepratelske Dark Action.",
+		"tier": 3, "branch": "mystic",
+		"cost": { "rp": 7 },
+		"unlock_conditions": {
+			"requires_nodes": ["ritual_circle"],
+			"excludes_nodes": ["seer"],
+			"game_condition": null
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+
+	# --- TIER 4 — Specializace ---
+	"invisible_hand": {
+		"display_name": "Neviditelna ruka",
+		"description":  "Korupce se siri automaticky.",
+		"tier": 4, "branch": "shadow",
+		"cost": { "rp": 10 },
+		"unlock_conditions": {
+			"requires_nodes": ["master_of_masks", "whisper_network"],
+			"excludes_nodes": [],
+			"game_condition": { "type": "orgs_active", "min": 3 }
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+	"fear_precedes": {
+		"display_name": "Strach predchazi",
+		"description":  "Obsazeni regionu bez odporu.",
+		"tier": 4, "branch": "military",
+		"cost": { "rp": 10 },
+		"unlock_conditions": {
+			"requires_nodes": ["dark_general", "fortress_lord"],
+			"excludes_nodes": [],
+			"game_condition": { "type": "regions_owned", "min": 3 }
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+	"ritual_nexus": {
+		"display_name": "Ritualni nexus",
+		"description":  "Dark Actions v Kult regionu zlevni.",
+		"tier": 4, "branch": "mystic",
+		"cost": { "rp": 10 },
+		"unlock_conditions": {
+			"requires_nodes": ["seer", "dark_mirror"],
+			"excludes_nodes": [],
+			"game_condition": { "type": "mana_cap_reached", "min": 20 }
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+
+	# --- TIER 5 — Apotheóza ---
+	"invisible_throne": {
+		"display_name": "Neviditelny trun",
+		"description":  "Dark Lord se stane systemem.",
+		"tier": 5, "branch": "shadow",
+		"cost": { "rp": 15 },
+		"unlock_conditions": {
+			"requires_nodes": ["invisible_hand"],
+			"excludes_nodes": ["iron_throne", "eternal_ritual"],
+			"game_condition": null
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+	"iron_throne": {
+		"display_name": "Zelezny trun",
+		"description":  "Dark Lord se stane legendou.",
+		"tier": 5, "branch": "military",
+		"cost": { "rp": 15 },
+		"unlock_conditions": {
+			"requires_nodes": ["fear_precedes"],
+			"excludes_nodes": ["invisible_throne", "eternal_ritual"],
+			"game_condition": null
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+	"eternal_ritual": {
+		"display_name": "Vecny ritual",
+		"description":  "Dark Lord prekona smrtelnost.",
+		"tier": 5, "branch": "mystic",
+		"cost": { "rp": 15 },
+		"unlock_conditions": {
+			"requires_nodes": ["ritual_nexus"],
+			"excludes_nodes": ["invisible_throne", "iron_throne"],
+			"game_condition": null
+		},
+		"one_time_effects": {},
+		"passive_effects":  {}
+	},
+}
+
+static func get_progression_node(node_key: String) -> Dictionary:
+	return PROGRESSION.get(node_key, {})
+
+static func get_progression_passive(node_key: String) -> Dictionary:
+	var node: Dictionary = PROGRESSION.get(node_key, {})
+	return node.get("passive_effects", {})
+
+static func get_progression_one_time(node_key: String) -> Dictionary:
+	var node: Dictionary = PROGRESSION.get(node_key, {})
+	return node.get("one_time_effects", {})
