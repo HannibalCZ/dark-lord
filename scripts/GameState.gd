@@ -19,6 +19,7 @@ signal game_ended(result: Dictionary) # { ok:bool, outcome:"win"/"lose", reason:
 @onready var ai_manager: AIManager = AIManager.new()
 @onready var events_manager: EventsManager = EventsManager.new()
 @onready var org_manager: OrgManager = OrgManager.new()
+@onready var progression_manager: ProgressionManager = ProgressionManager.new()
 
 var rng := RandomNumberGenerator.new()
 var turn:int = 1
@@ -53,6 +54,7 @@ func _ready() -> void:
 	building_manager.game_state    = self
 	ai_manager.game_state          = self
 	org_manager.game_state         = self
+	progression_manager.game_state = self
 	events_manager.init(self)
 
 	query = GameQuery.new(self)

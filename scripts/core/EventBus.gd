@@ -22,3 +22,5 @@ signal org_destroyed(region_id: int)
 signal org_doctrine_changed(region_id: int, new_doctrine: String)
 
 signal ai_unit_spawned(faction_id: String, unit_key: String, region_id: int)
+
+signal progression_node_unlocked(faction_id: String, node_key: String)
