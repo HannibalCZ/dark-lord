@@ -23,6 +23,10 @@ func apply(e: Dictionary, ctx: EffectContext) -> Array[Dictionary]:
 			logs.append({"type":"warn", "text":"Effects refer to missing faction_id='%s'. Faction part ignored." % source})
 	else:
 		_apply_faction(e, fac, logs)
+		# unit_limit modifier syncat na UnitManager.unit_limit —
+		# tam se čte při náboru (recruit_unit), ne na Faction.unit_limit
+		if e.has("modifier_unit_limit") and fac.is_player:
+			gs.unit_manager.unit_limit += int(e["modifier_unit_limit"])
 
 	# ---- GLOBALS ----
 	_apply_globals(e, gs, logs)
@@ -55,6 +59,31 @@ func _apply_faction(e: Dictionary, fac: Faction, logs: Array[Dictionary]) -> voi
 		fac.change_resource("infamy", float(e["infamy"]))
 	if e.has("research"):
 		fac.change_resource("research", float(e["research"]))
+
+	# Modifikátory (TYP A — accumulator do faction.modifiers)
+	# Odemčení progression uzlu → přičte se jednou.
+	# Manažeři čtou faction.modifiers každý tah — EffectsSystem se per-tah NEVOLÁ.
+	if e.has("modifier_mission_success"):
+		fac.modifiers["mission_success"] += float(e["modifier_mission_success"])
+
+	if e.has("modifier_army_power"):
+		fac.modifiers["army_power"] += int(e["modifier_army_power"])
+
+	if e.has("modifier_gold_per_region"):
+		fac.modifiers["gold_per_region"] += float(e["modifier_gold_per_region"])
+
+	if e.has("modifier_mana_income"):
+		fac.modifiers["mana_income"] += float(e["modifier_mana_income"])
+
+	if e.has("modifier_ap_max"):
+		fac.modifiers["ap_max_modifier"] += int(e["modifier_ap_max"])
+		# Okamžitě promítnout do dark_actions_max
+		fac.dark_actions_max += int(e["modifier_ap_max"])
+
+	if e.has("modifier_unit_limit"):
+		fac.modifiers["unit_limit_modifier"] += int(e["modifier_unit_limit"])
+		# Sync na UnitManager.unit_limit probíhá v apply() výše —
+		# _apply_faction() nemá přístup k gs
 
 	# Infernal pact flag (example)
 	if e.has("infernal_pact") and bool(e["infernal_pact"]):
@@ -194,7 +223,11 @@ func _check_lair_influence(region: Region, source_faction_id: String, gs: GameSt
 # -----------------------
 
 func _has_any_faction_fields(e: Dictionary) -> bool:
-	return e.has("gold") or e.has("mana") or e.has("infamy") or e.has("infernal_pact") or e.has("research")
+	return (e.has("gold") or e.has("mana") or e.has("infamy")
+		or e.has("infernal_pact") or e.has("research")
+		or e.has("modifier_mission_success") or e.has("modifier_army_power")
+		or e.has("modifier_gold_per_region") or e.has("modifier_mana_income")
+		or e.has("modifier_ap_max") or e.has("modifier_unit_limit"))
 
 func _has_any_region_fields(e: Dictionary) -> bool:
 	return e.has("defense") or e.has("corruption") or e.has("purge_corruption_all") or e.has("secret_progress") or e.has("lair_influence")
