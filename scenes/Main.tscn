@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://b7f7udyiyxxb"]
+[gd_scene load_steps=9 format=3 uid="uid://b7f7udyiyxxb"]
 
 [ext_resource type="PackedScene" uid="uid://ckl1fu7pnsokb" path="res://scenes/ui/TopBar.tscn" id="1_rarhs"]
 [ext_resource type="PackedScene" uid="uid://bpexmyevdnxa5" path="res://scenes/ui/MapTab.tscn" id="2_vcsgt"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://dr1uf3dhxyvm2" path="res://scenes/ui/MagicTab.tscn" id="4_vcsgt"]
 [ext_resource type="PackedScene" uid="uid://1krboumaxk6e" path="res://scenes/ui/BaseTab.tscn" id="5_c01mt"]
 [ext_resource type="PackedScene" path="res://scenes/ui/CouncilPanel.tscn" id="6_council"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ProgressionTab.tscn" id="7_ptab"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -56,5 +57,10 @@ metadata/_tab_index = 3
 visible = false
 layout_mode = 2
 metadata/_tab_index = 4
+
+[node name="ProgressionTab" parent="VBoxContainer/TabContainer" instance=ExtResource("7_ptab")]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 5
 
 [node name="CouncilPanel" parent="." instance=ExtResource("6_council")]
