@@ -1,4 +1,4 @@
-﻿# scripts/data/Balance.gd
+# scripts/data/Balance.gd
 extends Node
 
 const PLAYER_FACTION = "player"
@@ -804,7 +804,7 @@ const PROGRESSION = {
 		"unlock_conditions": {
 			"requires_nodes": [],
 			"excludes_nodes": [],
-			"game_condition": { "type": "military_victories", "min": 1 }
+			"game_condition": null
 		},
 		"one_time_effects": {},
 		"passive_effects":  {}
@@ -817,7 +817,7 @@ const PROGRESSION = {
 		"unlock_conditions": {
 			"requires_nodes": [],
 			"excludes_nodes": [],
-			"game_condition": { "type": "org_exists", "org_type": "cult", "min_turns": 3 }
+			"game_condition": null
 		},
 		"one_time_effects": {},
 		"passive_effects":  {}
@@ -942,7 +942,7 @@ const PROGRESSION = {
 		"unlock_conditions": {
 			"requires_nodes": ["seer", "dark_mirror"],
 			"excludes_nodes": [],
-			"game_condition": { "type": "mana_cap_reached", "min": 20 }
+			"game_condition": null
 		},
 		"one_time_effects": {},
 		"passive_effects":  {}
