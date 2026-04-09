@@ -1000,3 +1000,21 @@ static func get_progression_passive(node_key: String) -> Dictionary:
 static func get_progression_one_time(node_key: String) -> Dictionary:
 	var node: Dictionary = PROGRESSION.get(node_key, {})
 	return node.get("one_time_effects", {})
+
+# --- Proceduralni rozmisteni ---
+# PROCEDURAL_GENERATION_ENABLED: true = proceduralni
+# rozmisteni tajemstvi pri startu hry,
+# false = pouzij data z JSON beze zmeny (fallback)
+const PROCEDURAL_GENERATION_ENABLED: bool = true
+
+# Seed pro reprodukovatelne vysledky.
+# Zmen pro ruzne rozlozeni tajemstvi.
+# 0 = nahodny seed pri kazdem spusteni.
+const PROCEDURAL_SEED: int = 12345
+
+# Hustota tajemstvi — jaka cast zpusobilych
+# regionu dostane tajemstvi.
+# Zpusobile regiony: region_kind == "wildlands"
+# mimo startovni region hrace.
+const PROCEDURAL_SECRET_DENSITY_MIN: float = 0.25
+const PROCEDURAL_SECRET_DENSITY_MAX: float = 0.33

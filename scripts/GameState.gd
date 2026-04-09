@@ -126,6 +126,8 @@ func load_scenario(path: String) -> void:
 	else:
 		region_manager.init_regions_from_map(map_path)
 
+	_place_procedural_secrets()
+
 	# 3) Globals
 	var g: Dictionary = data.get("globals", {})
 	turn = int(g.get("turn", 1))
@@ -634,6 +636,62 @@ func _spawn_faction_unit(faction_id: String, unit_key: String) -> void:
 		_log(le)
 	_process_domain_events(spawn_res.get("events", []))
 	EventBus.ai_unit_spawned.emit(faction_id, unit_key, region_id)
+
+func _place_procedural_secrets() -> void:
+	if not Balance.PROCEDURAL_GENERATION_ENABLED:
+		return
+
+	# Inicializuj RNG se seedem
+	var proc_rng := RandomNumberGenerator.new()
+	if Balance.PROCEDURAL_SEED == 0:
+		proc_rng.randomize()
+	else:
+		proc_rng.seed = Balance.PROCEDURAL_SEED
+
+	# Získej způsobilé regiony
+	# Způsobilé: region_kind == "wildlands", mimo startovní region, bez secret_id z JSON
+	var eligible: Array[Region] = []
+	for region in region_manager.regions:
+		if region.region_kind != "wildlands":
+			continue
+		if region.id == player_start_region_id:
+			continue
+		if region.secret_id != "":
+			continue
+		eligible.append(region)
+
+	if eligible.is_empty():
+		return
+
+	# Náhodně vyber počet tajemství podle hustoty
+	var min_count: int = \
+		max(1, int(floor(
+			eligible.size()
+			* Balance.PROCEDURAL_SECRET_DENSITY_MIN)))
+	var max_count: int = \
+		max(1, int(floor(
+			eligible.size()
+			* Balance.PROCEDURAL_SECRET_DENSITY_MAX)))
+	var count: int = proc_rng.randi_range(min_count, max_count)
+
+	# Zamíchej způsobilé regiony (Fisher-Yates)
+	var shuffled: Array[Region] = eligible.duplicate()
+	for i in range(shuffled.size() - 1, 0, -1):
+		var j: int = proc_rng.randi_range(0, i)
+		var tmp: Region = shuffled[i]
+		shuffled[i] = shuffled[j]
+		shuffled[j] = tmp
+
+	# Přiřaď tajemství prvním count regionům
+	var secret_keys: Array = Balance.SECRET.keys()
+	for i in range(min(count, shuffled.size())):
+		var region: Region = shuffled[i]
+		var secret_key: String = secret_keys[
+			proc_rng.randi_range(0, secret_keys.size() - 1)]
+		region.secret_id       = secret_key
+		region.secret_known    = false
+		region.secret_state    = "none"
+		region.secret_progress = 0
 
 func apply_command_result(res: Dictionary) -> Dictionary:
 	# jednotné místo: logs + events + UI signal
