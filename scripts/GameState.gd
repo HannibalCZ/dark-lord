@@ -112,6 +112,8 @@ func load_scenario(path: String) -> void:
 	unit_manager.init_empty()
 	faction_manager.init_empty()
 	mission_manager.init()
+	progression_manager.unlocked_nodes.clear()
+	progression_manager.condition_trackers.clear()
 
 	# (budovy/spells jsou zatím "game rules", ne scénář – nechávám init)
 	building_manager.init_buildings()
