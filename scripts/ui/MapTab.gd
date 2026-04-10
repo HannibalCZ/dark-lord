@@ -252,6 +252,7 @@ func _on_game_updated() -> void:
 	if _tile_by_id.size() != GameState.region_manager.regions.size():
 		_build_grid()
 		return
+	_refresh_unit_positions()
 	_refresh_selected_panel()
 
 func _on_mission_selected(_idx: int) -> void:
