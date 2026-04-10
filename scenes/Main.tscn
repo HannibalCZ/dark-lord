@@ -33,6 +33,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_vertical = 3
 current_tab = 0
+tab_disabled/2 = true
 
 [node name="MapTab" parent="VBoxContainer/TabContainer" instance=ExtResource("2_vcsgt")]
 layout_mode = 2
