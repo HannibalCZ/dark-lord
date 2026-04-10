@@ -259,6 +259,7 @@ func _on_mission_selected(_idx: int) -> void:
 
 func _on_dark_action_selected(_idx: int) -> void:
 	_update_dark_action_info()
+	_refresh_actions()
 
 func _check_dark_action_requirements(action_key: String) -> Dictionary:
 	var def: Dictionary = Balance.DARK_ACTIONS.get(action_key, {})
@@ -311,6 +312,47 @@ func _update_dark_action_info() -> void:
 		dark_action_confirm.disabled = false
 
 	dark_action_info.text = desc
+
+func _refresh_actions() -> void:
+	# Pokud je dropdown disabled (žádné dostupné akce), confirm zůstane disabled
+	if dark_action_select.disabled:
+		dark_action_confirm.disabled = true
+		dark_action_confirm.tooltip_text = ""
+		dark_action_confirm.modulate = Color(1, 1, 1, 0.4)
+		return
+
+	var action_key: String = UIHelpers.get_selected_key(dark_action_select)
+	if action_key == "":
+		# Vybrán placeholder — žádná akce nevybrána
+		dark_action_confirm.disabled = true
+		dark_action_confirm.tooltip_text = ""
+		dark_action_confirm.modulate = Color(1, 1, 1, 0.4)
+		return
+
+	# 1) Zkontroluj requirements specifické pro region (korupční fáze atd.)
+	var req_check: Dictionary = _check_dark_action_requirements(action_key)
+	if not req_check.get("ok", false):
+		dark_action_confirm.disabled = true
+		dark_action_confirm.tooltip_text = String(req_check.get("reason", "Nelze seslat."))
+		dark_action_confirm.modulate = Color(1, 1, 1, 0.4)
+		return
+
+	# 2) Zkontroluj can_cast: AP, mana, zlato, cooldown, agent atd.
+	var cast_check: Dictionary = GameState.dark_actions_manager.can_cast(
+		Balance.PLAYER_FACTION,
+		action_key,
+		selected_region_idx
+	)
+	if not cast_check.get("ok", false):
+		dark_action_confirm.disabled = true
+		dark_action_confirm.tooltip_text = String(cast_check.get("reason", "Nelze seslat."))
+		dark_action_confirm.modulate = Color(1, 1, 1, 0.4)
+		return
+
+	# Vše v pořádku — akce je použitelná
+	dark_action_confirm.disabled = false
+	dark_action_confirm.tooltip_text = ""
+	dark_action_confirm.modulate = Color(1, 1, 1, 1.0)
 
 func _build_dark_action_description(action_key: String) -> String:
 	var def: Dictionary = Balance.DARK_ACTIONS.get(action_key, {})
@@ -782,6 +824,7 @@ func _build_dark_actions_menu() -> void:
 	dark_action_select.disabled = false
 
 	_update_dark_action_info()
+	_refresh_actions()
 
 func _on_dark_action_confirm() -> void:
 	if dark_action_select.disabled:
@@ -811,9 +854,8 @@ func _on_dark_action_confirm() -> void:
 
 	var _res: Dictionary = GameState.exec(GameState.commands.cast_dark_action(key, region_id, Balance.PLAYER_FACTION))
 
-	# refresh UI
+	# refresh UI — _build_dark_actions_menu() volá _update_dark_action_info() + _refresh_actions() interně
 	_build_dark_actions_menu()
-	_update_dark_action_info()
 
 	var r := GameState.query.regions.get_by_id(selected_region_idx)
 	if r != null:
