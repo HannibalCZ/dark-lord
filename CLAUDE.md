@@ -3,7 +3,7 @@
 ## O hře
 Tahová strategie kde hráč hraje za Temného pána ovládajícího svět skrze stínové organizace, agenty a temné rituály. Hráč nevládne otevřeně — operuje ze stínu. Síly dobra (AI frakce) reagují na Heat, Infamy a Awareness.
 
-GDD: `dark_lord_gdd_v14.docx` (referenční dokument pro veškerý design)
+GDD: `dark_lord_gdd_v15.docx` (referenční dokument pro veškerý design)
 
 ## Stack
 - Godot 4.x, GDScript
@@ -48,6 +48,7 @@ Každý manažer vlastní svou doménu. Nekomunikují přímo — používají `
 | `SpellManager` | Kouzla a rituály |
 | `LogManager` | Herní log — co se stalo v tahu |
 | `OrgManager` | Stínové organizace — zakládání, doktríny, pasivní efekty |
+| `EventsManager` | Narativní eventy — generování, filtrování, Rada zasvěcených |
 
 ### EventBus (`scripts/core/EventBus.gd`)
 Centrální signálová sběrnice. Veškerá mezimanažerská komunikace jde přes signály na EventBusu — ne přímými voláními.
@@ -79,7 +80,6 @@ Výjimky s TODO komentářem v kódu:
 - `unit_limit` — strukturální limit zatím mimo EffectsSystem
 
 ### Ekonomické vs. neekonomické efekty organizací
-EconomicManager vlastní gold/mana změny včetně org příjmů.
 OrgManager předává EffectsSystem pouze neekonomické efekty
 (heat, awareness, infamy). Nikdy neaplikuj gold/mana org efektů
 přes EffectsSystem — způsobí double-application.
@@ -111,9 +111,19 @@ Tah je **simultánní** — hráč plánuje, pak se vše vyhodnotí najednou s A
 
 ### Region (`scripts/models/RegionData.gd`)
 Pohyb je definován přes **sousedství** (`neighbors: Array[int]`), ne přes souřadnice.
-MVP používá čtvercovou mřížku 4x3 (12 regionů), ale architektura musí být připravena na přechod na graf uzlů (Crusader Kings styl).
+V0.02 používá node-based mapu (19 regionů). Každý region má
+position: Vector2i načtenou z JSON — pouze pro rendering,
+ne pro herní logiku. Sousedství je explicitní seznam v JSON
+(use_explicit_neighbors: true).
 
-Typy regionů: `CITY`, `VILLAGE`, `WILDERNESS`, `MANA_SOURCE`, `RUIN`
+Archivní MVP mapa: data/maps/mvp_map_archive.json
+Aktuální mapa: data/maps/mvp_map.json
+
+Typy regionů: `plains`, `forest`, `mountains`, `wasteland`,
+`town`
+
+Region kinds: `civilized` (započítává se do vítězného prahu),
+`wilderness` (lairy, tajemství)
 
 ### Unit (`scripts/models/UnitData.gd`)
 Pokrývá agenty i armády. Typ určuje dostupné mise a schopnosti.
@@ -165,13 +175,52 @@ Data-driven. Každá mise má `success_chance`, `success_effects[]`, `fail_effec
 - [x] Technický dluh
       - UnitManager odstraněny přímé reference na jiné manažery
       - Veškeré herní efekty přes EffectsSystem
+- [x] AI vylepšení — Inkvizice strategické chování
+- [x] AI vylepšení — spawning paladinů (Heat 85+) a inkvizitorů (Awareness 70+)
+- [x] Awareness jako mechanika (zdroje z misí, Dark Actions, korupce)
+- [x] Heat rebalance (decay -1/tah, nájezd +10, práh spawnu 85)
+- [x] Lair systém — spawn_rate, unit count fix, lair_control logika
+- [x] Transparence UI — collapsible sekce v detailu regionu,
+      mise efekty, pohyb highlight, Rada zasvěcených vylepšení
+- [x] Node-based mapa (v0.02)
+      - 19 regionů s explicitním sousedstvím v JSON
+      - MapCanvas + MapContent architektura
+      - Volné pozicování tiles podle region.position
+      - tile_by_id Dictionary (nahrazuje get_child(i))
+      - Kruhy se shaderem, barevné bordery podle vlastníka,
+        čáry mezi sousedy přes ConnectionLayer
+      - Scrollování mapy (WASD + edge scroll, clamp)
+- [x] Progression strom — datový model a mechanismus
+      - Faction.modifiers Dictionary (mission_success, army_power,
+        gold_per_region, mana_income, ap_max_modifier,
+        unit_limit_modifier)
+      - Balance.PROGRESSION — 19 uzlů T1–T5, prázdné efekty
+      - ProgressionManager — can_unlock(), unlock_node(),
+        get_tier_status(), condition_trackers
+      - Integrace modifikátorů do MissionManager,
+        EconomicManager, CombatManager
+      - ProgressionTab UI — vizuální strom, stavy uzlů,
+        potvrzovací dialog
+      - KONVENCE: TYP A (modifier_ klíče → faction.modifiers),
+        TYP B (one_time → EffectsSystem při odemčení)
 
-### Zbývá implementovat (MVP scope)
-- [ ] Dark Lord progression strom (GDD sekce 15)
-- [ ] AI vylepšení — Inkvizice strategické chování
-- [ ] Mid-game krize (GDD sekce 14) — odloženo
-- [ ] Archetypy (GDD sekce 13) — odloženo
-- [ ] Artefakty (GDD sekce 15.4) — odloženo
+3. Sekce "Milestone v0.02" — aktualizovat
+
+### Milestone v0.02
+- [x] Node-based mapa (19 regionů) + scrollování
+- [x] Dark Lord progression strom — datový model, mechanismus, UI
+- [ ] Progression strom — efekty uzlů T1–T5 (obsah)
+- [ ] Procedurální rozmístění tajemství a neutrálních organizací
+- [ ] Nice-to-have: Inkvizice investigační mechanika
+- [ ] Nice-to-have: RDL základní
+- [ ] Nice-to-have: Faction overview panel
+
+### Odloženo na pozdější milestone
+- [ ] Mid-game krize (GDD sekce 14)
+- [ ] Archetypy (GDD sekce 13)
+- [ ] Artefakty (GDD sekce 15.4)
+- [ ] Inkvizice investigační mechanika
+- [ ] Rivalitní Dark Lord
 
 ### Známé TODO v kódu
 - DarkActionsManager: AP cost přes EffectsSystem (klíč "ap")
@@ -206,9 +255,23 @@ Data-driven. Každá mise má `success_chance`, `success_effects[]`, `fail_effec
 
 ## Poznámky pro Claude Code
 
+- MapTab architektura: MapCanvas (clip) → MapContent (scrolluje)
+  → tiles + ConnectionLayer. Nikdy nepřidávej tiles přímo
+  do MapCanvas — patří do MapContent.
+- Region.position je pouze vizuální — nepoužívej pro herní logiku
+- Sousedství čti přes RegionQuery.neighbors() —
+  ne přímo z Region objektu
 - Před každou větší změnou se zeptej na aktuální stav relevantního manažera
 - GDD `dark_lord_gdd_v14.docx` je autoritativní zdroj pro design
 - MVP combat = porovnání čísel (CombatManager) — netvoř komplexnější systém bez pokynu
 - `MapTab_old.gd` existuje záměrně jako reference — nemaž
 - Balance.ORG struktura: inline efekty pod klíčem doktríny, lookup přes Balance.get_org_effects()
 - Organizace se zakládají přes Dark Action — ne misí
+- Progression konvence TYP A vs TYP B — viz komentář
+  v Balance.gd nad PROGRESSION konstantou
+- faction.modifiers jsou accumulatory — nikdy je neresetuj,
+  pouze přičítej přes EffectsSystem modifier_ klíče
+- ProgressionManager drží stav per frakce —
+  unlocked_nodes: { faction_id: Array[String] }
+- game_updated je signal na GameState —
+  ne na EventBusu. Emituj jako GameState.game_updated.emit()

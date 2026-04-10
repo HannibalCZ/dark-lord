@@ -19,7 +19,7 @@ layout_mode = 2
 [node name="Icon" type="Label" parent="HBoxContainer/Resources/ManaBlock"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = " "
+text = " M"
 
 [node name="Value" type="Label" parent="HBoxContainer/Resources/ManaBlock"]
 layout_mode = 2
@@ -37,7 +37,7 @@ layout_mode = 2
 [node name="Icon" type="Label" parent="HBoxContainer/Resources/ZlatoBlock"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = " "
+text = " Z"
 
 [node name="Value" type="Label" parent="HBoxContainer/Resources/ZlatoBlock"]
 layout_mode = 2
@@ -55,7 +55,7 @@ layout_mode = 2
 [node name="Icon" type="Label" parent="HBoxContainer/Resources/HanebnostBlock"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = " 41"
+text = "I"
 
 [node name="Value" type="Label" parent="HBoxContainer/Resources/HanebnostBlock"]
 layout_mode = 2
@@ -73,7 +73,7 @@ layout_mode = 2
 [node name="Icon" type="Label" parent="HBoxContainer/Resources/VyzkumBlock"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = " "
+text = " R"
 
 [node name="Value" type="Label" parent="HBoxContainer/Resources/VyzkumBlock"]
 layout_mode = 2
@@ -105,7 +105,7 @@ theme_override_constants/separation = 8
 
 [node name="HeatIcon" type="Label" parent="HBoxContainer/HeatSection"]
 layout_mode = 2
-text = " 21"
+text = "Heat"
 
 [node name="HeatBar" type="ProgressBar" parent="HBoxContainer/HeatSection"]
 custom_minimum_size = Vector2(100, 12)
@@ -120,20 +120,6 @@ text = "0%"
 [node name="VSeparator3" type="VSeparator" parent="HBoxContainer"]
 layout_mode = 2
 
-[node name="InfamySection" type="HBoxContainer" parent="HBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="InfamyIcon" type="Label" parent="HBoxContainer/InfamySection"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = " "
-
-[node name="InfamyValue" type="Label" parent="HBoxContainer/InfamySection"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "0"
-
 [node name="VSeparator6" type="VSeparator" parent="HBoxContainer"]
 layout_mode = 2
 
@@ -143,7 +129,7 @@ theme_override_constants/separation = 8
 
 [node name="AwarenessIcon" type="Label" parent="HBoxContainer/AwarenessSection"]
 layout_mode = 2
-text = " 41"
+text = "Aw"
 
 [node name="AwarenessBar" type="ProgressBar" parent="HBoxContainer/AwarenessSection"]
 custom_minimum_size = Vector2(100, 12)

@@ -28,16 +28,16 @@ var resources := {
 # EffectsSystem každý tah.
 var modifiers: Dictionary = {
 	"mission_success":     0.0,  # float, přičte se
-	                              # k base_chance v MissionManager
+								  # k base_chance v MissionManager
 	"army_power":          0,    # int, přičte se k total power
-	                              # v CombatManager
+								  # v CombatManager
 	"gold_per_region":     0.0,  # float, přičte se za každý
-	                              # vlastněný region v EconomicManager
+								  # vlastněný region v EconomicManager
 	"mana_income":         0.0,  # float, přičte se k mana příjmu
-	                              # v EconomicManager
+								  # v EconomicManager
 	"ap_max_modifier":     0,    # int, přičte se k dark_actions_max
 	"unit_limit_modifier": 0,    # int, přičte se k UnitManager.unit_limit
-	                              # (limit se čte z UnitManager, ne Faction)
+								  # (limit se čte z UnitManager, ne Faction)
 }
 
 var dark_actions_max: int = 0

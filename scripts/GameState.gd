@@ -691,7 +691,7 @@ func _place_procedural_secrets() -> void:
 		var secret_key: String = secret_keys[
 			proc_rng.randi_range(0, secret_keys.size() - 1)]
 		region.secret_id       = secret_key
-		region.secret_known    = false
+		region.secret_known    = true
 		region.secret_state    = "none"
 		region.secret_progress = 0
 

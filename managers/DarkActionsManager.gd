@@ -43,11 +43,11 @@ func can_cast(faction_id:String, action_key:String, region_id:int = -1) -> Dicti
 		return {"ok": false, "reason": "Nedostatek dark action bodů."}
 
 	var mana_cost:int = int(action_def.get("mana_cost", 0))
-	if fac.get_resource("mana") < mana_cost:
+	if mana_cost > 0 and fac.get_resource("mana") < mana_cost:
 		return {"ok": false, "reason": "Nedostatek many."}
 
 	var gold_cost:int = int(action_def.get("gold_cost", 0))
-	if fac.get_resource("gold") < gold_cost:
+	if gold_cost > 0 and fac.get_resource("gold") < gold_cost:
 		return {"ok": false, "reason": "Nedostatek zlata."}
 
 	var atype:String = String(action_def.get("type", "global"))

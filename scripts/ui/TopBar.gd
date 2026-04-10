@@ -10,7 +10,7 @@ extends PanelContainer
 @onready var heat_value      : Label         = $HBoxContainer/HeatSection/HeatValue
 @onready var awareness_bar   : ProgressBar   = $HBoxContainer/AwarenessSection/AwarenessBar
 @onready var awareness_value : Label         = $HBoxContainer/AwarenessSection/AwarenessValue
-@onready var infamy_value    : Label         = $HBoxContainer/InfamySection/InfamyValue
+@onready var infamy_value    : Label         = $HBoxContainer/Resources/HanebnostBlock/Value
 @onready var control_value   : Label         = $HBoxContainer/ControlSection/ControlValue
 @onready var turn_label      : Label         = $HBoxContainer/TurnLabel
 @onready var next_turn_btn   : Button        = $HBoxContainer/NextTurnButton
