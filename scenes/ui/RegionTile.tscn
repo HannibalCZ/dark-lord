@@ -122,6 +122,16 @@ grow_vertical = 2
 texture = ExtResource("4_7kug1")
 stretch_mode = 3
 
+[node name="OrgIcon" type="TextureRect" parent="Overlay"]
+layout_mode = 1
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 26.0
+offset_bottom = 26.0
+mouse_filter = 2
+stretch_mode = 5
+visible = false
+
 [node name="LairIcon" type="TextureRect" parent="Overlay"]
 layout_mode = 1
 offset_right = 40.0
