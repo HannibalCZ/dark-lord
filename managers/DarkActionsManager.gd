@@ -63,6 +63,18 @@ func can_cast(faction_id:String, action_key:String, region_id:int = -1) -> Dicti
 		if _find_available_agent(region_id) == null:
 			return {"ok": false, "reason": "Zadny dostupny agent v regionu."}
 
+	# validace requires_org requirement
+	var req: Dictionary = action_def.get("requirements", {})
+	if req.get("requires_org", false):
+		var req_region: Region = game_state.region_manager.get_region(region_id)
+		if req_region == null:
+			return {"ok": false, "reason": "Zadny region neni vybran."}
+		var req_org: Dictionary = game_state.org_manager.get_org_in_region(req_region.id)
+		if req_org.is_empty():
+			return {"ok": false, "reason": "Region nema organizaci."}
+		if req_org.get("owner", "") != Balance.PLAYER_FACTION:
+			return {"ok": false, "reason": "Organizace v regionu nepatri hraci."}
+
 	return {"ok": true}
 
 
@@ -116,10 +128,22 @@ func cast(faction_id:String, action_key:String, region_id:int = -1) -> Dictionar
 		target_region = game_state.query.regions.get_by_id(region_id)
 
 	var effects:Dictionary = action_def.get("effects", {})
-	if not effects.is_empty():
+
+	# org_loyalty neni znamy EffectsSystem — zpracuj primo pres OrgManager
+	var loyalty_boost: int = effects.get("org_loyalty", 0)
+	if loyalty_boost != 0 and target_region != null:
+		var boost_org: Dictionary = game_state.org_manager.get_org_in_region(target_region.id)
+		if not boost_org.is_empty():
+			boost_org["loyalty"] = min(100, boost_org.get("loyalty", Balance.ORG_LOYALTY_START) + loyalty_boost)
+
+	# odstan org_loyalty pred predanim EffectsSystem
+	var effects_for_system: Dictionary = effects.duplicate()
+	effects_for_system.erase("org_loyalty")
+
+	if not effects_for_system.is_empty():
 		# signatura: _apply_effects(effects, region_or_null, source_faction_id)
 		var ctx := EffectContext.make(game_state, target_region, faction_id)
-		var eff_logs: Array[Dictionary] = game_state.effects_system.apply(effects, ctx)
+		var eff_logs: Array[Dictionary] = game_state.effects_system.apply(effects_for_system, ctx)
 		logs += eff_logs
 
 	# zpracování speciálního efektu found_org

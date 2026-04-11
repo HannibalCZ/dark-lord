@@ -188,8 +188,20 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 	# 4) Aplikuj efekty
 	if success:
 		var effects: Dictionary = cfg.get("success", {})
+
+		# org_loyalty neni znamy EffectsSystem — zpracuj primo pres OrgManager
+		var loyalty_boost: int = effects.get("org_loyalty", 0)
+		if loyalty_boost != 0:
+			var boost_org: Dictionary = game_state.org_manager.get_org_in_region(region.id)
+			if not boost_org.is_empty():
+				boost_org["loyalty"] = min(100, boost_org.get("loyalty", Balance.ORG_LOYALTY_START) + loyalty_boost)
+
+		# odstan org_loyalty pred predanim EffectsSystem
+		var effects_for_system: Dictionary = effects.duplicate()
+		effects_for_system.erase("org_loyalty")
+
 		var ctx := EffectContext.make(game_state, region, unit.faction_id)
-		var eff_logs : Array[Dictionary] = game_state.effects_system.apply(effects, ctx)
+		var eff_logs : Array[Dictionary] = game_state.effects_system.apply(effects_for_system, ctx)
 		#game_state._apply_effects(effects, region, unit.faction_id)
 
 		# purge znicí organizaci v regionu pokud existuje
@@ -295,6 +307,15 @@ func _check_requirements(req:Dictionary, unit:Unit, region:Region) -> bool:
 
 	if req.get("requires_lair", false):
 		if not region.has_lair():
+			return false
+
+	if req.get("requires_org", false):
+		var org: Dictionary = game_state.org_manager.get_org_in_region(region.id)
+		if org.is_empty():
+			return false
+		if org.get("owner", "") != Balance.PLAYER_FACTION:
+			return false
+		if org.get("is_rogue", false):
 			return false
 
 	return true
