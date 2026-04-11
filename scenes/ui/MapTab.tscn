@@ -241,6 +241,12 @@ theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
 theme_override_font_sizes/font_size = 11
 autowrap_mode = 3
 
+[node name="OrgLoyaltyLabel" type="Label" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+visible = false
+
 [node name="DestroyButton" type="Button" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.2, 0.2, 1)

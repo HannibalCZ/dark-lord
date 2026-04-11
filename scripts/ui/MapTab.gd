@@ -56,6 +56,7 @@ extends Control
 @onready var doctrine_picker: OptionButton = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/DoctrinePicker
 @onready var doctrine_effects: Label      = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/DoctrineEffects
 @onready var destroy_button: Button       = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/DestroyButton
+@onready var org_loyalty_label: Label     = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/OrgLoyaltyLabel
 
 var _tile_by_id: Dictionary = {}  # { region_id: int -> RegionTile }
 var _connections: Array = []      # [ {a: Vector2, b: Vector2}, ... ]
@@ -277,7 +278,9 @@ func _refresh_org_indicators() -> void:
 	for region_id in _tile_by_id:
 		var tile = _tile_by_id[region_id]
 		var org: Dictionary = GameState.org_manager.get_org_in_region(region_id)
-		tile.set_org_indicator(not org.is_empty())
+		var has_org: bool = not org.is_empty()
+		var is_rogue: bool = org.get("is_rogue", false)
+		tile.set_org_indicator(has_org, is_rogue)
 
 func _on_mission_selected(_idx: int) -> void:
 	_update_mission_info()
@@ -894,6 +897,7 @@ func _update_org_section(region_id: int) -> void:
 	var data: Dictionary = GameState.org_manager.get_org_display_data(region_id)
 	if not data.get("has_org", false):
 		org_section.visible = false
+		org_loyalty_label.visible = false
 		return
 
 	org_section.visible = true
@@ -911,6 +915,30 @@ func _update_org_section(region_id: int) -> void:
 		doctrine_picker.visible = false
 		doctrine_effects.visible = false
 		destroy_button.visible = true
+
+	# Loajalita — cti primo z org Dictionary, ne z display_data
+	var org: Dictionary = GameState.org_manager.get_org_in_region(region_id)
+	var loyalty: int = org.get("loyalty", Balance.ORG_LOYALTY_START)
+	var is_rogue: bool = org.get("is_rogue", false)
+
+	var phase_text: String
+	var phase_color: Color
+	if is_rogue:
+		phase_text = "Rogue"
+		phase_color = Color("#888888")
+	elif loyalty >= Balance.ORG_LOYALTY_FAITHFUL:
+		phase_text = "Verna"
+		phase_color = Color("#4caf50")
+	elif loyalty >= Balance.ORG_LOYALTY_STABLE:
+		phase_text = "Stabilni"
+		phase_color = Color("#ffd700")
+	else:
+		phase_text = "Nestabilni"
+		phase_color = Color("#f44336")
+
+	org_loyalty_label.text = "%d — %s" % [loyalty, phase_text]
+	org_loyalty_label.add_theme_color_override("font_color", phase_color)
+	org_loyalty_label.visible = true
 
 
 func _populate_doctrine_picker(region_id: int) -> void:

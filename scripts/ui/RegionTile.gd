@@ -143,10 +143,17 @@ func _update_secret_icon(region: Region) -> void:
 	else:
 		secret_icon.visible = false
 
-func set_org_indicator(has_org: bool, org_texture: Texture2D = null) -> void:
+func set_org_indicator(has_org: bool, is_rogue: bool = false, org_texture: Texture2D = null) -> void:
 	org_icon.visible = has_org
-	if has_org and org_texture != null:
+	if not has_org:
+		return
+	if org_texture != null:
 		org_icon.texture = org_texture
+	# Rogue organizace ma sedou barvu, normalni bílou
+	if is_rogue:
+		org_icon.modulate = Color(0.5, 0.5, 0.5, 1.0)
+	else:
+		org_icon.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
 func _update_lair_icon(region: Region) -> void:
 	if region == null:
