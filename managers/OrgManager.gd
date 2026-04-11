@@ -85,7 +85,9 @@ func add_org(org_type: String, owner: String, region_id: int) -> Dictionary:
 		"owner":        owner,
 		"region_id":    region_id,
 		"doctrine":     Balance.ORG[org_type]["default_doctrine"],
-		"founded_turn": game_state.turn
+		"founded_turn": game_state.turn,
+		"loyalty":      Balance.ORG_LOYALTY_START,
+		"is_rogue":     false
 	}
 	_next_id += 1
 	orgs.append(org)

@@ -228,8 +228,23 @@ const MISSION = {
 		},
 		"ui_icon": "res://ui/icons/missions/manipulate.png",
 		"ui_order": 7
+	},
+
+	"inspect": {
+		"id":           "inspect",
+		"display_name": "Inspekce organizace",
+		"description":  "Agent navstivi organizaci a posili jeji loajalitu.",
+		"base_chance":  0.85,
+		"requirements": {
+			"requires_org": true
+		},
+		"cost": { "ap": 1, "mana": 0, "gold": 0 },
+		"success": { "org_loyalty": ORG_INSPECT_LOYALTY_BOOST },
+		"fail":    { "heat": 2 },
+		"ui_icon":  "res://ui/icons/missions/inspect.png",
+		"ui_order": 8
 	}
-	
+
 }
 
 const DARK_ACTIONS = {
@@ -354,6 +369,21 @@ const DARK_ACTIONS = {
 		"agent_cost": true,
 		"effects": { "found_org": "cult" }
 	},
+
+	"reinforce_loyalty": {
+		"display_name": "Posil loajalitu",
+		"description":  "Dark Lord osobne posili vazby s organizaci v tomto regionu.",
+		"type":         "region",
+		"mana_cost":    3,
+		"ap_cost":      1,
+		"cooldown":     4,
+		"requirements": {
+			"requires_org": true
+		},
+		"effects": {
+			"org_loyalty": ORG_REINFORCE_LOYALTY_BOOST
+		}
+	},
 }
 
 const UNIT = {
@@ -375,7 +405,7 @@ const UNIT = {
 		"recruit_cost": { "mana": 15 },
 		"upkeep_cost": { "mana": 2 },
 		"moves": 2,
-		"can_do": ["corrupt","sabotage","explore","bribe","manipulate"]
+		"can_do": ["corrupt","sabotage","explore","bribe","manipulate","inspect"]
 	},
 	"homunculus": {
 		"display_name": "Homunkulus",
@@ -698,6 +728,39 @@ const ORG = {
 		}
 	}
 }
+
+# --- Loajalita organizaci ---
+
+# Vychozi loajalita nove organizace
+const ORG_LOYALTY_START: int = 50
+
+# Fazove prahy loajality
+const ORG_LOYALTY_FAITHFUL:  int = 71  # 71-100
+const ORG_LOYALTY_STABLE:    int = 31  # 31-70
+const ORG_LOYALTY_UNSTABLE:  int = 1   # 1-30
+# 0 = Rogue
+
+# Multiplikatory efektu per faze
+const ORG_LOYALTY_MULT_FAITHFUL:  float = 1.5
+const ORG_LOYALTY_MULT_STABLE:    float = 1.0
+const ORG_LOYALTY_MULT_UNSTABLE:  float = 0.5
+
+# Pokles loajality per tah podle Infamy pasma
+const ORG_LOYALTY_DECAY_LOW:      int = 10  # Infamy 0-20
+const ORG_LOYALTY_DECAY_MID:      int = 7   # Infamy 21-50
+const ORG_LOYALTY_DECAY_HIGH:     int = 4   # Infamy 51-80
+const ORG_LOYALTY_DECAY_VERY_HIGH: int = 1  # Infamy 81+
+
+# Infamy prahy pro vypocet decay
+const ORG_INFAMY_LOW:  float = 20.0
+const ORG_INFAMY_MID:  float = 50.0
+const ORG_INFAMY_HIGH: float = 80.0
+
+# Inspect mise - boost loajality
+const ORG_INSPECT_LOYALTY_BOOST: int = 30
+
+# Dark Action "Posil loajalitu" - boost loajality
+const ORG_REINFORCE_LOYALTY_BOOST: int = 20
 
 # --- AI Spawning ---
 const AI_SPAWN = {
