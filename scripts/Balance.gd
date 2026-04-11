@@ -666,6 +666,8 @@ const AWARENESS_CORRUPTION_PHASE_MIN = 3
 const ADVISOR_KAPITAN = "kapitan"
 const ADVISOR_VEZIR   = "vezir"
 const ADVISOR_ZVEDKA  = "zvedka"
+const ADVISOR_BOSS    = "boss"    # Zlocincky boss — aktivuje se pri zalozeni Crime Syndicate
+const ADVISOR_MYSTIK  = "mystik"  # Mystik / Ritualista — aktivuje se pri zalozeni Kultu
 
 const EVENT_CRITICAL  = "critical"
 const EVENT_IMPORTANT = "important"

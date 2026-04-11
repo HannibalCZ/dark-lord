@@ -27,6 +27,13 @@ var _collected_ai_mission_results: Array[Dictionary] = []
 # Odemcené progression uzly z aktuálního tahu — sbíráme přes EventBus.
 var _collected_progression_events: Array[Dictionary] = []
 
+# Aktivni poradci — pridava se jednou pri prvnim zalozeni org daneho typu.
+# Pouze pro evidenci; Rada funguje i bez aktivace poradce.
+var _active_advisors: Array[String] = []
+
+# Rogue eventy — buffrovano okamzite pri signalu, zpracuje se v generate_events_for_turn().
+var _pending_rogue_events: Array[EventData] = []
+
 # ---------------------------
 func init(gs: GameStateSingleton) -> void:
 	game_state = gs
@@ -36,6 +43,8 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.org_doctrine_changed.connect(_on_org_doctrine_changed)
 	EventBus.ai_unit_spawned.connect(_on_ai_unit_spawned)
 	EventBus.progression_node_unlocked.connect(_on_progression_node_unlocked)
+	EventBus.org_founded.connect(_on_org_founded)
+	EventBus.org_went_rogue.connect(_on_org_went_rogue)
 	GameState.game_ended.connect(_on_game_ended)
 
 # ---------------------------
@@ -52,6 +61,8 @@ func generate_events_for_turn() -> Array[EventData]:
 	_collect_org_events(events)
 	_collect_spawn_events(events)
 	_collect_progression_events(events)
+	_collect_loyalty_events(events)
+	_collect_pending_rogue_events(events)
 
 	_collected_player_results.clear()
 
@@ -565,3 +576,82 @@ func _on_org_doctrine_changed(region_id: int, new_doctrine: String) -> void:
 		"type": "org",
 		"text": "Doktrína organizace v %s zmenena na '%s'." % [region_name, new_doctrine]
 	})
+
+
+# ---------------------------
+# Poradci — aktivace pri zalozeni organizace
+# ---------------------------
+func _activate_advisor(advisor_id: String) -> void:
+	if not _active_advisors.has(advisor_id):
+		_active_advisors.append(advisor_id)
+
+
+func _get_org_advisor(org_type: String) -> String:
+	match org_type:
+		"crime_syndicate": return Balance.ADVISOR_BOSS
+		"shadow_network":  return Balance.ADVISOR_ZVEDKA
+		"cult":            return Balance.ADVISOR_MYSTIK
+		_:                 return Balance.ADVISOR_VEZIR
+
+
+func _on_org_founded(org: Dictionary) -> void:
+	if game_state == null:
+		return
+	var org_type: String = String(org.get("org_type", ""))
+	match org_type:
+		"crime_syndicate": _activate_advisor(Balance.ADVISOR_BOSS)
+		"shadow_network":  _activate_advisor(Balance.ADVISOR_ZVEDKA)
+		"cult":            _activate_advisor(Balance.ADVISOR_MYSTIK)
+
+
+# ---------------------------
+# ZDROJ 8 — Varovani pri nestabilni loajalite organizaci
+# ---------------------------
+func _collect_loyalty_events(events: Array[EventData]) -> void:
+	if game_state == null:
+		return
+	for org in game_state.org_manager.orgs:
+		if org.get("is_rogue", false):
+			continue  # Rogue orgy maji svuj vlastni event
+		var loyalty: int = org.get("loyalty", Balance.ORG_LOYALTY_START)
+		if loyalty > Balance.ORG_LOYALTY_STABLE or loyalty <= 0:
+			continue  # Pouze Nestabilni faze (1–30)
+		var org_name: String = Balance.ORG[org["org_type"]].get("display_name", org["org_type"])
+		var region: Region = game_state.region_manager.get_region(org["region_id"])
+		var region_name: String = region.name if region != null else "region %d" % org["region_id"]
+		var advisor: String = _get_org_advisor(org["org_type"])
+		events.append(EventData.create(
+			advisor,
+			Balance.EVENT_IMPORTANT,
+			"Pane, %s v regionu %s ztrace loajalitu. Musime jednat rychle nebo ji ztratite." % [org_name, region_name],
+			"Loajalita %s: %d (Nestabilni)" % [org_name, loyalty]
+		))
+
+
+# ---------------------------
+# Signal handler + ZDROJ 9 — Prechod organizace do Rogue stavu
+# ---------------------------
+func _on_org_went_rogue(org_id: String, region_id: int) -> void:
+	if game_state == null:
+		return
+	var org: Dictionary = game_state.org_manager.get_org_in_region(region_id)
+	if org.is_empty():
+		return
+	var org_name: String = Balance.ORG[org["org_type"]].get("display_name", org["org_type"])
+	var region: Region = game_state.region_manager.get_region(region_id)
+	var region_name: String = region.name if region != null else "region %d" % region_id
+	var advisor: String = _get_org_advisor(org["org_type"])
+	var event: EventData = EventData.create(
+		advisor,
+		Balance.EVENT_CRITICAL,
+		"Pane, %s v regionu %s nam zradila. Prestali jsme mit jakykoliv vliv — organizace operuje pro sebe." % [org_name, region_name],
+		"%s presla do Rogue stavu." % org_name
+	)
+	# Buffrujeme okamzite — zpracuje se na zacatku pristiho tahu v generate_events_for_turn()
+	_pending_rogue_events.append(event)
+
+
+func _collect_pending_rogue_events(events: Array[EventData]) -> void:
+	for event in _pending_rogue_events:
+		events.append(event)
+	_pending_rogue_events.clear()
