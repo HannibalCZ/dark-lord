@@ -16,6 +16,7 @@ var button: Button
 @onready var corruption_overlay: TextureRect = $CorruptionSprite
 @onready var secret_icon: TextureRect = $Overlay/SecretIcon
 @onready var lair_icon: TextureRect = $Overlay/LairIcon
+@onready var org_icon: TextureRect = $Overlay/OrgIcon
 
 var _is_selected: bool = false
 var _is_hovered: bool = false
@@ -141,6 +142,11 @@ func _update_secret_icon(region: Region) -> void:
 		secret_icon.visible = true
 	else:
 		secret_icon.visible = false
+
+func set_org_indicator(has_org: bool, org_texture: Texture2D = null) -> void:
+	org_icon.visible = has_org
+	if has_org and org_texture != null:
+		org_icon.texture = org_texture
 
 func _update_lair_icon(region: Region) -> void:
 	if region == null:

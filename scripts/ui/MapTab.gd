@@ -271,6 +271,13 @@ func _on_game_updated() -> void:
 		return
 	_refresh_unit_positions()
 	_refresh_selected_panel()
+	_refresh_org_indicators()
+
+func _refresh_org_indicators() -> void:
+	for region_id in _tile_by_id:
+		var tile = _tile_by_id[region_id]
+		var org: Dictionary = GameState.org_manager.get_org_in_region(region_id)
+		tile.set_org_indicator(not org.is_empty())
 
 func _on_mission_selected(_idx: int) -> void:
 	_update_mission_info()
