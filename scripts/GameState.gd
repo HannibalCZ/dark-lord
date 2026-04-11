@@ -295,6 +295,10 @@ func advance_turn() -> void:
 	# 2) pasivni efekty organizaci
 	entries += org_manager.apply_end_of_turn_effects()
 
+	# 2b) loajalitni decay — po efektech, pred ekonomikou
+	# (EconomicManager uz vidi aktualni loyalty pri vypoctu gold/mana prijmu)
+	org_manager.apply_loyalty_decay()
+
 	# 3) ekonomika
 	entries += economic_manager.apply_economy_cycle()
 

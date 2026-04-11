@@ -51,7 +51,7 @@ func compute_income_and_upkeep(faction_id: String) -> Dictionary:
 	for org in game_state.org_manager.orgs:
 		if org["owner"] != faction_id:
 			continue
-		var org_effects: Dictionary = Balance.get_org_effects(org["org_type"], org["doctrine"])
+		var org_effects: Dictionary = game_state.org_manager.get_org_effects_scaled(org)
 		gold_income += float(org_effects.get("gold", 0))
 		mana_income += float(org_effects.get("mana", 0))
 

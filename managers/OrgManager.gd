@@ -120,6 +120,53 @@ func set_doctrine(region_id: int, new_doctrine: String) -> void:
 
 
 # ---------------------------------------------------------
+# Loajalitni helpery
+# ---------------------------------------------------------
+
+func _get_loyalty_phase(loyalty: int) -> String:
+	if loyalty <= 0:
+		return "rogue"
+	elif loyalty < Balance.ORG_LOYALTY_STABLE:
+		return "unstable"
+	elif loyalty < Balance.ORG_LOYALTY_FAITHFUL:
+		return "stable"
+	else:
+		return "faithful"
+
+
+func _get_loyalty_multiplier(loyalty: int) -> float:
+	match _get_loyalty_phase(loyalty):
+		"faithful": return Balance.ORG_LOYALTY_MULT_FAITHFUL
+		"stable":   return Balance.ORG_LOYALTY_MULT_STABLE
+		"unstable": return Balance.ORG_LOYALTY_MULT_UNSTABLE
+		_:          return 0.0  # rogue — zadne efekty
+
+
+func _scale_effects(effects: Dictionary, mult: float) -> Dictionary:
+	var scaled: Dictionary = {}
+	for key in effects:
+		var val = effects[key]
+		if val is int:
+			scaled[key] = int(round(float(val) * mult))
+		elif val is float:
+			scaled[key] = val * mult
+		else:
+			scaled[key] = val  # string, bool, Array — beze zmeny
+	return scaled
+
+
+# Centralni misto pro skálovane efekty org podle loyalty.
+# Volaj misto Balance.get_org_effects() vsude kde se efekty pouzivaji.
+func get_org_effects_scaled(org: Dictionary) -> Dictionary:
+	if org.get("is_rogue", false):
+		return {}  # Rogue org negeneruje zadne efekty
+	var base: Dictionary = Balance.get_org_effects(org["org_type"], org["doctrine"])
+	var loyalty: int = org.get("loyalty", Balance.ORG_LOYALTY_START)
+	var mult: float = _get_loyalty_multiplier(loyalty)
+	return _scale_effects(base, mult)
+
+
+# ---------------------------------------------------------
 # End-of-turn pasivni efekty
 # ---------------------------------------------------------
 
@@ -127,14 +174,14 @@ func apply_end_of_turn_effects() -> Array[Dictionary]:
 	var logs: Array[Dictionary] = []
 
 	for org in orgs:
-		var all_effects: Dictionary = Balance.get_org_effects(org["org_type"], org["doctrine"])
+		var all_effects: Dictionary = get_org_effects_scaled(org)
 		if all_effects.is_empty():
 			continue
 
-		# gold/mana org efektů jsou zahrnuty v
+		# gold/mana org efektu jsou zahrnuty v
 		# EconomicManager.compute_income_and_upkeep()
-		# aby šly přes jeden centrální výpočet příjmů.
-		# Zde aplikujeme pouze neekonomické efekty (heat, awareness, atd.).
+		# aby sly pres jeden centralni vypocet prijmu.
+		# Zde aplikujeme pouze neekonomicke efekty (heat, awareness, atd.).
 		var non_economic: Dictionary = {}
 		for key in all_effects:
 			if key != "gold" and key != "mana":
@@ -157,3 +204,35 @@ func apply_end_of_turn_effects() -> Array[Dictionary]:
 		})
 
 	return logs
+
+
+# ---------------------------------------------------------
+# Loajalitni decay
+# ---------------------------------------------------------
+
+func apply_loyalty_decay() -> void:
+	var player_fac = game_state.faction_manager.get_faction(Balance.PLAYER_FACTION)
+	if player_fac == null:
+		return
+	var infamy: float = player_fac.get_resource("infamy")
+
+	var decay: int
+	if infamy <= Balance.ORG_INFAMY_LOW:
+		decay = Balance.ORG_LOYALTY_DECAY_LOW
+	elif infamy <= Balance.ORG_INFAMY_MID:
+		decay = Balance.ORG_LOYALTY_DECAY_MID
+	elif infamy <= Balance.ORG_INFAMY_HIGH:
+		decay = Balance.ORG_LOYALTY_DECAY_HIGH
+	else:
+		decay = Balance.ORG_LOYALTY_DECAY_VERY_HIGH
+
+	for org in orgs:
+		if org.get("is_rogue", false):
+			continue  # Rogue orgy se dal nezhorsuji
+		var new_loyalty: int = org.get("loyalty", Balance.ORG_LOYALTY_START) - decay
+		if new_loyalty <= 0:
+			org["loyalty"] = 0
+			org["is_rogue"] = true
+			EventBus.org_went_rogue.emit(org["org_id"], org["region_id"])
+		else:
+			org["loyalty"] = new_loyalty
