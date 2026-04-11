@@ -69,6 +69,7 @@ const SCROLL_SPEED    := 250.0
 const EDGE_MARGIN     := 40.0
 const TILE_SIZE_PX    := Vector2(128.0, 128.0)
 var _content_rect     := Rect2()
+var _initial_center_done: bool = false
 
 var mission_success_effects: Label
 var mission_fail_effects: Label
@@ -247,6 +248,22 @@ func _compute_map_bounds() -> void:
 		mn = mn.min(tile.position)
 		mx = mx.max(tile.position + TILE_SIZE_PX)
 	_content_rect = Rect2(mn, mx - mn)
+
+func _center_on_player_start() -> void:
+	if _initial_center_done:
+		return
+	var start_id: int = GameState.player_start_region_id
+	var region = GameState.query.regions.get_by_id(start_id)
+	if region == null:
+		return
+	if map_canvas.size == Vector2.ZERO:
+		return
+	_initial_center_done = true
+	var canvas_center: Vector2 = map_canvas.size / 2.0
+	var region_pos: Vector2 = Vector2(region.position)
+	var target: Vector2 = canvas_center - region_pos
+	map_content.position = target
+	_clamp_map_content()
 
 func _on_game_updated() -> void:
 	if _tile_by_id.size() != GameState.region_manager.regions.size():
@@ -520,6 +537,7 @@ func _build_grid() -> void:
 		_tile_by_id[i] = t
 
 	_compute_map_bounds()
+	call_deferred("_center_on_player_start")
 	_refresh_unit_positions()
 	_refresh_region_colors()
 	_refresh_tile_selection()
