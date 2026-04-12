@@ -66,6 +66,8 @@ func _update_resource_block(block: VBoxContainer, value: int, delta: int) -> voi
 func _update_heat_bar(value: int) -> void:
 	heat_bar.value = value
 	heat_value.text = "%d%%" % value
+	heat_value.tooltip_text = TopBar.build_breakdown_tooltip(
+			GameState.heat_tracker.entries, "heat", value)
 	var style := StyleBoxFlat.new()
 	if value >= 100:
 		style.bg_color = Color("#9c27b0")
@@ -81,6 +83,8 @@ func _update_heat_bar(value: int) -> void:
 func _update_awareness_bar(value: int) -> void:
 	awareness_bar.value = value
 	awareness_value.text = "%d%%" % value
+	awareness_value.tooltip_text = TopBar.build_breakdown_tooltip(
+			GameState.heat_tracker.entries, "awareness", value)
 	var style := StyleBoxFlat.new()
 	if value >= 100:
 		style.bg_color = Color("#9c27b0")
@@ -91,6 +95,39 @@ func _update_awareness_bar(value: int) -> void:
 	else:
 		style.bg_color = Color("#4caf50")
 	awareness_bar.add_theme_stylebox_override("fill", style)
+
+
+static func build_breakdown_tooltip(
+		entries: Array[Dictionary],
+		stat: String,
+		current_value: int) -> String:
+	var delta_key: String = stat + "_delta"
+	var relevant: Array[Dictionary] = []
+	for e in entries:
+		if e.get(delta_key, 0) != 0:
+			relevant.append(e)
+
+	if relevant.is_empty():
+		return "%s: %d\n(zadna zmena tento tah)" % [stat.capitalize(), current_value]
+
+	var total: int = 0
+	for e in relevant:
+		total += int(e.get(delta_key, 0))
+
+	var sign: String = "+" if total >= 0 else ""
+	var lines: Array[String] = []
+	lines.append("%s: %d (%s%d tento tah)" % [stat.capitalize(), current_value, sign, total])
+	lines.append("─────────────────")
+
+	for e in relevant:
+		var delta: int = int(e.get(delta_key, 0))
+		if delta == 0:
+			continue
+		var label: String = e.get("source", "Neznamy zdroj")
+		var delta_sign: String = "+" if delta >= 0 else ""
+		lines.append("  %s: %s%d" % [label, delta_sign, delta])
+
+	return "\n".join(lines)
 
 
 func _update_infamy(value: int) -> void:
