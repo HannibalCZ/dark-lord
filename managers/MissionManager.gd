@@ -208,6 +208,7 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 		effects_for_system.erase("destroy_org")
 
 		var ctx := EffectContext.make(game_state, region, unit.faction_id)
+		ctx.source_label = "Mise: %s (úspěch)" % key
 		var eff_logs : Array[Dictionary] = game_state.effects_system.apply(effects_for_system, ctx)
 		#game_state._apply_effects(effects, region, unit.faction_id)
 
@@ -222,6 +223,7 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 			var global_fx: Dictionary = Balance.MISSION_GLOBAL_SUCCESS_EFFECTS
 			if not global_fx.is_empty():
 				var gctx := EffectContext.make(game_state, null, Balance.PLAYER_FACTION)
+				gctx.source_label = "Mise: %s (úspěch)" % key
 				game_state.effects_system.apply(global_fx, gctx)
 
 		return {
@@ -239,6 +241,7 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 	else:
 		var effects: Dictionary = cfg.get("fail", {})
 		var ctx := EffectContext.make(game_state, region, unit.faction_id)
+		ctx.source_label = "Mise: %s (selhání)" % key
 		var eff_logs : Array[Dictionary] = game_state.effects_system.apply(effects, ctx)
 		#game_state._apply_effects(effects, region, unit.faction_id)
 
@@ -249,6 +252,7 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 			var global_fx: Dictionary = Balance.MISSION_GLOBAL_FAIL_EFFECTS
 			if not global_fx.is_empty():
 				var gctx := EffectContext.make(game_state, null, Balance.PLAYER_FACTION)
+				gctx.source_label = "Mise: %s (selhání)" % key
 				game_state.effects_system.apply(global_fx, gctx)
 
 		return {

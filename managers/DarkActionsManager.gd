@@ -143,6 +143,7 @@ func cast(faction_id:String, action_key:String, region_id:int = -1) -> Dictionar
 	if not effects_for_system.is_empty():
 		# signatura: _apply_effects(effects, region_or_null, source_faction_id)
 		var ctx := EffectContext.make(game_state, target_region, faction_id)
+		ctx.source_label = "Temná akce: %s" % String(action_def.get("display_name", action_key))
 		var eff_logs: Array[Dictionary] = game_state.effects_system.apply(effects_for_system, ctx)
 		logs += eff_logs
 
@@ -168,6 +169,7 @@ func cast(faction_id:String, action_key:String, region_id:int = -1) -> Dictionar
 	var global_fx: Dictionary = Balance.DARK_ACTION_GLOBAL_EFFECTS
 	if not global_fx.is_empty():
 		var gctx := EffectContext.make(game_state, null, Balance.PLAYER_FACTION)
+		gctx.source_label = "Temná akce: %s" % String(action_def.get("display_name", action_key))
 		game_state.effects_system.apply(global_fx, gctx)
 
 	return {

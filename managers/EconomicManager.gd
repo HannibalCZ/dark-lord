@@ -159,6 +159,7 @@ func _apply_corruption_awareness() -> void:
 		if phase >= 4:
 			delta = Balance.AWARENESS_CORRUPTION_PH4
 		var ctx := EffectContext.make(game_state, null, Balance.PLAYER_FACTION)
+		ctx.source_label = "Korupce: region %d (fáze %d)" % [region.id, phase]
 		game_state.effects_system.apply({"awareness": delta}, ctx)
 
 func _tick_all_region_tags(regions: Array) -> void:

@@ -29,7 +29,7 @@ func apply(e: Dictionary, ctx: EffectContext) -> Array[Dictionary]:
 			gs.unit_manager.unit_limit += int(e["modifier_unit_limit"])
 
 	# ---- GLOBALS ----
-	_apply_globals(e, gs, logs)
+	_apply_globals(e, gs, logs, ctx)
 
 	# ---- REGION ----
 	if region != null:
@@ -106,7 +106,10 @@ func _apply_faction(e: Dictionary, fac: Faction, logs: Array[Dictionary]) -> voi
 			logs.append({"type":"warn", "text":"Faction does not support infernal_pact fields; ignored."})
 
 
-func _apply_globals(e: Dictionary, gs: GameStateSingleton, logs: Array[Dictionary]) -> void:
+func _apply_globals(e: Dictionary, gs: GameStateSingleton, logs: Array[Dictionary], ctx: EffectContext) -> void:
+	var heat_before := gs.heat
+	var awareness_before := gs.awareness
+
 	if e.has("heat"):
 		gs.heat += int(e["heat"])
 	if e.has("doom"):
@@ -118,6 +121,15 @@ func _apply_globals(e: Dictionary, gs: GameStateSingleton, logs: Array[Dictionar
 		gs.awareness = clamp(
 			gs.awareness + int(e["awareness"]),
 			0, Balance.AWARENESS_MAX)
+
+	var heat_delta := gs.heat - heat_before
+	var awareness_delta := gs.awareness - awareness_before
+	if (heat_delta != 0 or awareness_delta != 0) and gs.heat_tracker != null:
+		gs.heat_tracker.record(
+			ctx.source_label,
+			heat_delta, gs.heat,
+			awareness_delta, gs.awareness
+		)
 
 	# mission_bonus se nezpracovává zde —
 	# aplikuje se přímo v MissionManager._compute_mission_success()

@@ -20,6 +20,7 @@ signal game_ended(result: Dictionary) # { ok:bool, outcome:"win"/"lose", reason:
 @onready var events_manager: EventsManager = EventsManager.new()
 @onready var org_manager: OrgManager = OrgManager.new()
 @onready var progression_manager: ProgressionManager = ProgressionManager.new()
+@onready var heat_tracker: HeatAwarenessTracker = HeatAwarenessTracker.new()
 
 var rng := RandomNumberGenerator.new()
 var turn:int = 1
@@ -273,7 +274,9 @@ func advance_turn() -> void:
 	var entries: Array[Dictionary] = []
 	if game_over:
 		return
-	
+
+	heat_tracker.reset()
+
 	# =========================
 	# A) AI plánování (férově před resolve)
 	# =========================
@@ -329,6 +332,7 @@ func advance_turn() -> void:
 	# Heat decay — přirozené snižování každý tah (po všech zdrojích, před prahy)
 	if heat > 0:
 		var decay_ctx := EffectContext.make(self, null, Balance.PLAYER_FACTION)
+		decay_ctx.source_label = "Přirozený útlum"
 		effects_system.apply({"heat": -Balance.HEAT_DECAY_PER_TURN}, decay_ctx)
 
 	# HEAT reakce
