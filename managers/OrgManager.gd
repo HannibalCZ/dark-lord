@@ -174,6 +174,34 @@ func apply_end_of_turn_effects() -> Array[Dictionary]:
 	var logs: Array[Dictionary] = []
 
 	for org in orgs:
+		var org_type: String = org["org_type"]
+		var display_name: String = Balance.ORG[org_type]["display_name"]
+		var region: Region = game_state.region_manager.get_region(org["region_id"])
+
+		# Neutral/Rogue org: aplikuj ORG_NEUTRAL_EFFECTS misto doktriny
+		if org.get("owner") != Balance.ORG_OWNER_PLAYER:
+			var neutral_effects: Dictionary = Balance.ORG_NEUTRAL_EFFECTS.get(org_type, {})
+			if neutral_effects.is_empty():
+				continue
+			# mission_penalty neni EffectsSystem klic — preskocit
+			var eff_to_apply: Dictionary = {}
+			for key in neutral_effects:
+				if key != "mission_penalty":
+					eff_to_apply[key] = neutral_effects[key]
+			if not eff_to_apply.is_empty():
+				var ctx := EffectContext.make(game_state, region, org.get("owner", "neutral"))
+				ctx.source_label = "Neutral organizace: %s" % display_name
+				var effect_logs: Array[Dictionary] = game_state.effects_system.apply(eff_to_apply, ctx)
+				logs += effect_logs
+				logs.append({
+					"type": "org",
+					"text": "Neutral organizace %s (%s) aplikovala pasivni efekty v regionu %d." % [
+						org["org_id"], display_name, org["region_id"]
+					]
+				})
+			continue
+
+		# Hracova org: standardni doktrinarni efekty
 		var all_effects: Dictionary = get_org_effects_scaled(org)
 		if all_effects.is_empty():
 			continue
@@ -188,19 +216,15 @@ func apply_end_of_turn_effects() -> Array[Dictionary]:
 				non_economic[key] = all_effects[key]
 
 		if not non_economic.is_empty():
-			var region: Region = game_state.region_manager.get_region(org["region_id"])
 			var ctx := EffectContext.make(game_state, region, Balance.ORG_OWNER_PLAYER)
-			ctx.source_label = "Organizace: %s" % Balance.ORG[org["org_type"]]["display_name"]
+			ctx.source_label = "Organizace: %s" % display_name
 			var effect_logs: Array[Dictionary] = game_state.effects_system.apply(non_economic, ctx)
 			logs += effect_logs
 
 		logs.append({
 			"type": "org",
 			"text": "Organizace %s (%s) aplikovala efekty doktríny '%s' v regionu %d." % [
-				org["org_id"],
-				Balance.ORG[org["org_type"]]["display_name"],
-				org["doctrine"],
-				org["region_id"]
+				org["org_id"], display_name, org["doctrine"], org["region_id"]
 			]
 		})
 
@@ -230,6 +254,8 @@ func apply_loyalty_decay() -> void:
 	for org in orgs:
 		if org.get("is_rogue", false):
 			continue  # Rogue orgy se dal nezhorsuji
+		if org.get("owner") != Balance.ORG_OWNER_PLAYER:
+			continue  # Neutral/rival orgy nemaji loyalty decay
 		var new_loyalty: int = org.get("loyalty", Balance.ORG_LOYALTY_START) - decay
 		if new_loyalty <= 0:
 			org["loyalty"] = 0

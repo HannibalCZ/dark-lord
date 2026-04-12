@@ -785,6 +785,16 @@ const ORG_INSPECT_LOYALTY_BOOST: int = 30
 # Dark Action "Posil loajalitu" - boost loajality
 const ORG_REINFORCE_LOYALTY_BOOST: int = 20
 
+# --- Efekty neutralnich a Rogue organizaci ---
+# Aplikuji se kazdy tah dokud je org neutral nebo Rogue.
+# Negativni efekty motivuji hrace je resit.
+# mission_penalty neni EffectsSystem klic — cte se pouze v MissionManager.
+const ORG_NEUTRAL_EFFECTS = {
+	"crime_syndicate": { "heat": 1 },
+	"shadow_network":  { "mission_penalty": 0.10 },
+	"cult":            { "awareness": 1 }
+}
+
 # --- AI Spawning ---
 const AI_SPAWN = {
 	"paladin": {
