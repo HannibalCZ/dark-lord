@@ -280,7 +280,8 @@ func _refresh_org_indicators() -> void:
 		var org: Dictionary = GameState.org_manager.get_org_in_region(region_id)
 		var has_org: bool = not org.is_empty()
 		var is_rogue: bool = org.get("is_rogue", false)
-		tile.set_org_indicator(has_org, is_rogue)
+		var is_neutral: bool = has_org and org.get("owner", "") != Balance.PLAYER_FACTION
+		tile.set_org_indicator(has_org, is_rogue, is_neutral)
 
 func _on_mission_selected(_idx: int) -> void:
 	_update_mission_info()
@@ -553,6 +554,7 @@ func _build_grid() -> void:
 	_refresh_tile_selection()
 	_draw_connections()
 	_refresh_borders()
+	_refresh_org_indicators()
 
 func _on_tile_selected(region_idx: int) -> void:
 	_clear_movement_target_highlight()
