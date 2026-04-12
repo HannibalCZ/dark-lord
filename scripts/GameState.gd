@@ -340,7 +340,8 @@ func advance_turn() -> void:
 	entries += building_manager.apply_end_of_turn_effects()
 
 	# 2) pasivni efekty organizaci
-	entries += org_manager.apply_end_of_turn_effects()
+	entries += org_manager.apply_end_of_turn_effects()       # hracovy aktivni orgy
+	org_manager.apply_neutral_and_rogue_effects()             # neutral + rogue orgy
 
 	# 2b) loajalitni decay — po efektech, pred ekonomikou
 	# (EconomicManager uz vidi aktualni loyalty pri vypoctu gold/mana prijmu)

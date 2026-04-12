@@ -174,34 +174,17 @@ func apply_end_of_turn_effects() -> Array[Dictionary]:
 	var logs: Array[Dictionary] = []
 
 	for org in orgs:
+		# Pouze hracovy aktivni orgy — neutral, rival a Rogue
+		# zpracovava apply_neutral_and_rogue_effects()
+		if org.get("owner") != Balance.ORG_OWNER_PLAYER:
+			continue
+		if org.get("is_rogue", false):
+			continue
+
 		var org_type: String = org["org_type"]
 		var display_name: String = Balance.ORG[org_type]["display_name"]
 		var region: Region = game_state.region_manager.get_region(org["region_id"])
 
-		# Neutral/Rogue org: aplikuj ORG_NEUTRAL_EFFECTS misto doktriny
-		if org.get("owner") != Balance.ORG_OWNER_PLAYER:
-			var neutral_effects: Dictionary = Balance.ORG_NEUTRAL_EFFECTS.get(org_type, {})
-			if neutral_effects.is_empty():
-				continue
-			# mission_penalty neni EffectsSystem klic — preskocit
-			var eff_to_apply: Dictionary = {}
-			for key in neutral_effects:
-				if key != "mission_penalty":
-					eff_to_apply[key] = neutral_effects[key]
-			if not eff_to_apply.is_empty():
-				var ctx := EffectContext.make(game_state, region, org.get("owner", "neutral"))
-				ctx.source_label = "Neutral organizace: %s" % display_name
-				var effect_logs: Array[Dictionary] = game_state.effects_system.apply(eff_to_apply, ctx)
-				logs += effect_logs
-				logs.append({
-					"type": "org",
-					"text": "Neutral organizace %s (%s) aplikovala pasivni efekty v regionu %d." % [
-						org["org_id"], display_name, org["region_id"]
-					]
-				})
-			continue
-
-		# Hracova org: standardni doktrinarni efekty
 		var all_effects: Dictionary = get_org_effects_scaled(org)
 		if all_effects.is_empty():
 			continue
@@ -229,6 +212,50 @@ func apply_end_of_turn_effects() -> Array[Dictionary]:
 		})
 
 	return logs
+
+
+# ---------------------------------------------------------
+# Negativni efekty neutral a Rogue organizaci
+# ---------------------------------------------------------
+# Volat po apply_end_of_turn_effects(), pred apply_loyalty_decay().
+# Neutral orgy (owner != player) a Rogue orgy (is_rogue == true)
+# generuji negativni efekty z Balance.ORG_NEUTRAL_EFFECTS.
+# mission_penalty se nepredava do EffectsSystem — je zpracovana
+# v MissionManager._compute_mission_success().
+
+func apply_neutral_and_rogue_effects() -> void:
+	for org in orgs:
+		# Preskoc hracovy aktivni orgy — ty maji vlastni pipeline
+		if org.get("owner") == Balance.ORG_OWNER_PLAYER \
+				and not org.get("is_rogue", false):
+			continue
+
+		var org_type: String = org["org_type"]
+		var neutral_fx: Dictionary = Balance.ORG_NEUTRAL_EFFECTS.get(org_type, {})
+		if neutral_fx.is_empty():
+			continue
+
+		# Sestav source_label citelny pro hrace (zobrazuje se v tooltipech)
+		var org_name: String = Balance.ORG[org_type].get("display_name", org_type)
+		var label: String
+		if org.get("is_rogue", false):
+			label = "%s (Rogue)" % org_name
+		else:
+			label = "%s (%s)" % [org_name, org.get("owner", Balance.ORG_OWNER_NEUTRAL)]
+
+		# mission_penalty nejde pres EffectsSystem — pouze heat, awareness, atd.
+		var fx_for_system: Dictionary = {}
+		for key in neutral_fx:
+			if key != "mission_penalty":
+				fx_for_system[key] = neutral_fx[key]
+
+		if fx_for_system.is_empty():
+			continue
+
+		var region: Region = game_state.region_manager.get_region(org["region_id"])
+		var ctx := EffectContext.make(game_state, region, Balance.ORG_OWNER_PLAYER)
+		ctx.source_label = label
+		game_state.effects_system.apply(fx_for_system, ctx)
 
 
 # ---------------------------------------------------------
