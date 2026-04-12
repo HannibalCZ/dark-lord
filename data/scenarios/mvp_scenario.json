@@ -32,5 +32,9 @@
 
 	{ "id": 100, "unit_key": "paladin_army", "region_id": 7,  "faction_id": "paladin", "state": "healthy" },
 	{ "id": 101, "unit_key": "inquisitor",   "region_id": 5,  "faction_id": "elf",     "state": "healthy" }
+  ],
+  "orgs": [
+	{ "org_type": "crime_syndicate", "owner": "neutral", "region_id": 10, "doctrine": "extortion",    "loyalty": 100 },
+	{ "org_type": "cult",            "owner": "neutral", "region_id": 7,  "doctrine": "dark_rituals", "loyalty": 100 }
   ]
 }

@@ -115,6 +115,8 @@ func load_scenario(path: String) -> void:
 	mission_manager.init()
 	progression_manager.unlocked_nodes.clear()
 	progression_manager.condition_trackers.clear()
+	org_manager.orgs.clear()
+	org_manager._next_id = 1
 
 	# (budovy/spells jsou zatím "game rules", ne scénář – nechávám init)
 	building_manager.init_buildings()
@@ -224,6 +226,48 @@ func load_scenario(path: String) -> void:
 
 	# 6) UnitManager ID counter sync
 	unit_manager.recompute_id_counter()
+
+	# 6b) Orgs ze scénáře — ukládáme přímo do orgs pole (bez EventBus),
+	# aby neutrální orgs nevyvolávaly EventsManager notifikace při načtení.
+	var orgs_arr: Array = data.get("orgs", [])
+	for item in orgs_arr:
+		if typeof(item) != TYPE_DICTIONARY:
+			continue
+		var od: Dictionary = item
+		var org_type: String = String(od.get("org_type", ""))
+		var owner: String    = String(od.get("owner", "neutral"))
+		var org_rid: int     = int(od.get("region_id", -1))
+		var doctrine: String = String(od.get("doctrine", ""))
+		var loyalty: int     = int(od.get("loyalty", Balance.ORG_LOYALTY_START))
+
+		if org_type == "" or org_rid < 0:
+			push_warning("Skipping invalid org entry: %s" % str(od))
+			continue
+		if not Balance.ORG.has(org_type):
+			push_warning("Org entry has unknown org_type='%s'" % org_type)
+			continue
+		if region_manager.get_region(org_rid) == null:
+			push_warning("Org entry has invalid region_id=%d" % org_rid)
+			continue
+
+		var default_doctrine: String = Balance.ORG[org_type]["default_doctrine"]
+		var used_doctrine: String = doctrine if doctrine != "" else default_doctrine
+		if not Balance.ORG[org_type]["doctrines"].has(used_doctrine):
+			push_warning("Org entry has unknown doctrine='%s' for type='%s'" % [used_doctrine, org_type])
+			used_doctrine = default_doctrine
+
+		var org: Dictionary = {
+			"org_id":       "org_" + str(org_manager._next_id),
+			"org_type":     org_type,
+			"owner":        owner,
+			"region_id":    org_rid,
+			"doctrine":     used_doctrine,
+			"founded_turn": turn,
+			"loyalty":      loyalty,
+			"is_rogue":     false
+		}
+		org_manager._next_id += 1
+		org_manager.orgs.append(org)
 
 	# 7) Dark actions refresh pro playera na startu
 	dark_actions_manager.refresh_dark_actions_for_faction(Balance.PLAYER_FACTION)

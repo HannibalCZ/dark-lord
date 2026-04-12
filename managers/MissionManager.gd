@@ -127,6 +127,14 @@ func _compute_mission_success(mission_key: String, unit: Unit, region: Region) -
 			if effects.has("mission_bonus"):
 				region_delta += float(effects["mission_bonus"]) / 100.0
 
+	# mission_penalty z neutralnich/Rogue organizaci v regionu
+	# Penalizuje hrace za mise v regionu kde operuje cizi organizace.
+	if not org.is_empty():
+		if org.get("owner") != Balance.PLAYER_FACTION:
+			var neutral_fx: Dictionary = Balance.ORG_NEUTRAL_EFFECTS.get(org["org_type"], {})
+			if neutral_fx.has("mission_penalty"):
+				region_delta -= float(neutral_fx["mission_penalty"])
+
 	# Progression modifier — mission_success (TYP A)
 	# Aplikuje se pouze pro hráčovy mise — konzistentní s mission_bonus ze Shadow Network
 	var player_faction = game_state.faction_manager.get_faction(Balance.PLAYER_FACTION)
