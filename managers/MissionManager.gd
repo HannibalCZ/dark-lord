@@ -196,9 +196,16 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 			if not boost_org.is_empty():
 				boost_org["loyalty"] = min(100, boost_org.get("loyalty", Balance.ORG_LOYALTY_START) + loyalty_boost)
 
-		# odstan org_loyalty pred predanim EffectsSystem
+		# destroy_org neni znamy EffectsSystem — zpracuj primo pres OrgManager
+		if effects.get("destroy_org", false):
+			var target_org: Dictionary = game_state.org_manager.get_org_in_region(region.id)
+			if not target_org.is_empty():
+				game_state.org_manager.remove_org(region.id)
+
+		# odstan org_loyalty a destroy_org pred predanim EffectsSystem
 		var effects_for_system: Dictionary = effects.duplicate()
 		effects_for_system.erase("org_loyalty")
+		effects_for_system.erase("destroy_org")
 
 		var ctx := EffectContext.make(game_state, region, unit.faction_id)
 		var eff_logs : Array[Dictionary] = game_state.effects_system.apply(effects_for_system, ctx)
