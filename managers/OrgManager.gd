@@ -190,6 +190,7 @@ func apply_end_of_turn_effects() -> Array[Dictionary]:
 		if not non_economic.is_empty():
 			var region: Region = game_state.region_manager.get_region(org["region_id"])
 			var ctx := EffectContext.make(game_state, region, Balance.ORG_OWNER_PLAYER)
+			ctx.source_label = "Organizace: %s" % Balance.ORG[org["org_type"]]["display_name"]
 			var effect_logs: Array[Dictionary] = game_state.effects_system.apply(non_economic, ctx)
 			logs += effect_logs
 

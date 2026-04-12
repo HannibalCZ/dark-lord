@@ -4,6 +4,7 @@ class_name EffectContext
 var game: GameStateSingleton
 var region: Region = null
 var source_faction_id: String = Balance.PLAYER_FACTION
+var source_label: String = ""
 
 static func make(game: GameStateSingleton, region: Region = null, source_faction_id: String = Balance.PLAYER_FACTION) -> EffectContext:
 	var ctx := EffectContext.new()
