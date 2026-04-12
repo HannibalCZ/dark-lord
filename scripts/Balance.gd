@@ -243,6 +243,27 @@ const MISSION = {
 		"fail":    { "heat": 2 },
 		"ui_icon":  "res://ui/icons/missions/inspect.png",
 		"ui_order": 8
+	},
+
+	"dismantle": {
+		"id":           "dismantle",
+		"display_name": "Rozpusteni organizace",
+		"description":  "Agent znici organizaci v tomto regionu.",
+		"base_chance":  0.70,
+		"requirements": {
+			"requires_org": true
+		},
+		"cost": { "ap": 1, "mana": 0, "gold": 0 },
+		"success": {
+			"destroy_org": true,
+			"heat": 3
+		},
+		"fail": {
+			"heat": 5,
+			"awareness": 2
+		},
+		"ui_icon":  "res://ui/icons/missions/dismantle.png",
+		"ui_order": 9
 	}
 
 }
@@ -405,7 +426,7 @@ const UNIT = {
 		"recruit_cost": { "mana": 15 },
 		"upkeep_cost": { "mana": 2 },
 		"moves": 2,
-		"can_do": ["corrupt","sabotage","explore","bribe","manipulate","inspect"]
+		"can_do": ["corrupt","sabotage","explore","bribe","manipulate","inspect","dismantle"]
 	},
 	"homunculus": {
 		"display_name": "Homunkulus",
@@ -437,7 +458,7 @@ const UNIT = {
 		"recruit_cost": {},
 		"upkeep_cost": {},
 		"moves": 2,
-		"can_do": ["purge"],
+		"can_do": ["purge","dismantle"],
 		"aura": {
 			"mission_success": -0.50,
 			"mission_key": ["corrupt", "sabotage"],
