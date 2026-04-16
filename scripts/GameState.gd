@@ -21,6 +21,7 @@ signal game_ended(result: Dictionary) # { ok:bool, outcome:"win"/"lose", reason:
 @onready var org_manager: OrgManager = OrgManager.new()
 @onready var progression_manager: ProgressionManager = ProgressionManager.new()
 @onready var heat_tracker: HeatAwarenessTracker = HeatAwarenessTracker.new()
+@onready var reputation_manager: ReputationManager = ReputationManager.new()
 
 var rng := RandomNumberGenerator.new()
 var turn:int = 1
@@ -33,7 +34,7 @@ var game_over: bool = false
 var game_over_result: Dictionary = {}
 var player_start_region_id: int = -1
 var _start_region_captured: bool = false
-var awareness: int = 0      # stub — MVP nemá awareness mechaniku
+var awareness: int = 10      # stub — MVP nemá awareness mechaniku
 var prev_awareness: int = 0 # předchozí hodnota pro EventsManager
 var pending_events: Array[EventData] = []  # eventy čekající na zobrazení v Radě zasvěcených
 var _welcome_shown: bool = false
@@ -56,6 +57,7 @@ func _ready() -> void:
 	ai_manager.game_state          = self
 	org_manager.game_state         = self
 	progression_manager.game_state = self
+	reputation_manager.game_state  = self
 	events_manager.init(self)
 
 	query = GameQuery.new(self)
@@ -383,6 +385,9 @@ func advance_turn() -> void:
 		var decay_ctx := EffectContext.make(self, null, Balance.PLAYER_FACTION)
 		decay_ctx.source_label = "Přirozený útlum"
 		effects_system.apply({"heat": -Balance.HEAT_DECAY_PER_TURN}, decay_ctx)
+
+	# Reputace — prepocitej pred heat thresholdy, aby modifier byl aktualni
+	reputation_manager.update_all()
 
 	# HEAT reakce
 	_check_heat_thresholds(old_heat, heat)
