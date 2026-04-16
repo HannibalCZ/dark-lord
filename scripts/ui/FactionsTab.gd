@@ -105,13 +105,36 @@ func _create_card(faction: Faction) -> PanelContainer:
 	regions_label.text = "Regiony: %d" % GameState.region_manager.get_regions_by_faction(faction.id).size()
 	row3.add_child(regions_label)
 
-	# --- Řádek 4: placeholder pro reputační systém ---
+	# --- Řádek 4: Heat threshold modifier z reputace ---
 	var effect_label := Label.new()
 	effect_label.name = "BehaviorEffectLabel"
-	effect_label.text = "Heat threshold: vychozi"
+	effect_label.text = _behavior_effect_display(faction)
 	effect_label.add_theme_color_override("font_color", Color("#888888"))
 	effect_label.add_theme_font_size_override("font_size", 11)
 	vbox.add_child(effect_label)
+
+	# --- Řádek 5: reputace — hodnota a fáze ---
+	var rep_label := Label.new()
+	rep_label.name = "ReputationLabel"
+	rep_label.add_theme_font_size_override("font_size", 12)
+	rep_label.text = "Reputace: %d — %s" % [
+		faction.reputation,
+		_reputation_phase_display(faction.reputation_phase)
+	]
+	rep_label.add_theme_color_override(
+		"font_color", _reputation_phase_color(faction.reputation_phase))
+	vbox.add_child(rep_label)
+
+	# --- Řádek 6: breakdown výpočtu reputace (sekundární, šedší) ---
+	var breakdown_label := Label.new()
+	breakdown_label.name = "ReputationBreakdownLabel"
+	breakdown_label.add_theme_font_size_override("font_size", 11)
+	breakdown_label.modulate = Color(0.7, 0.7, 0.7, 1.0)
+	var bd: Dictionary = GameState.reputation_manager.get_reputation_breakdown(faction.id)
+	breakdown_label.text = "  Zaklad: +%d | Korupce: +%d | Sit: +%d" % [
+		bd["base"], bd["corruption"], bd["shadow_net"]
+	]
+	vbox.add_child(breakdown_label)
 
 	return card
 
@@ -152,6 +175,29 @@ func _update_card(card: Node, faction: Faction) -> void:
 		if regions_label != null:
 			regions_label.text = "Regiony: %d" % GameState.region_manager.get_regions_by_faction(faction.id).size()
 
+	# BehaviorEffectLabel — Heat threshold modifier
+	var effect_label: Label = vbox.get_node_or_null("BehaviorEffectLabel")
+	if effect_label != null:
+		effect_label.text = _behavior_effect_display(faction)
+
+	# ReputationLabel — hodnota a fáze s barvou
+	var rep_label: Label = vbox.get_node_or_null("ReputationLabel")
+	if rep_label != null:
+		rep_label.text = "Reputace: %d — %s" % [
+			faction.reputation,
+			_reputation_phase_display(faction.reputation_phase)
+		]
+		rep_label.add_theme_color_override(
+			"font_color", _reputation_phase_color(faction.reputation_phase))
+
+	# ReputationBreakdownLabel — breakdown výpočtu
+	var breakdown_label: Label = vbox.get_node_or_null("ReputationBreakdownLabel")
+	if breakdown_label != null:
+		var bd: Dictionary = GameState.reputation_manager.get_reputation_breakdown(faction.id)
+		breakdown_label.text = "  Zaklad: +%d | Korupce: +%d | Sit: +%d" % [
+			bd["base"], bd["corruption"], bd["shadow_net"]
+		]
+
 # ---------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------
@@ -182,3 +228,30 @@ func _spawn_display(faction: Faction) -> String:
 		return "Spawn: %d/%d tahu" % [counter, rate]
 	else:
 		return "Spawn: neaktivni"
+
+func _reputation_phase_display(phase: String) -> String:
+	match phase:
+		"hostile":     return "Nepratelska"
+		"neutral":     return "Neutralni"
+		"infiltrated": return "Infiltrovana"
+		"controlled":  return "Ovladnuta"
+		_:             return "Neznama"
+
+func _reputation_phase_color(phase: String) -> Color:
+	match phase:
+		"hostile":     return Color("#f44336")
+		"neutral":     return Color("#aaaaaa")
+		"infiltrated": return Color("#ffd700")
+		"controlled":  return Color("#4caf50")
+		_:             return Color("#aaaaaa")
+
+func _behavior_effect_display(faction: Faction) -> String:
+	var mod: int = faction.reputation_modifier
+	if mod == 0:
+		return "Heat threshold: vychozi"
+	elif mod == 99:
+		return "Heat threshold: ignoruje Heat"
+	elif mod > 0:
+		return "Heat threshold: +%d" % mod
+	else:
+		return "Heat threshold: %d" % mod
