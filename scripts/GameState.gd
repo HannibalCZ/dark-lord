@@ -464,8 +464,16 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 	if new_heat == old_heat:
 		return
 
+	# Reputacni modifier — snizuje/zvysuje efektivni heat pro tuto frakci.
+	# Hostile: -10 (frakce reaguje drive),
+	# Infiltrated: +10 (reaguje pozdeji),
+	# Controlled: +99 (prakticky nikdy neprekroci threshold)
+	var rep_mod: int = paladin_faction.reputation_modifier
+	var eff_old: int = old_heat + rep_mod
+	var eff_new: int = new_heat + rep_mod
+
 	# --- STAGE 1 ---
-	if old_heat < Balance.HEAT_STAGE_1 and new_heat >= Balance.HEAT_STAGE_1:
+	if eff_old < Balance.HEAT_STAGE_1 and eff_new >= Balance.HEAT_STAGE_1:
 		heat_stage = max(heat_stage, 1)
 		_log({
 			"type": "heat",
@@ -473,7 +481,7 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 		})
 
 	# --- STAGE 2 ---
-	if old_heat < Balance.HEAT_STAGE_2 and new_heat >= Balance.HEAT_STAGE_2:
+	if eff_old < Balance.HEAT_STAGE_2 and eff_new >= Balance.HEAT_STAGE_2:
 		heat_stage = max(heat_stage, 2)
 		_log({
 			"type": "heat",
@@ -481,28 +489,28 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 		})
 
 	# --- STAGE 3 ---
-	if old_heat < Balance.HEAT_STAGE_3 and new_heat >= Balance.HEAT_STAGE_3:
+	if eff_old < Balance.HEAT_STAGE_3 and eff_new >= Balance.HEAT_STAGE_3:
 		heat_stage = max(heat_stage, 3)
 		paladin_faction.ai_regular_spawns_enabled = true
 		_log({
 			"type": "heat",
-			"text": "🔥🔥🔥 [HEAT 76] Svaté výpravy proudí ze všech koutů světa."
+			"text": "🔥🔥🔥 [HEAT 85] Svaté výpravy proudí ze všech koutů světa."
 		})
 
 	# --- STAGE 4 ---
-	if old_heat < Balance.HEAT_MAX and new_heat >= Balance.HEAT_MAX:
+	if eff_old < Balance.HEAT_MAX and eff_new >= Balance.HEAT_MAX:
 		heat_stage = 4
 		_log({
 			"type": "cycle",
 			"text": "💀 [HEAT 100] Začíná závěrečná křížová výprava proti Temnému pánovi!"
 		})
 
-	# --- BEHAVIOR ENUM (paralelně s boolean flags, bude primární) ---
-	if new_heat >= Balance.HEAT_STAGE_3:
+	# --- BEHAVIOR ENUM — zalozeno na efektivnim heat vcetne rep_mod ---
+	if eff_new >= Balance.HEAT_STAGE_3:
 		paladin_faction.current_behavior = Faction.Behavior.COORDINATED
-	elif new_heat >= Balance.HEAT_STAGE_2:
+	elif eff_new >= Balance.HEAT_STAGE_2:
 		paladin_faction.current_behavior = Faction.Behavior.AGGRESSIVE
-	elif new_heat >= Balance.HEAT_STAGE_1:
+	elif eff_new >= Balance.HEAT_STAGE_1:
 		paladin_faction.current_behavior = Faction.Behavior.PATROLLING
 	else:
 		paladin_faction.current_behavior = Faction.Behavior.PASSIVE
@@ -647,8 +655,17 @@ func process_ai_spawning() -> void:
 		if faction == null:
 			continue
 
+		# Ovladnuta frakce nespawnuje — reset counteru aby se neakumulovaly tahy
+		if faction.reputation_phase == "controlled":
+			faction.spawn_counter = 0
+			continue
+
 		var trigger_value: int = heat if cfg["trigger"] == "heat" else awareness
-		faction.ai_regular_spawns_enabled = trigger_value >= int(cfg["threshold"])
+		# Reputacni modifier posouva efektivni threshold spawnu:
+		# Hostile: -10 (spawnuje drive), Infiltrated: +10 (spawnuje pozdeji)
+		var base_threshold: int = int(cfg["threshold"])
+		var effective_threshold: int = base_threshold + faction.reputation_modifier
+		faction.ai_regular_spawns_enabled = trigger_value >= effective_threshold
 
 		if not faction.ai_regular_spawns_enabled:
 			faction.spawn_counter = 0
