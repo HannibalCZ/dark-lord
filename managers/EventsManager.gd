@@ -34,6 +34,12 @@ var _active_advisors: Array[String] = []
 # Rogue eventy — buffrovano okamzite pri signalu, zpracuje se v generate_events_for_turn().
 var _pending_rogue_events: Array[EventData] = []
 
+# Reputacni faze z konce minuleho tahu — pro detekci prechodu do "controlled".
+# Plni se na KONCI generate_events_for_turn(), cte se na ZACATKU dalsiho tahu.
+# Prvni tah: prazdny dict → .get(faction_id, "neutral") vraci "neutral" (bezpecny fallback).
+var _prev_reputation_phases: Dictionary = {}
+# { faction_id: String }
+
 # ---------------------------
 func init(gs: GameStateSingleton) -> void:
 	game_state = gs
@@ -62,9 +68,16 @@ func generate_events_for_turn() -> Array[EventData]:
 	_collect_spawn_events(events)
 	_collect_progression_events(events)
 	_collect_loyalty_events(events)
+	_collect_reputation_events(events)
 	_collect_pending_rogue_events(events)
 
 	_collected_player_results.clear()
+
+	# Snapshot reputacnich fazi pro porovnani v PRISTIM tahu.
+	# Musi byt az zde — reputation_manager.update_all() uz probehlo
+	# pred volanim generate_events_for_turn(), takze zachycujeme
+	# aktualni (jiz aktualizovany) stav jako "prev" pro pristi tah.
+	_snapshot_reputation_phases()
 
 	return _filter_events(events)
 
@@ -626,6 +639,46 @@ func _collect_loyalty_events(events: Array[EventData]) -> void:
 			"Pane, %s v regionu %s ztrace loajalitu. Musime jednat rychle nebo ji ztratite." % [org_name, region_name],
 			"Loajalita %s: %d (Nestabilni)" % [org_name, loyalty]
 		))
+
+
+# ---------------------------
+# Helper — ulozi aktualni reputation_phase vsech AI frakcí pro pristi tah
+# ---------------------------
+func _snapshot_reputation_phases() -> void:
+	for faction_id in Balance.REPUTATION_BASE.keys():
+		var faction = game_state.faction_manager.get_faction(faction_id)
+		if faction == null:
+			continue
+		_prev_reputation_phases[faction_id] = faction.reputation_phase
+
+
+# ---------------------------
+# ZDROJ 10 — Prechod frakce do faze Ovladnuta (Zvedka)
+# ---------------------------
+func _collect_reputation_events(events: Array[EventData]) -> void:
+	if game_state == null:
+		return
+	for faction_id in Balance.REPUTATION_BASE.keys():
+		var faction = game_state.faction_manager.get_faction(faction_id)
+		if faction == null:
+			continue
+
+		var prev_phase: String = _prev_reputation_phases.get(faction_id, "neutral")
+		var curr_phase: String = faction.reputation_phase
+
+		# Pouze pri prechodu DO "controlled" — ne opakovane kazdy tah
+		if prev_phase != "controlled" and curr_phase == "controlled":
+			var faction_name: String = faction.name if faction.name != "" else faction_id
+			events.append(EventData.create(
+				Balance.ADVISOR_ZVEDKA,
+				Balance.EVENT_CRITICAL,
+				(
+					"Pane, nase site pronikly do sameho srdce %s. "
+					+ "Jejich predstavitele slouzi nasim zajmum — "
+					+ "mozna ani nevedi komu ve skutecnosti slouzi."
+				) % faction_name,
+				"%s dosahla faze Ovladnuta." % faction_name
+			))
 
 
 # ---------------------------
