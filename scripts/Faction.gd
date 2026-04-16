@@ -49,6 +49,14 @@ var ai_regular_spawns_enabled: bool = false
 var ai_spawn_unit: String = ""
 var spawn_counter: int = 0
 
+# Reputace — cachovana hodnota,
+# prepocitavana ReputationManagerem kazdy tah
+var reputation: int = 0
+var reputation_phase: String = "neutral"
+# "hostile" | "neutral" | "infiltrated" | "controlled"
+var reputation_modifier: int = 0
+# Heat threshold modifier: -10 / 0 / +10 / +99
+
 func change_resource(kind:String, amount:float) -> void:
 	if not resources.has(kind):
 		push_error("Faction %s: unknown resource '%s'" % [id, kind])

@@ -1101,6 +1101,35 @@ static func get_progression_one_time(node_key: String) -> Dictionary:
 # PROCEDURAL_GENERATION_ENABLED: true = proceduralni
 # rozmisteni tajemstvi pri startu hry,
 # false = pouzij data z JSON beze zmeny (fallback)
+# --- Reputacni system ---
+
+# Vychozi reputace per frakce
+const REPUTATION_BASE = {
+	"paladin":  15,
+	"elf":      10,
+	"merchant": 20,
+	"orc":      40
+}
+
+# Fazove prahy
+const REPUTATION_HOSTILE:     int = 25  # 0-25
+const REPUTATION_NEUTRAL:     int = 50  # 26-50
+const REPUTATION_INFILTRATED: int = 75  # 51-75
+# 76-100 = Ovladnuta
+
+# Vahy pro vypocet
+const REPUTATION_WEIGHT_CORRUPTION: int   = 8
+const REPUTATION_WEIGHT_SHADOW_NET: float = 0.30
+
+# Efekt na Heat threshold per faze
+const REPUTATION_HEAT_MOD_HOSTILE:     int = -10
+const REPUTATION_HEAT_MOD_NEUTRAL:     int = 0
+const REPUTATION_HEAT_MOD_INFILTRATED: int = 10
+const REPUTATION_HEAT_MOD_CONTROLLED:  int = 99
+# 99 = prakticky neomezeno — frakce nikdy
+# neprekroci threshold
+
+# --- Proceduralni rozmisteni ---
 const PROCEDURAL_GENERATION_ENABLED: bool = true
 
 # Seed pro reprodukovatelne vysledky.
