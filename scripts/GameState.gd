@@ -183,6 +183,10 @@ func load_scenario(path: String) -> void:
 
 		faction_manager.add_faction(fac)
 
+		# Inicializace reputace ze zakladnich hodnot v Balance.gd.
+		# Faze a modifier se nastavi pri prvnim update_all() v advance_turn().
+		fac.reputation = Balance.REPUTATION_BASE.get(fac.id, 50)
+
 		# resources
 		var res: Dictionary = fd.get("resources", {})
 		for rk in res.keys():
