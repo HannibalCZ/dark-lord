@@ -270,7 +270,11 @@ func load_scenario(path: String) -> void:
 			"doctrine":     used_doctrine,
 			"founded_turn": turn,
 			"loyalty":      loyalty,
-			"is_rogue":     false
+			"is_rogue":     false,
+			# Neutralni organizace ze scenare jsou vzdy viditelne.
+			# Hracovy organizace ze scenare zacinaji skryte
+			# (konzistentni s add_org()).
+			"visible":      owner != Balance.ORG_OWNER_PLAYER
 		}
 		org_manager._next_id += 1
 		org_manager.orgs.append(org)
@@ -352,6 +356,10 @@ func advance_turn() -> void:
 	# 2b) loajalitni decay — po efektech, pred ekonomikou
 	# (EconomicManager uz vidi aktualni loyalty pri vypoctu gold/mana prijmu)
 	org_manager.apply_loyalty_decay()
+
+	# 2c) odhaleni organizaci — po decay, aby loyalty byla aktualni
+	# Shadow Network disinfo uz skryla org v apply_end_of_turn_effects()
+	org_manager._check_org_visibility()
 
 	# 3) ekonomika
 	entries += economic_manager.apply_economy_cycle()
