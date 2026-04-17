@@ -87,7 +87,11 @@ func add_org(org_type: String, owner: String, region_id: int) -> Dictionary:
 		"doctrine":     Balance.ORG[org_type]["default_doctrine"],
 		"founded_turn": game_state.turn,
 		"loyalty":      Balance.ORG_LOYALTY_START,
-		"is_rogue":     false
+		"is_rogue":     false,
+		# Hracovy organizace zacinaji skryte — inkvizitor na ne nemuze cilit
+		# dokud nejsou odhaleny pres _check_org_visibility().
+		# Neutralni a rival organizace jsou vzdy viditelne (jiz zname).
+		"visible":      owner != Balance.ORG_OWNER_PLAYER
 	}
 	_next_id += 1
 	orgs.append(org)
@@ -204,6 +208,14 @@ func apply_end_of_turn_effects() -> Array[Dictionary]:
 			var effect_logs: Array[Dictionary] = game_state.effects_system.apply(non_economic, ctx)
 			logs += effect_logs
 
+		# Shadow Network doktrína "disinfo" — aktivně skrývá organizaci.
+		# Každý tah vrátí visible na false, takže ani odhalená org
+		# nemůže být dlouhodobě viditelná pokud dezinformuje.
+		if org["org_type"] == "shadow_network" \
+				and org["doctrine"] == "disinfo" \
+				and not org.get("is_rogue", false):
+			org["visible"] = false
+
 		logs.append({
 			"type": "org",
 			"text": "Organizace %s (%s) aplikovala efekty doktríny '%s' v regionu %d." % [
@@ -290,3 +302,43 @@ func apply_loyalty_decay() -> void:
 			EventBus.org_went_rogue.emit(org["org_id"], org["region_id"])
 		else:
 			org["loyalty"] = new_loyalty
+
+
+# ---------------------------------------------------------
+# Odhaleni organizaci
+# ---------------------------------------------------------
+# Projde vsechny hracovy organizace a odhalí je pokud generují
+# dostatecne silne efekty ve Verne fazi loajality.
+# Vola se z advance_turn() za apply_loyalty_decay().
+# Shadow Network s doktrínou "disinfo" je imunni —
+# dezinformace ji skryje zpet v apply_end_of_turn_effects().
+
+func _check_org_visibility() -> void:
+	for org in orgs:
+		# Pouze hracovy organizace — neutral a rival jsou vzdy visible
+		if org.get("owner") != Balance.ORG_OWNER_PLAYER:
+			continue
+		# Uz odhalena — preskoc
+		if org.get("visible", false):
+			continue
+		# Rogue organizace se neodhaluji timto mechanismem
+		if org.get("is_rogue", false):
+			continue
+
+		# Odhal pouze pokud je org ve Verne fazi loajality
+		var loyalty: int = org.get("loyalty", Balance.ORG_LOYALTY_START)
+		if loyalty < Balance.ORG_LOYALTY_FAITHFUL:
+			continue
+
+		# Spocitej celkovy dopad efektu (absolutni hodnota)
+		var effects: Dictionary = get_org_effects_scaled(org)
+		var total_impact: int = 0
+		for key in ["gold", "mana", "heat", "awareness", "infamy"]:
+			total_impact += abs(int(effects.get(key, 0)))
+
+		if total_impact >= Balance.ORG_REVEAL_THRESHOLD:
+			org["visible"] = true
+			EventBus.org_revealed.emit(
+				String(org["org_id"]),
+				int(org["region_id"])
+			)

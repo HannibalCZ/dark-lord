@@ -854,6 +854,12 @@ const ORG_INSPECT_LOYALTY_BOOST: int = 30
 # Dark Action "Posil loajalitu" - boost loajality
 const ORG_REINFORCE_LOYALTY_BOOST: int = 20
 
+# Prah odhaleni organizace — soucet absolutnich hodnot efektu
+# (gold, mana, heat, awareness, infamy) ktery zpusobi odhaleni.
+# Organizace ve Verne fazi (loyalty >= ORG_LOYALTY_FAITHFUL)
+# s celkovym dopadem >= ORG_REVEAL_THRESHOLD se stane visible.
+const ORG_REVEAL_THRESHOLD: int = 8
+
 # --- Efekty neutralnich a Rogue organizaci ---
 # Aplikuji se kazdy tah dokud je org neutral nebo Rogue.
 # Negativni efekty motivuji hrace je resit.

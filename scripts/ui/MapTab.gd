@@ -58,6 +58,8 @@ extends Control
 @onready var destroy_button: Button       = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/DestroyButton
 @onready var org_loyalty_label: Label     = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/OrgLoyaltyLabel
 
+var org_visibility_label: Label = null   # vytvoren dynamicky v _ready()
+
 var _tile_by_id: Dictionary = {}  # { region_id: int -> RegionTile }
 var _connections: Array = []      # [ {a: Vector2, b: Vector2}, ... ]
 var selected_region_idx: int = -1
@@ -189,6 +191,15 @@ func _ready() -> void:
 	_mission_parent.move_child(mission_success_effects, _mi_idx + 1)
 	_mission_parent.move_child(mission_fail_effects, _mi_idx + 2)
 
+	# Org visibility label — pridano dynamicky za org_loyalty_label
+	org_visibility_label = Label.new()
+	org_visibility_label.name = "OrgVisibilityLabel"
+	org_visibility_label.add_theme_font_size_override("font_size", 12)
+	org_visibility_label.visible = false
+	var _org_vbox: Node = org_loyalty_label.get_parent()
+	_org_vbox.add_child(org_visibility_label)
+	_org_vbox.move_child(org_visibility_label, org_loyalty_label.get_index() + 1)
+
 	visibility_changed.connect(func(): set_process(is_visible_in_tree()))
 	set_process(is_visible_in_tree())
 
@@ -281,7 +292,12 @@ func _refresh_org_indicators() -> void:
 		var has_org: bool = not org.is_empty()
 		var is_rogue: bool = org.get("is_rogue", false)
 		var is_neutral: bool = has_org and org.get("owner", "") != Balance.PLAYER_FACTION
-		tile.set_org_indicator(has_org, is_rogue, is_neutral)
+		# is_hidden: hracova org ktera jeste nebyla odhalena
+		var is_hidden: bool = has_org \
+				and not is_neutral \
+				and not is_rogue \
+				and not org.get("visible", true)
+		tile.set_org_indicator(has_org, is_rogue, is_neutral, is_hidden)
 
 func _on_mission_selected(_idx: int) -> void:
 	_update_mission_info()
@@ -941,6 +957,21 @@ func _update_org_section(region_id: int) -> void:
 	org_loyalty_label.text = "%d — %s" % [loyalty, phase_text]
 	org_loyalty_label.add_theme_color_override("font_color", phase_color)
 	org_loyalty_label.visible = true
+
+	# Viditelnost organizace — zobrazit pouze pro hracovy orgy
+	if org_visibility_label != null and data["is_player_org"]:
+		var is_visible_to_enemy: bool = org.get("visible", false)
+		if is_visible_to_enemy:
+			org_visibility_label.text = "Stav: Odhalena"
+			org_visibility_label.add_theme_color_override(
+				"font_color", Color("#f44336"))
+		else:
+			org_visibility_label.text = "Stav: Skryta"
+			org_visibility_label.add_theme_color_override(
+				"font_color", Color("#4caf50"))
+		org_visibility_label.visible = true
+	elif org_visibility_label != null:
+		org_visibility_label.visible = false
 
 
 func _populate_doctrine_picker(region_id: int) -> void:

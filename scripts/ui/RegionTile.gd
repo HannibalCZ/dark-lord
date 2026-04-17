@@ -143,19 +143,23 @@ func _update_secret_icon(region: Region) -> void:
 	else:
 		secret_icon.visible = false
 
-func set_org_indicator(has_org: bool, is_rogue: bool = false, is_neutral: bool = false, org_texture: Texture2D = null) -> void:
+func set_org_indicator(has_org: bool, is_rogue: bool = false, is_neutral: bool = false, is_hidden: bool = false, org_texture: Texture2D = null) -> void:
 	org_icon.visible = has_org
 	if not has_org:
 		return
 	if org_texture != null:
 		org_icon.texture = org_texture
-	# Rogue ma prednost — sedá (hracova org mimo kontrolu)
-	# Neutral — cerveny ton (nepratelsaka organizace)
-	# Hracova aktivni — plna bila
+	# Priorita stavu: Rogue > Neutral > Hidden > Aktivni
+	# Rogue    — seda (hracova org mimo kontrolu)
+	# Neutral  — cervena (nepratelska organizace, vzdy viditelna)
+	# Hidden   — modra, polopruhledna (hracova org skryta pred inkvizici)
+	# Aktivni  — bila (hracova org odhalena / viditelna)
 	if is_rogue:
 		org_icon.modulate = Color(0.5, 0.5, 0.5, 1.0)
 	elif is_neutral:
 		org_icon.modulate = Color(1.0, 0.4, 0.4, 1.0)
+	elif is_hidden:
+		org_icon.modulate = Color(0.5, 0.5, 1.0, 0.5)
 	else:
 		org_icon.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
