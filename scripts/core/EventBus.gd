@@ -28,5 +28,6 @@ signal explorer_appeared(region_id: int, region_name: String)
 signal secret_stolen(region_id: int, unit_id: int)
 signal inquisitor_returned(unit_id: int)
 signal unit_killed(unit_id: int, unit_key: String, region_id: int)
+signal decoy_triggered(region_id: int, unit_key: String)
 
 signal progression_node_unlocked(faction_id: String, node_key: String)

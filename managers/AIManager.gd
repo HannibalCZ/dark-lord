@@ -26,6 +26,7 @@ func execute_ai_turn() -> void:
 		# Scout profil má vlastní pohybovou a akční logiku — přeskočí standardní pipeline
 		if profile_key == "scout":
 			_ai_move_scout(u)
+			_check_decoy_on_arrival(u)
 			_ai_apply_scout_effects(u)
 			continue
 
@@ -36,6 +37,7 @@ func execute_ai_turn() -> void:
 				_ai_inquisitor_retreat(u)
 			else:
 				_ai_move_towards(u, target_id)
+				_check_decoy_on_arrival(u)
 				if u.region_id == target_id:
 					_ai_inquisitor_execute_action(u)
 			continue
@@ -161,6 +163,7 @@ func _ai_move_scout(u: Unit) -> void:
 		})
 
 # Vybírá sousední region pro průzkumníka podle priorit:
+# 0) Soused s decoy tagem (nejvyšší — přebije vše ostatní)
 # 1) Soused se skrytým tajemstvím (has_secret() a secret_known == false)
 # 2) Nenavštívený "wildlands" soused
 # 3) Libovolný nenavštívený soused
@@ -169,6 +172,14 @@ func _scout_pick_next_region(u: Unit) -> int:
 	var neighbors: Array[int] = game_state.query.regions.neighbors(u.region_id)
 	if neighbors.is_empty():
 		return -1
+
+	# Priorita 0: soused s decoy tagem
+	var decoy_neighbors: Array[int] = []
+	for nb_id: int in neighbors:
+		if _region_has_decoy(nb_id):
+			decoy_neighbors.append(nb_id)
+	if not decoy_neighbors.is_empty():
+		return decoy_neighbors[game_state.rng.randi_range(0, decoy_neighbors.size() - 1)]
 
 	# Priorita 1: soused s neodkrytým tajemstvím
 	for nb_id: int in neighbors:
@@ -222,14 +233,57 @@ func _ai_apply_scout_effects(u: Unit) -> void:
 		var ctx := EffectContext.make(game_state, region, u.faction_id)
 		game_state.effects_system.apply({"awareness": 2}, ctx)
 
+# --- Decoy (Stínová návnada) helper funkce ---
+
+# Vrátí true pokud region obsahuje aktivní decoy tag.
+# Region.has_tag() neexistuje — iterujeme tags pole přímo.
+func _region_has_decoy(region_id: int) -> bool:
+	var region: Region = game_state.region_manager.get_region(region_id)
+	if region == null:
+		return false
+	for tag in region.tags:
+		if tag.get("id", "") == "decoy":
+			return true
+	return false
+
+# Zkontroluje zda jednotka dorazila do regionu s decoy tagem.
+# Pokud ano — odstraní tag, aplikuje Awareness +2 a emituje decoy_triggered.
+# Volat po každém pohybu scouta a inkvizitora.
+func _check_decoy_on_arrival(u: Unit) -> void:
+	var region: Region = game_state.region_manager.get_region(u.region_id)
+	if region == null:
+		return
+	var has_decoy: bool = false
+	for tag in region.tags:
+		if tag.get("id", "") == "decoy":
+			has_decoy = true
+			break
+	if not has_decoy:
+		return
+
+	# Jednotka dorazila do návnady — odeber tag a aplikuj efekty
+	region.remove_tag("decoy")
+
+	var ctx := EffectContext.make(game_state, region, Balance.PLAYER_FACTION)
+	ctx.source_label = "Stínová návnada"
+	game_state.effects_system.apply({"awareness": 2}, ctx)
+
+	EventBus.decoy_triggered.emit(region.id, u.unit_key)
+
 # --- Inkvizitor — prioritní logika cílů, ústup a akce ---
 
 # Vrátí ID cílového regionu pro inkvizitora podle priorit:
+# 0) Region s decoy tagem (nejvyšší — přebije visible org i korupci)
 # 1) Region s visible hráčovou organizací (kdekoliv na mapě)
 # 2) Elfí region s nejvyšší hráčovou korupcí (fáze > 0)
 # 3) Globální region s nejvyšší hráčovou korupcí
 # 4) -1 → žádný cíl, inkvizitor se vrátí domů
 func _find_inquisitor_target(u: Unit) -> int:
+	# Priorita 0: region s decoy tagem kdekoliv na mapě
+	for region in game_state.region_manager.regions:
+		if _region_has_decoy(region.id):
+			return region.id
+
 	# Priorita 1: visible hráčova org kdekoliv na mapě
 	for org in game_state.org_manager.orgs:
 		if org.get("owner") != Balance.ORG_OWNER_PLAYER:

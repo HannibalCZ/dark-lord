@@ -47,6 +47,9 @@ var _collected_inquisitor_events: Array[Dictionary] = []
 # Vzor: _pending_rogue_events (okamzity signal uprostred tahu).
 var _pending_kill_events: Array[EventData] = []
 
+# Stínová návnada aktivována — buffrovano pri signalu decoy_triggered.
+var _pending_decoy_events: Array[EventData] = []
+
 # Reputacni faze z konce minuleho tahu — pro detekci prechodu do "controlled".
 # Plni se na KONCI generate_events_for_turn(), cte se na ZACATKU dalsiho tahu.
 # Prvni tah: prazdny dict → .get(faction_id, "neutral") vraci "neutral" (bezpecny fallback).
@@ -67,6 +70,7 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.explorer_appeared.connect(_on_explorer_appeared)
 	EventBus.inquisitor_returned.connect(_on_inquisitor_returned)
 	EventBus.unit_killed.connect(_on_unit_killed)
+	EventBus.decoy_triggered.connect(_on_decoy_triggered)
 	GameState.game_ended.connect(_on_game_ended)
 
 # ---------------------------
@@ -87,6 +91,7 @@ func generate_events_for_turn() -> Array[EventData]:
 	_collect_reputation_events(events)
 	_collect_pending_rogue_events(events)
 	_collect_pending_kill_events(events)
+	_collect_pending_decoy_events(events)
 	_collect_explorer_events(events)
 	_collect_inquisitor_events(events)
 
@@ -793,6 +798,34 @@ func _collect_inquisitor_events(events: Array[EventData]) -> void:
 # Signal handler — inkvizitor dorazil do elfího regionu bez cíle
 func _on_inquisitor_returned(unit_id: int) -> void:
 	_collected_inquisitor_events.append({ "unit_id": unit_id })
+
+
+# ---------------------------
+# ZDROJ 14 — Stínová návnada aktivována (Mystik)
+# ---------------------------
+func _collect_pending_decoy_events(events: Array[EventData]) -> void:
+	for event in _pending_decoy_events:
+		events.append(event)
+	_pending_decoy_events.clear()
+
+
+# Signal handler — AI jednotka vstoupila do regionu s decoy tagem
+func _on_decoy_triggered(region_id: int, unit_key: String) -> void:
+	if game_state == null:
+		return
+	var region: Region = game_state.region_manager.get_region(region_id)
+	var region_name: String = region.name if region != null else "neznamy region"
+	var unit_display: String = "pruzkumnik" if unit_key == "explorer" else "inkvizitor"
+	_pending_decoy_events.append(EventData.create(
+		Balance.ADVISOR_MYSTIK,
+		Balance.EVENT_IMPORTANT,
+		(
+			"Pane, nasa navnada v oblasti %s odlakala %s. "
+			+ "Strateg kouzla odvedl svou praci — "
+			+ "ale nasa pritomnost mu neunikla uplne."
+		) % [region_name, unit_display],
+		"Stínová návnada aktivována v %s." % region_name
+	))
 
 
 # ---------------------------

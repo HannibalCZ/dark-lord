@@ -314,7 +314,7 @@ const DARK_ACTIONS = {
 		"type": "region",
 		"mana_cost": 10,
 		"ap_cost": 1,
-		"cooldown": 4,
+		"cooldown": 5,
 		"effects": {
 			"heat": 4,
 			"tags": ["decoy"]}
