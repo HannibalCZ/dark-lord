@@ -12,6 +12,11 @@ var power: int = 0
 var state: String = "healthy"  # "healthy", "busy", "lost"
 var moves_per_turn: int = 1
 var moves_left: int = 1
+var visited_regions: Array[int] = []
+# Regiony které jednotka navštívila (region_id).
+# Používá scout profil v AIManager pro prioritizaci
+# nenavštívených sousedů při pohybu průzkumníka.
+# Aktualizuje se v UnitManager.move_unit() (Task 5).
 
 func init(_id:int, _unit_temp:String, _region_id:int, _faction_id:String) -> Unit:
 	id = _id
