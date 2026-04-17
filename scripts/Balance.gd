@@ -264,6 +264,34 @@ const MISSION = {
 		},
 		"ui_icon":  "res://ui/icons/missions/dismantle.png",
 		"ui_order": 9
+	},
+
+	"eliminate": {
+		"id":           "eliminate",
+		"display_name": "Eliminace",
+		"description":  "Agent zlikviduje nepratelskou jednotku v tomto regionu.",
+		"base_chance":  0.60,
+		"requirements": {
+			# requires_enemy_unit: true — novy typ requirementu.
+			# MissionManager.can_do_mission() ho zatim nezna (Task 3).
+			# Mise bude validni pouze kdyz je v regionu
+			# nepratela (agent nebo armada jine frakce).
+			"requires_enemy_unit": true
+		},
+		"cost": { "ap": 1, "mana": 0, "gold": 0 },
+		"success": {
+			# kill_unit: true — novy typ efektu (Task 3).
+			# EffectsSystem / MissionManager vybere cilovou jednotku
+			# (priorita: pruzkumnik > inkvizitor > armada).
+			"kill_unit": true,
+			"heat":      5
+		},
+		"fail": {
+			"heat":      8,
+			"awareness": 3
+		},
+		"ui_icon":  "res://ui/icons/missions/eliminate.png",
+		"ui_order": 10
 	}
 
 }
@@ -426,7 +454,7 @@ const UNIT = {
 		"recruit_cost": { "mana": 15 },
 		"upkeep_cost": { "mana": 2 },
 		"moves": 2,
-		"can_do": ["corrupt","sabotage","explore","bribe","manipulate","inspect","dismantle"]
+		"can_do": ["corrupt","sabotage","explore","bribe","manipulate","inspect","dismantle","eliminate"]
 	},
 	"homunculus": {
 		"display_name": "Homunkulus",
@@ -464,6 +492,20 @@ const UNIT = {
 			"mission_key": ["corrupt", "sabotage"],
 			"affects": "enemies"
 		}       # AI agent, dělá purge a loví agenty
+	},
+	"explorer": {
+		"display_name": "Průzkumník",
+		"type": "agent",
+		"power": 1,
+		"recruit_cost": {},   # AI-only jednotka
+		"upkeep_cost": {},
+		"moves": 2,
+		"can_do": [],
+		# Průzkumník nemá mise — pohybuje se automaticky
+		# přes scout profil a generuje efekty při vstupu do regionu.
+		"faction": "merchant",
+		"ai_profile": "scout"
+		# Fixní profil — _pick_profile() vrátí "scout" přes unit-level override.
 	}
 }
 
@@ -522,6 +564,33 @@ const AI_PROFILE = {
 		},
 		"move_towards_target": true,
 		"action_at_target": "raid"
+	},
+	# --- Scout profil — průzkumník obchodníků ---
+	# Nepoužívá standardní target/move_towards_target systém.
+	# AIManager._pick_profile() vrátí "scout" přes unit-level ai_profile override.
+	# Pohybová logika bude v AIManager jako samostatná větev
+	# podmíněná profilem "scout" (Task 5).
+	"scout": {
+		# Prioritizace pohybu (zpracovává AIManager, ne RegionQuery):
+		# 1. soused s tajemstvím (secret_id != "")
+		# 2. soused wilderness regionu
+		# 3. nenavštívený soused (region_id not in unit.visited_regions)
+		# 4. náhodný dostupný soused
+		"movement": "priority_neighbors",
+
+		# Efekty při vstupu do regionu (aplikuje AIManager, ne MissionManager):
+		# - awareness += 1
+		# - odhalí secret_id regionu (secret_known = true) pokud existuje
+		# - odhalí přítomnost organizací v regionu (zaloguje pro Radu)
+		"action_at_region": "explore_effects",
+
+		# Průzkumník se nikdy nezastaví — vždy má kam jít
+		"retreat_when_no_targets": false,
+
+		# Průzkumník neutíká před bojem — nechá se porazit
+		# Inkvizitor ho může eliminovat jako nepřátelskou jednotku
+		"move_towards_target": false,
+		"action_at_target": null
 	}
 }
 
@@ -807,9 +876,36 @@ const AI_SPAWN = {
 	"elf": {
 		"unit_key":   "inquisitor",
 		"trigger":    "awareness",
-		"threshold":  70,
-		"spawn_rate": 3,
+		"threshold":  50,       # sníženo z 70 — první inkvizitor přichází dříve
+		"spawn_rate": 99,
+		# spawn_rate 99 = workaround pro quasi-jednorázový spawn.
+		# TODO Task 5: process_ai_spawning() přečte "one_shot": true
+		# a po prvním spawnu nastaví faction.explorer_spawned_count
+		# (nebo dedikovaný flag) tak aby se druhý inkvizitor
+		# spawnul teprve při awareness >= threshold_2 (viz EXPLORER_SPAWN).
+		"one_shot": true,
 		"unit_limit": 2
+	}
+}
+
+# --- Průzkumník (merchant) spawn podmínky ---
+# Průzkumník se spawnuje jinak než ostatní AI jednotky:
+# jednorázově v konkrétních okamžicích, ne přes spawn_rate smyčku.
+# Logiku čte AIManager / GameState v Task 5 přes explorer_spawned_count
+# na Faction objektu.
+const EXPLORER_SPAWN = {
+	"merchant": {
+		"unit_key":          "explorer",
+		"spawn_1_turn":      1,
+		# První průzkumník spawne v tahu 1 (hned na začátku hry).
+		"spawn_2_awareness": 35,
+		# Druhý průzkumník spawne když Awareness dosáhne 35.
+		# Oba spawny jsou jednorázové — kontroluje faction.explorer_spawned_count.
+		"unit_limit":        2,
+		# Celkový limit průzkumníků (live + dead se nepočítají — pouze stav != "lost").
+		"heat_on_kill":      8
+		# Heat boost aplikovaný na hráče když inkvizitor nebo agent eliminuje průzkumníka.
+		# Obchodníci si všimnou zmizení svého zvěda.
 	}
 }
 

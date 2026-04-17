@@ -48,6 +48,11 @@ var unit_limit: int = 1
 var ai_regular_spawns_enabled: bool = false
 var ai_spawn_unit: String = ""
 var spawn_counter: int = 0
+var explorer_spawned_count: int = 0
+# Počet průzkumníků spawnutých pro tuto frakci (max 2).
+# Čte GameState._try_spawn_explorer() (Task 5) a porovnává
+# s Balance.EXPLORER_SPAWN[faction_id]["unit_limit"].
+# Inkrementuje se při každém spawnu průzkumníka.
 
 # Reputace — cachovana hodnota,
 # prepocitavana ReputationManagerem kazdy tah
