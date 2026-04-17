@@ -38,6 +38,10 @@ var _pending_rogue_events: Array[EventData] = []
 # zpracuje se v generate_events_for_turn() stejneho tahu.
 var _collected_explorer_events: Array[Dictionary] = []
 
+# Inkvizitor se vrátil domů — buffrovano pri signalu inquisitor_returned,
+# zpracuje se v generate_events_for_turn(). Emituje se pouze pri skutecnem dosazeníí elfího regionu.
+var _collected_inquisitor_events: Array[Dictionary] = []
+
 # Reputacni faze z konce minuleho tahu — pro detekci prechodu do "controlled".
 # Plni se na KONCI generate_events_for_turn(), cte se na ZACATKU dalsiho tahu.
 # Prvni tah: prazdny dict → .get(faction_id, "neutral") vraci "neutral" (bezpecny fallback).
@@ -56,6 +60,7 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.org_founded.connect(_on_org_founded)
 	EventBus.org_went_rogue.connect(_on_org_went_rogue)
 	EventBus.explorer_appeared.connect(_on_explorer_appeared)
+	EventBus.inquisitor_returned.connect(_on_inquisitor_returned)
 	GameState.game_ended.connect(_on_game_ended)
 
 # ---------------------------
@@ -76,6 +81,7 @@ func generate_events_for_turn() -> Array[EventData]:
 	_collect_reputation_events(events)
 	_collect_pending_rogue_events(events)
 	_collect_explorer_events(events)
+	_collect_inquisitor_events(events)
 
 	_collected_player_results.clear()
 
@@ -396,18 +402,33 @@ func _collect_ai_mission_events(events: Array[EventData]) -> void:
 		var narrative: String
 		var summary: String
 
+		var mission_key: String = String(result.get("mission_key", "purge"))
 		if success:
-			narrative = (
-				"Pane, inkvizitor zasahl v regionu %s. "
-				+ "Korupce byla potlacena — nas vliv v tomto kraji byl oslaben."
-			) % region_name
-			summary = "AI purge uspel v %s." % region_name
+			if mission_key == "dismantle":
+				narrative = (
+					"Pane, inkvizitor odhalil a rozbil nasi organizaci v regionu %s. "
+					+ "Pripravili jsme o duverne misto — musime jednat."
+				) % region_name
+				summary = "AI dismantle uspel v %s — organizace znicena." % region_name
+			else:
+				narrative = (
+					"Pane, inkvizitor zasahl v regionu %s. "
+					+ "Korupce byla potlacena — nas vliv v tomto kraji byl oslaben."
+				) % region_name
+				summary = "AI purge uspel v %s." % region_name
 		else:
-			narrative = (
-				"Pane, inkvizitor se pokusil o zasah v regionu %s, ale byl odrazen. "
-				+ "Nase pozice zde zatim drzi."
-			) % region_name
-			summary = "AI purge selhal v %s." % region_name
+			if mission_key == "dismantle":
+				narrative = (
+					"Pane, inkvizitor se pokusil rozbit nasi organizaci v regionu %s, ale selhal. "
+					+ "Organizace zatim drzi — bud opatrni."
+				) % region_name
+				summary = "AI dismantle selhal v %s." % region_name
+			else:
+				narrative = (
+					"Pane, inkvizitor se pokusil o zasah v regionu %s, ale byl odrazen. "
+					+ "Nase pozice zde zatim drzi."
+				) % region_name
+				summary = "AI purge selhal v %s." % region_name
 
 		events.append(EventData.create(
 			Balance.ADVISOR_ZVEDKA,
@@ -433,9 +454,9 @@ func _on_mission_resolved(data: Dictionary) -> void:
 	if unit == null:
 		return
 
-	# Pouze hráčovy mise — AI purge zachytáváme zvlášť
+	# Pouze hráčovy mise — AI purge a dismantle zachytáváme zvlášť
 	if unit.faction_id != Balance.PLAYER_FACTION:
-		if data.get("mission_key") == "purge":
+		if data.get("mission_key") in ["purge", "dismantle"]:
 			_collected_ai_mission_results.append(data)
 		return
 
@@ -741,3 +762,27 @@ func _on_explorer_appeared(region_id: int, region_name: String) -> void:
 		"region_id":   region_id,
 		"region_name": region_name
 	})
+
+
+# ---------------------------
+# ZDROJ 12 — Inkvizitor se vrátil domů bez cíle (Zvědka)
+# ---------------------------
+func _collect_inquisitor_events(events: Array[EventData]) -> void:
+	if _collected_inquisitor_events.is_empty():
+		return
+	events.append(EventData.create(
+		Balance.ADVISOR_ZVEDKA,
+		Balance.EVENT_IMPORTANT,
+		(
+			"Pane, inkvizitor se vrátil do základny. "
+			+ "V tuto chvíli nenašel nic podezřelého — "
+			+ "ale bude pokračovat v pátrání."
+		),
+		"Inkvizitor se vrátil domu bez cile."
+	))
+	_collected_inquisitor_events.clear()
+
+
+# Signal handler — inkvizitor dorazil do elfího regionu bez cíle
+func _on_inquisitor_returned(unit_id: int) -> void:
+	_collected_inquisitor_events.append({ "unit_id": unit_id })

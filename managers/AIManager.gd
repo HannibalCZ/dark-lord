@@ -29,6 +29,17 @@ func execute_ai_turn() -> void:
 			_ai_apply_scout_effects(u)
 			continue
 
+		# Inkvizitor má vlastní prioritní systém cílů a akci — přeskočí standardní pipeline
+		if u.unit_key == "inquisitor":
+			var target_id: int = _find_inquisitor_target(u)
+			if target_id == -1:
+				_ai_inquisitor_retreat(u)
+			else:
+				_ai_move_towards(u, target_id)
+				if u.region_id == target_id:
+					_ai_inquisitor_execute_action(u)
+			continue
+
 		var target_id: int = _ai_pick_target_region(u, prof)
 		if target_id == -1:
 			continue
@@ -210,6 +221,93 @@ func _ai_apply_scout_effects(u: Unit) -> void:
 	if region.region_kind == "civilized":
 		var ctx := EffectContext.make(game_state, region, u.faction_id)
 		game_state.effects_system.apply({"awareness": 2}, ctx)
+
+# --- Inkvizitor — prioritní logika cílů, ústup a akce ---
+
+# Vrátí ID cílového regionu pro inkvizitora podle priorit:
+# 1) Region s visible hráčovou organizací (kdekoliv na mapě)
+# 2) Elfí region s nejvyšší hráčovou korupcí (fáze > 0)
+# 3) Globální region s nejvyšší hráčovou korupcí
+# 4) -1 → žádný cíl, inkvizitor se vrátí domů
+func _find_inquisitor_target(u: Unit) -> int:
+	# Priorita 1: visible hráčova org kdekoliv na mapě
+	for org in game_state.org_manager.orgs:
+		if org.get("owner") != Balance.ORG_OWNER_PLAYER:
+			continue
+		if not org.get("visible", false):
+			continue
+		if org.get("is_rogue", false):
+			continue
+		return int(org["region_id"])
+
+	# Priorita 2: elfí region s nejvyšší hráčovou korupcí
+	var elf_regions: Array[Region] = game_state.region_manager.get_regions_by_faction("elf")
+	var best_elf_id: int = -1
+	var best_elf_corruption: int = -1
+	for region in elf_regions:
+		var corruption: int = region.get_corruption_phase_for(Balance.PLAYER_FACTION)
+		if corruption > best_elf_corruption:
+			best_elf_corruption = corruption
+			best_elf_id = region.id
+	if best_elf_id != -1 and best_elf_corruption > 0:
+		return best_elf_id
+
+	# Priorita 3: globální region s nejvyšší hráčovou korupcí
+	var global_target: int = game_state.query.regions.find_highest_corruption_with_filters(
+		u.faction_id, {})
+	if global_target != -1:
+		return global_target
+
+	# Žádný cíl
+	return -1
+
+# Vrátí inkvizitora do nejbližšího elfího regionu pokud nemá žádný cíl.
+# Signal inquisitor_returned se emituje pouze když inkvizitor skutečně dorazí.
+func _ai_inquisitor_retreat(u: Unit) -> void:
+	var elf_regions: Array[Region] = game_state.region_manager.get_regions_by_faction("elf")
+	if elf_regions.is_empty():
+		return
+
+	# Najdi nejbližší elfí region podle BFS vzdálenosti
+	var nearest_id: int = -1
+	var min_dist: int = 999
+	for region in elf_regions:
+		var dist: int = game_state._bfs_distance(u.region_id, region.id)
+		if dist < min_dist:
+			min_dist = dist
+			nearest_id = region.id
+
+	if nearest_id == -1:
+		return
+
+	# Pohyb směrem domů (přes existující _ai_move_towards)
+	_ai_move_towards(u, nearest_id)
+
+	# Event pouze pokud inkvizitor skutečně dorazil do elfího regionu
+	if u.region_id == nearest_id:
+		EventBus.inquisitor_returned.emit(u.id)
+
+# Provede akci inkvizitora na jeho aktuálním regionu:
+# - dismantle má přednost pokud je v regionu visible hráčova org
+# - fallback na purge (čištění korupce)
+func _ai_inquisitor_execute_action(u: Unit) -> void:
+	var region: Region = game_state.region_manager.get_region(u.region_id)
+	if region == null:
+		return
+
+	# Preferuj dismantle pokud je v regionu visible hráčova org (ne rogue)
+	var org: Dictionary = game_state.org_manager.get_org_in_region(u.region_id)
+	if not org.is_empty() \
+			and org.get("visible", false) \
+			and org.get("owner") == Balance.ORG_OWNER_PLAYER \
+			and not org.get("is_rogue", false):
+		if game_state.mission_manager.can_do_mission(u, region, "dismantle"):
+			game_state.mission_manager.plan_ai_mission(u, region, "dismantle")
+			return
+
+	# Fallback: purge korupce
+	if game_state.mission_manager.can_do_mission(u, region, "purge"):
+		game_state.mission_manager.plan_ai_mission(u, region, "purge")
 
 # Najde region s lairem jehož faction_id odpovídá frakci jednotky.
 # Vrátí první takový region nebo null — používá se pro určení stavu lairu orc_band.
