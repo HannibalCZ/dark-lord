@@ -24,5 +24,6 @@ signal org_went_rogue(org_id: String, region_id: int)
 signal org_revealed(org_id: String, region_id: int)
 
 signal ai_unit_spawned(faction_id: String, unit_key: String, region_id: int)
+signal explorer_appeared(region_id: int, region_name: String)
 
 signal progression_node_unlocked(faction_id: String, node_key: String)

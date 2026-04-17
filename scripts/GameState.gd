@@ -402,6 +402,8 @@ func advance_turn() -> void:
 
 	# AI spawn (po heat thresholdech, aby paladin viděl aktuální stav)
 	process_ai_spawning()
+	# Průzkumník — jednorázový spawn oddělený od process_ai_spawning()
+	_try_spawn_explorer()
 
 	# =========================
 	# F) Rada zasvěcených — generuj eventy z tohoto tahu
@@ -725,6 +727,106 @@ func _spawn_faction_unit(faction_id: String, unit_key: String) -> void:
 		_log(le)
 	_process_domain_events(spawn_res.get("events", []))
 	EventBus.ai_unit_spawned.emit(faction_id, unit_key, region_id)
+
+# ---------------------------
+# BFS vzdálenost mezi dvěma regiony.
+# Vrátí počet kroků (hran) nebo -1 pokud cesta neexistuje.
+# RegionManager.get_bfs_distance() neexistuje — implementujeme inline.
+func _bfs_distance(from_id: int, to_id: int) -> int:
+	if from_id == to_id:
+		return 0
+	var visited: Dictionary = {}
+	var queue: Array = [[from_id, 0]]
+	visited[from_id] = true
+	while not queue.is_empty():
+		var current: Array = queue.pop_front()
+		var cur_id: int = int(current[0])
+		var dist: int = int(current[1])
+		for neighbor in region_manager.adjacency.get(cur_id, []):
+			if visited.has(neighbor):
+				continue
+			if neighbor == to_id:
+				return dist + 1
+			visited[neighbor] = true
+			queue.append([neighbor, dist + 1])
+	return -1  # nedosažitelný region
+
+# Najde obchodní region nejvzdálenější od hráčova lairu (BFS vzdálenost).
+# Průzkumník spawne co nejdál od hráče — maximalizuje průzkumné pokrytí.
+func _find_explorer_spawn_region() -> int:
+	var merchant_regions: Array[Region] = \
+		region_manager.get_regions_by_faction("merchant")
+	if merchant_regions.is_empty():
+		# Fallback: libovolný region který hráč nevlastní
+		for r in region_manager.regions:
+			if r != null and r.owner_faction_id != Balance.PLAYER_FACTION:
+				return r.id
+		return -1
+
+	var farthest_id: int = -1
+	var max_dist: int = -1
+	for region in merchant_regions:
+		var dist: int = _bfs_distance(player_start_region_id, region.id)
+		if dist > max_dist:
+			max_dist = dist
+			farthest_id = region.id
+	return farthest_id
+
+# Zkontroluje podmínky pro spawn průzkumníka a spawnuje pokud jsou splněny.
+# Volá se z advance_turn() za process_ai_spawning() — nikdy je neslučuj.
+# Podmínky: spawn 1 v tahu 1, spawn 2 při Awareness >= spawn_2_awareness.
+func _try_spawn_explorer() -> void:
+	var cfg: Dictionary = Balance.EXPLORER_SPAWN.get("merchant", {})
+	if cfg.is_empty():
+		return
+
+	var merchant_faction: Faction = faction_manager.get_faction("merchant")
+	if merchant_faction == null:
+		return  # merchant frakce neexistuje v tomto scénáři
+
+	var limit: int = int(cfg.get("unit_limit", 2))
+	if merchant_faction.explorer_spawned_count >= limit:
+		return  # Oba průzkumníci již byli spawnuti
+
+	# Spawn 1 — tah 1 (první průzkumník na začátku hry)
+	if merchant_faction.explorer_spawned_count == 0 \
+			and turn == int(cfg.get("spawn_1_turn", 1)):
+		_do_spawn_explorer(merchant_faction, cfg)
+		return
+
+	# Spawn 2 — Awareness >= threshold (druhý průzkumník při větší pozornosti)
+	if merchant_faction.explorer_spawned_count == 1 \
+			and awareness >= int(cfg.get("spawn_2_awareness", 35)):
+		_do_spawn_explorer(merchant_faction, cfg)
+
+# Provede samotný spawn průzkumníka a emituje event pro Radu zasvěcených.
+func _do_spawn_explorer(faction: Faction, cfg: Dictionary) -> void:
+	var spawn_region_id: int = _find_explorer_spawn_region()
+	if spawn_region_id == -1:
+		push_warning("_do_spawn_explorer: nenalezen zadny vhodny region, spawn preskocen.")
+		return
+
+	var unit_key: String = String(cfg.get("unit_key", "explorer"))
+	# spawn_unit_free: faction_id první, unit_key druhý — stejný vzor jako _spawn_faction_unit()
+	var spawn_res := unit_manager.spawn_unit_free("merchant", unit_key, spawn_region_id)
+	for le in spawn_res.get("logs", []):
+		_log(le)
+	_process_domain_events(spawn_res.get("events", []))
+
+	faction.explorer_spawned_count += 1
+
+	var region: Region = region_manager.get_region(spawn_region_id)
+	var region_name: String = region.name if region != null else "neznamy region"
+	EventBus.explorer_appeared.emit(spawn_region_id, region_name)
+
+# Aplikuje Heat boost při eliminaci průzkumníka.
+# Voláno z MissionManager při úspěšné misi "eliminate" (Task 7).
+func _on_explorer_killed(_unit_id: int) -> void:
+	var cfg: Dictionary = Balance.EXPLORER_SPAWN.get("merchant", {})
+	var heat_boost: int = int(cfg.get("heat_on_kill", 8))
+	var ctx := EffectContext.make(self, null, Balance.PLAYER_FACTION)
+	ctx.source_label = "Pruzkumnik eliminovan — obchodnici zaznamenali zmizeni sveho zveda"
+	effects_system.apply({"heat": heat_boost}, ctx)
 
 func _place_procedural_secrets() -> void:
 	if not Balance.PROCEDURAL_GENERATION_ENABLED:
