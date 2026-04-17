@@ -23,6 +23,12 @@ func execute_ai_turn() -> void:
 		if prof.is_empty():
 			continue
 
+		# Scout profil má vlastní pohybovou a akční logiku — přeskočí standardní pipeline
+		if profile_key == "scout":
+			_ai_move_scout(u)
+			_ai_apply_scout_effects(u)
+			continue
+
 		var target_id: int = _ai_pick_target_region(u, prof)
 		if target_id == -1:
 			continue
@@ -124,6 +130,86 @@ func _ai_execute_action(u: Unit, target_id: int, prof: Dictionary) -> void:
 	if not game_state.mission_manager.can_do_mission(u, region, action_key):
 		return
 	game_state.mission_manager.plan_ai_mission(u, region, action_key)
+
+# --- Scout (průzkumník) pohybová a akční logika ---
+
+# Pohybuje průzkumníkem dokud má moves_left, vždy do nejprioritnějšího souseda.
+func _ai_move_scout(u: Unit) -> void:
+	while u.moves_left > 0:
+		var next_id: int = _scout_pick_next_region(u)
+		if next_id == -1 or next_id == u.region_id:
+			break
+		var from_id: int = u.region_id
+		game_state.move_unit(u.id, next_id)
+		turn_movement_log.append({
+			"unit_id":       u.id,
+			"unit_name":     u.name,
+			"faction_id":    u.faction_id,
+			"from_region_id": from_id,
+			"to_region_id":  next_id
+		})
+
+# Vybírá sousední region pro průzkumníka podle priorit:
+# 1) Soused se skrytým tajemstvím (has_secret() a secret_known == false)
+# 2) Nenavštívený "wildlands" soused
+# 3) Libovolný nenavštívený soused
+# 4) Náhodný soused (všechny navštíveny)
+func _scout_pick_next_region(u: Unit) -> int:
+	var neighbors: Array[int] = game_state.query.regions.neighbors(u.region_id)
+	if neighbors.is_empty():
+		return -1
+
+	# Priorita 1: soused s neodkrytým tajemstvím
+	for nb_id: int in neighbors:
+		var r: Region = game_state.region_manager.get_region(nb_id)
+		if r == null:
+			continue
+		if r.has_secret() and not r.secret_known:
+			return nb_id
+
+	# Priorita 2: nenavštívený wildlands soused
+	var unvisited_wild: Array[int] = []
+	for nb_id: int in neighbors:
+		if nb_id in u.visited_regions:
+			continue
+		var r: Region = game_state.region_manager.get_region(nb_id)
+		if r == null:
+			continue
+		if r.region_kind == "wildlands":
+			unvisited_wild.append(nb_id)
+	if not unvisited_wild.is_empty():
+		return unvisited_wild[game_state.rng.randi_range(0, unvisited_wild.size() - 1)]
+
+	# Priorita 3: libovolný nenavštívený soused
+	var unvisited: Array[int] = []
+	for nb_id: int in neighbors:
+		if nb_id not in u.visited_regions:
+			unvisited.append(nb_id)
+	if not unvisited.is_empty():
+		return unvisited[game_state.rng.randi_range(0, unvisited.size() - 1)]
+
+	# Priorita 4: náhodný soused (všechny navštíveny)
+	return neighbors[game_state.rng.randi_range(0, neighbors.size() - 1)]
+
+# Aplikuje efekty průzkumníka na jeho aktuální region po dokončení pohybu:
+# - šance EXPLORER_SECRET_STEAL % na odhalení skrytého tajemství
+# - mírný awareness boost (+2) za průzkum civilizovaného regionu
+func _ai_apply_scout_effects(u: Unit) -> void:
+	var region: Region = game_state.region_manager.get_region(u.region_id)
+	if region == null:
+		return
+
+	# Tajemství: region má aktivní tajemství, hráč ho dosud nezná
+	if region.has_secret() and not region.secret_known:
+		var roll: int = game_state.rng.randi_range(1, 100)
+		if roll <= Balance.EXPLORER_SECRET_STEAL:
+			region.secret_known = true
+			EventBus.secret_stolen.emit(region.id, u.id)
+
+	# Awareness: průzkum civilizovaného regionu prozradí Dark Lordovu přítomnost
+	if region.region_kind == "civilized":
+		var ctx := EffectContext.make(game_state, region, u.faction_id)
+		game_state.effects_system.apply({"awareness": 2}, ctx)
 
 # Najde region s lairem jehož faction_id odpovídá frakci jednotky.
 # Vrátí první takový region nebo null — používá se pro určení stavu lairu orc_band.
