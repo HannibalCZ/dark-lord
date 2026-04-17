@@ -67,6 +67,7 @@ func _ready() -> void:
 	# případné navázání signálů (UI naslouchá přes GameState)
 	spell_manager.magic_used.connect(func(): emit_signal("game_updated"))
 	building_manager.buildings_changed.connect(func(): emit_signal("game_updated"))
+	EventBus.unit_killed.connect(_on_unit_killed)
 	
 	rng.randomize()
 	init_data()
@@ -821,6 +822,12 @@ func _do_spawn_explorer(faction: Faction, cfg: Dictionary) -> void:
 
 # Aplikuje Heat boost při eliminaci průzkumníka.
 # Voláno z MissionManager při úspěšné misi "eliminate" (Task 7).
+# Dispatcher pro unit_killed signal — volá specializované handlery podle unit_key.
+func _on_unit_killed(unit_id: int, unit_key: String, _region_id: int) -> void:
+	if unit_key == "explorer":
+		_on_explorer_killed(unit_id)
+	# Budoucí rozšíření: inkvizitor, paladin, atd.
+
 func _on_explorer_killed(_unit_id: int) -> void:
 	var cfg: Dictionary = Balance.EXPLORER_SPAWN.get("merchant", {})
 	var heat_boost: int = int(cfg.get("heat_on_kill", 8))
