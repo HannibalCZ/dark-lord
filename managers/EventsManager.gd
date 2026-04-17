@@ -34,6 +34,10 @@ var _active_advisors: Array[String] = []
 # Rogue eventy — buffrovano okamzite pri signalu, zpracuje se v generate_events_for_turn().
 var _pending_rogue_events: Array[EventData] = []
 
+# Explorer eventy — buffrovano pri signalu explorer_appeared,
+# zpracuje se v generate_events_for_turn() stejneho tahu.
+var _collected_explorer_events: Array[Dictionary] = []
+
 # Reputacni faze z konce minuleho tahu — pro detekci prechodu do "controlled".
 # Plni se na KONCI generate_events_for_turn(), cte se na ZACATKU dalsiho tahu.
 # Prvni tah: prazdny dict → .get(faction_id, "neutral") vraci "neutral" (bezpecny fallback).
@@ -51,6 +55,7 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.progression_node_unlocked.connect(_on_progression_node_unlocked)
 	EventBus.org_founded.connect(_on_org_founded)
 	EventBus.org_went_rogue.connect(_on_org_went_rogue)
+	EventBus.explorer_appeared.connect(_on_explorer_appeared)
 	GameState.game_ended.connect(_on_game_ended)
 
 # ---------------------------
@@ -70,6 +75,7 @@ func generate_events_for_turn() -> Array[EventData]:
 	_collect_loyalty_events(events)
 	_collect_reputation_events(events)
 	_collect_pending_rogue_events(events)
+	_collect_explorer_events(events)
 
 	_collected_player_results.clear()
 
@@ -708,3 +714,30 @@ func _collect_pending_rogue_events(events: Array[EventData]) -> void:
 	for event in _pending_rogue_events:
 		events.append(event)
 	_pending_rogue_events.clear()
+
+
+# ---------------------------
+# ZDROJ 11 — Průzkumník obchodníků se objevil (Zvědka)
+# ---------------------------
+func _collect_explorer_events(events: Array[EventData]) -> void:
+	for e in _collected_explorer_events:
+		var region_name: String = String(e.get("region_name", "neznamy region"))
+		events.append(EventData.create(
+			Balance.ADVISOR_ZVEDKA,
+			Balance.EVENT_IMPORTANT,
+			(
+				"Pane, v oblasti %s byl spatren zvědavý průzkumník obchodniků. "
+				+ "Pokud ho nezastavime, brzy se rozhlasi o nasi pritomnosti. "
+				+ "Doporucuji okamzite opatreni."
+			) % region_name,
+			"Pruzkumnik obchodniku se objevil v %s." % region_name
+		))
+	_collected_explorer_events.clear()
+
+
+# Signal handler — pruzkumnik se objevil na mape
+func _on_explorer_appeared(region_id: int, region_name: String) -> void:
+	_collected_explorer_events.append({
+		"region_id":   region_id,
+		"region_name": region_name
+	})
