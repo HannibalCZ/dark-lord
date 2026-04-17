@@ -176,6 +176,10 @@ func move_unit(unit_id:int, target_region_id:int) -> Dictionary:
 	u.region_id = target_region_id
 	u.moves_left -= 1
 
+	# sledování navštívených regionů (pro scout pohybovou logiku)
+	if target_region_id not in u.visited_regions:
+		u.visited_regions.append(target_region_id)
+
 	# 3) post-move efekty (např. změna vlastnictví regionu)
 	var post: Dictionary = apply_post_move_effects(unit_id, from_region_id, target_region_id)
 

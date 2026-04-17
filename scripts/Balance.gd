@@ -915,6 +915,10 @@ const EXPLORER_SPAWN = {
 	}
 }
 
+# Šance (v procentech) že průzkumník odhalí tajemství při průchodu regionem
+# s dosud neznámým tajemstvím. Roll 1–100, úspěch pokud <= EXPLORER_SECRET_STEAL.
+const EXPLORER_SECRET_STEAL: int = 50
+
 static func get_org_effects(org_type: String, doctrine: String) -> Dictionary:
 	return ORG[org_type]["doctrines"][doctrine]["effects"]
 
