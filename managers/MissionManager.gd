@@ -210,10 +210,21 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 			if not target_org.is_empty():
 				game_state.org_manager.remove_org(region.id)
 
-		# odstan org_loyalty a destroy_org pred predanim EffectsSystem
+		# kill_unit — zpracuj mimo EffectsSystem: zabij první nepřátelskou jednotku v regionu
+		if effects.get("kill_unit", false):
+			var enemies: Array[Unit] = game_state.query.units.enemies_in_region(region.id, unit.faction_id)
+			for target in enemies:
+				var killed_key: String = target.unit_key
+				var killed_id: int = target.id
+				target.state = "lost"
+				EventBus.unit_killed.emit(killed_id, killed_key, region.id)
+				break  # zabij pouze první nepřátelskou jednotku per mise
+
+		# odstan org_loyalty, destroy_org a kill_unit pred predanim EffectsSystem
 		var effects_for_system: Dictionary = effects.duplicate()
 		effects_for_system.erase("org_loyalty")
 		effects_for_system.erase("destroy_org")
+		effects_for_system.erase("kill_unit")
 
 		var ctx := EffectContext.make(game_state, region, unit.faction_id)
 		ctx.source_label = "Mise: %s (úspěch)" % key
@@ -335,6 +346,11 @@ func _check_requirements(req:Dictionary, unit:Unit, region:Region) -> bool:
 		if org.get("owner", "") != Balance.PLAYER_FACTION:
 			return false
 		if org.get("is_rogue", false):
+			return false
+
+	if req.get("requires_enemy_unit", false):
+		var enemies: Array[Unit] = game_state.query.units.enemies_in_region(region.id, unit.faction_id)
+		if enemies.is_empty():
 			return false
 
 	return true
