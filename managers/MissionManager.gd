@@ -200,9 +200,7 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 		# org_loyalty neni znamy EffectsSystem — zpracuj primo pres OrgManager
 		var loyalty_boost: int = effects.get("org_loyalty", 0)
 		if loyalty_boost != 0:
-			var boost_org: Dictionary = game_state.org_manager.get_org_in_region(region.id)
-			if not boost_org.is_empty():
-				boost_org["loyalty"] = min(100, boost_org.get("loyalty", Balance.ORG_LOYALTY_START) + loyalty_boost)
+			game_state.org_manager.boost_org_loyalty(region.id, loyalty_boost)
 
 		# destroy_org neni znamy EffectsSystem — zpracuj primo pres OrgManager
 		if effects.get("destroy_org", false):

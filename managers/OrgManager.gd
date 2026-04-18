@@ -271,6 +271,17 @@ func apply_neutral_and_rogue_effects() -> void:
 
 
 # ---------------------------------------------------------
+# Loajalitni boost (public API)
+# ---------------------------------------------------------
+
+func boost_org_loyalty(region_id: int, amount: int) -> void:
+	var org: Dictionary = get_org_in_region(region_id)
+	if org.is_empty():
+		return
+	org["loyalty"] = min(100, org.get("loyalty", Balance.ORG_LOYALTY_START) + amount)
+
+
+# ---------------------------------------------------------
 # Loajalitni decay
 # ---------------------------------------------------------
 
