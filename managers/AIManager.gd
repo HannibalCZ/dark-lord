@@ -367,9 +367,7 @@ func _ai_inquisitor_execute_action(u: Unit) -> void:
 # Najde region s lairem jehož faction_id odpovídá frakci jednotky.
 # Vrátí první takový region nebo null — používá se pro určení stavu lairu orc_band.
 func _find_lair_region_for_unit(u: Unit) -> Region:
-	for region in game_state.region_manager.regions:
-		if not region.has_lair():
-			continue
+	for region in game_state.query.regions.get_regions_with_lair():
 		var lair_conf: Dictionary = Balance.LAIR.get(region.lair_id, {})
 		if lair_conf.is_empty():
 			continue

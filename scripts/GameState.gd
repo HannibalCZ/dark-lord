@@ -624,9 +624,7 @@ func _process_domain_events(events: Array) -> void:
 		emit_signal("unit_moved", p["unit_id"], p["from"], p["to"])
 
 func process_lairs_end_of_turn() -> void:
-	for region in region_manager.regions:
-		if not region.has_lair():
-			continue
+	for region in query.regions.get_regions_with_lair():
 
 		var lair_conf: Dictionary = Balance.LAIR.get(region.lair_id, {})
 		if lair_conf.is_empty():
@@ -683,7 +681,7 @@ func process_ai_spawning() -> void:
 			faction.spawn_counter = 0
 			continue
 
-		var current_count: int = _count_faction_units(faction_id, String(cfg["unit_key"]))
+		var current_count: int = query.units.count_units_by_faction_and_key(faction_id, String(cfg["unit_key"]))
 		if current_count >= int(cfg["unit_limit"]):
 			continue
 
@@ -694,14 +692,6 @@ func process_ai_spawning() -> void:
 		faction.spawn_counter = 0
 		_spawn_faction_unit(faction_id, String(cfg["unit_key"]))
 
-func _count_faction_units(faction_id: String, unit_key: String) -> int:
-	var count: int = 0
-	for u in unit_manager.units:
-		if u.faction_id == faction_id \
-				and u.unit_key == unit_key \
-				and u.state != "lost":
-			count += 1
-	return count
 
 func _spawn_faction_unit(faction_id: String, unit_key: String) -> void:
 	var region_id: int = -1
