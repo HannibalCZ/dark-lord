@@ -50,6 +50,9 @@ var _pending_kill_events: Array[EventData] = []
 # Stínová návnada aktivována — buffrovano pri signalu decoy_triggered.
 var _pending_decoy_events: Array[EventData] = []
 
+# Tajemství odhaleno průzkumníkem — buffrovano pri signalu secret_stolen.
+var _pending_secret_events: Array[EventData] = []
+
 # Reputacni faze z konce minuleho tahu — pro detekci prechodu do "controlled".
 # Plni se na KONCI generate_events_for_turn(), cte se na ZACATKU dalsiho tahu.
 # Prvni tah: prazdny dict → .get(faction_id, "neutral") vraci "neutral" (bezpecny fallback).
@@ -71,6 +74,7 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.inquisitor_returned.connect(_on_inquisitor_returned)
 	EventBus.unit_killed.connect(_on_unit_killed)
 	EventBus.decoy_triggered.connect(_on_decoy_triggered)
+	EventBus.secret_stolen.connect(_on_secret_stolen)
 	GameState.game_ended.connect(_on_game_ended)
 
 # ---------------------------
@@ -92,6 +96,7 @@ func generate_events_for_turn() -> Array[EventData]:
 	_collect_pending_rogue_events(events)
 	_collect_pending_kill_events(events)
 	_collect_pending_decoy_events(events)
+	_collect_pending_secret_events(events)
 	_collect_explorer_events(events)
 	_collect_inquisitor_events(events)
 
@@ -826,6 +831,42 @@ func _on_decoy_triggered(region_id: int, unit_key: String) -> void:
 		) % [region_name, unit_display],
 		"Stínová návnada aktivována v %s." % region_name
 	))
+
+
+# ---------------------------
+# ZDROJ 15 — Tajemství odhaleno průzkumníkem (Zvědka)
+# ---------------------------
+func _collect_pending_secret_events(events: Array[EventData]) -> void:
+	for event in _pending_secret_events:
+		events.append(event)
+	_pending_secret_events.clear()
+
+
+# Signal handler — průzkumník odhalil nebo ukradl tajemství
+func _on_secret_stolen(region_id: int, unit_id: int) -> void:
+	if game_state == null:
+		return
+	var region: Region = game_state.region_manager.get_region(region_id)
+	if region == null:
+		return
+	var region_name: String = region.name if region.name != "" else "region %d" % region_id
+
+	var is_stolen: bool = region.secret_id == ""
+
+	if is_stolen:
+		_pending_secret_events.append(EventData.create(
+			Balance.ADVISOR_ZVEDKA,
+			Balance.EVENT_CRITICAL,
+			"Pane, pruzkumnik v oblasti %s odhalil a odnesl nase tajemstvi. Prisli jsme o veskerou postup — region je nyni bez tajemstvi." % region_name,
+			"Tajemstvi ukradeno v %s." % region_name
+		))
+	else:
+		_pending_secret_events.append(EventData.create(
+			Balance.ADVISOR_ZVEDKA,
+			Balance.EVENT_IMPORTANT,
+			"Pane, pruzkumnik v oblasti %s narusil nase tajemstvi. Mame jeste cas ho zastavit." % region_name,
+			"Tajemstvi poskozeno v %s." % region_name
+		))
 
 
 # ---------------------------
