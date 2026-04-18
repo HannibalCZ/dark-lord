@@ -217,6 +217,9 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 				var killed_key: String = target.unit_key
 				var killed_id: int = target.id
 				target.state = "lost"
+				# Okamzity rebuild aby dalsi mise ve stejnem tahu nevidely mrtvou
+				# jednotku jako validni cil
+				game_state.query.units.rebuild()
 				EventBus.unit_killed.emit(killed_id, killed_key, region.id)
 				break  # zabij pouze první nepřátelskou jednotku per mise
 
