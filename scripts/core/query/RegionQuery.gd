@@ -54,7 +54,10 @@ func are_adjacent(a: int, b: int) -> bool:
 	return b in neigh
 
 func regions_owned_by(faction_id: String) -> Array[Region]:
-	return by_owner.get(faction_id, [])
+	var raw: Array = by_owner.get(faction_id, [])
+	var result: Array[Region] = []
+	result.assign(raw)
+	return result
 
 func count_owned_by(faction_id: String) -> int:
 	return regions_owned_by(faction_id).size()
