@@ -265,7 +265,7 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 		#game_state._apply_effects(effects, region, unit.faction_id)
 
 		# jednotka je ztracená
-		unit.state = "lost"
+		game_state.unit_manager.kill_unit(unit.id)
 
 		if unit.faction_id == Balance.PLAYER_FACTION:
 			var global_fx: Dictionary = Balance.MISSION_GLOBAL_FAIL_EFFECTS
