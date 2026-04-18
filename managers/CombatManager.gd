@@ -12,8 +12,12 @@ func resolve_all_combats() -> Dictionary:
 
 	for region_idx in contested:
 		var res := _resolve_region_battle(region_idx) # {logs, events}
-		logs += res.get("logs")
-		events += res.get("events")
+		var res_logs: Array[Dictionary] = []
+		res_logs.assign(res.get("logs", []))
+		logs += res_logs
+		var res_events: Array[Dictionary] = []
+		res_events.assign(res.get("events", []))
+		events += res_events
 
 	return {
 		"ok": true,
@@ -118,7 +122,9 @@ func _resolve_region_battle(region_idx: int) -> Dictionary:
 				if u.state != "lost":
 					var res := game_state.unit_manager.kill_unit(u.id)
 					if res.get("ok", false):
-						events += res.get("events", [])
+						var kill_events: Array[Dictionary] = []
+						kill_events.assign(res.get("events", []))
+						events += kill_events
 
 		logs.append({
 			"type": "battle",
@@ -165,7 +171,9 @@ func _resolve_region_battle(region_idx: int) -> Dictionary:
 				if u.state != "lost":
 					var res := game_state.unit_manager.kill_unit(u.id)
 					if res.get("ok", false):
-						events += res.get("events", [])
+						var kill_events: Array[Dictionary] = []
+						kill_events.assign(res.get("events", []))
+						events += kill_events
 
 		logs.append({
 			"type": "neutral",
