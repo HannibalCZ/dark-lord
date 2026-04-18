@@ -8,51 +8,52 @@ func execute_ai_turn() -> void:
 	turn_movement_log.clear()
 	game_state.mission_manager.planned_ai_missions.clear()
 
-	for u: Unit in game_state.unit_manager.units:
-		if u.faction_id == Balance.PLAYER_FACTION:
+	for faction_id in game_state.query.units.by_faction:
+		if faction_id == Balance.PLAYER_FACTION:
 			continue
-		if u.state != "healthy":
-			continue
+		for u: Unit in game_state.query.units.by_faction[faction_id]:
+			if u.state != "healthy":
+				continue
 
-		var u_cfg: Dictionary = Balance.UNIT.get(u.unit_key, {})
-		if u_cfg.is_empty():
-			continue
+			var u_cfg: Dictionary = Balance.UNIT.get(u.unit_key, {})
+			if u_cfg.is_empty():
+				continue
 
-		var profile_key: String = _pick_profile(u)
-		var prof: Dictionary = Balance.AI_PROFILE.get(profile_key, {})
-		if prof.is_empty():
-			continue
+			var profile_key: String = _pick_profile(u)
+			var prof: Dictionary = Balance.AI_PROFILE.get(profile_key, {})
+			if prof.is_empty():
+				continue
 
-		# Scout profil má vlastní pohybovou a akční logiku — přeskočí standardní pipeline
-		if profile_key == "scout":
-			_ai_move_scout(u)
-			_check_decoy_on_arrival(u)
-			_ai_apply_scout_effects(u)
-			continue
-
-		# Inkvizitor má vlastní prioritní systém cílů a akci — přeskočí standardní pipeline
-		if u.unit_key == "inquisitor":
-			var target_id: int = _find_inquisitor_target(u)
-			if target_id == -1:
-				_ai_inquisitor_retreat(u)
-			else:
-				_ai_move_towards(u, target_id)
+			# Scout profil má vlastní pohybovou a akční logiku — přeskočí standardní pipeline
+			if profile_key == "scout":
+				_ai_move_scout(u)
 				_check_decoy_on_arrival(u)
-				if u.region_id == target_id:
-					_ai_inquisitor_execute_action(u)
-			continue
+				_ai_apply_scout_effects(u)
+				continue
 
-		var target_id: int = _ai_pick_target_region(u, prof)
-		if target_id == -1:
-			continue
+			# Inkvizitor má vlastní prioritní systém cílů a akci — přeskočí standardní pipeline
+			if u.unit_key == "inquisitor":
+				var target_id: int = _find_inquisitor_target(u)
+				if target_id == -1:
+					_ai_inquisitor_retreat(u)
+				else:
+					_ai_move_towards(u, target_id)
+					_check_decoy_on_arrival(u)
+					if u.region_id == target_id:
+						_ai_inquisitor_execute_action(u)
+				continue
 
-		# Pohyb — jen pokud move_towards_target == true A není na cíli
-		if prof.get("move_towards_target", false) and u.region_id != target_id:
-			_ai_move_towards(u, target_id)
+			var target_id: int = _ai_pick_target_region(u, prof)
+			if target_id == -1:
+				continue
 
-		# Akce — jen pokud je na cíli
-		if u.region_id == target_id:
-			_ai_execute_action(u, target_id, prof)
+			# Pohyb — jen pokud move_towards_target == true A není na cíli
+			if prof.get("move_towards_target", false) and u.region_id != target_id:
+				_ai_move_towards(u, target_id)
+
+			# Akce — jen pokud je na cíli
+			if u.region_id == target_id:
+				_ai_execute_action(u, target_id, prof)
 
 # Výběr profilu pro jednotku.
 # Priorita: unit-level override ("ai_profile" v Balance.UNIT) >

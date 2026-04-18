@@ -117,11 +117,7 @@ func _check_game_condition(faction_id: String, condition: Dictionary) -> bool:
 
 		"regions_owned":
 			# Pocet regionu kde owner == faction_id
-			var count := 0
-			for region in game_state.region_manager.regions:
-				if region.owner_faction_id == faction_id:
-					count += 1
-			return count >= int(condition.get("min", 0))
+			return game_state.query.regions.count_owned_by(faction_id) >= int(condition.get("min", 0))
 
 		"military_victories":
 			# Sleduje se pres condition_trackers — inkrementovat zvenku

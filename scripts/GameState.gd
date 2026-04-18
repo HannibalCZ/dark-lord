@@ -707,10 +707,9 @@ func _spawn_faction_unit(faction_id: String, unit_key: String) -> void:
 	var region_id: int = -1
 
 	# 1) první region ve vlastnictví frakce
-	for region in region_manager.regions:
-		if region.owner_faction_id == faction_id:
-			region_id = region.id
-			break
+	var owned := query.regions.regions_owned_by(faction_id)
+	if not owned.is_empty():
+		region_id = owned[0].id
 
 	# 2) fallback: region kde má frakce živou jednotku
 	if region_id < 0:
