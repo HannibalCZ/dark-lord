@@ -49,6 +49,15 @@ func active_count_for_faction(faction_id: String) -> int:
 			c += 1
 	return c
 
+func count_units_by_faction_and_key(faction_id: String, unit_key: String) -> int:
+	var faction_units: Array = by_faction.get(faction_id, [])
+	var count: int = 0
+	for u in faction_units:
+		if u.unit_key == unit_key \
+				and u.state != "lost":
+			count += 1
+	return count
+
 func enemies_in_region(region_id: int, friendly_faction_id: String, only_armies: bool = false) -> Array[Unit]:
 	var out: Array[Unit] = []
 	for u in in_region(region_id, false):

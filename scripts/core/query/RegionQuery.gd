@@ -77,6 +77,20 @@ func count_player_controlled_civilized() -> int:
 			total += 1
 	return total
 
+func get_regions_with_lair() -> Array:
+	var result: Array = []
+	for region in by_id:
+		if region != null and region.has_lair():
+			result.append(region)
+	return result
+
+func count_corrupted_regions(faction_id: String, min_phase: int = 1) -> int:
+	var count: int = 0
+	for region in by_id:
+		if region != null and region.get_corruption_phase_for(faction_id) >= min_phase:
+			count += 1
+	return count
+
 func count_total_civilized() -> int:
 	var total: int = 0
 	for r: Region in by_id:

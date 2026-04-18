@@ -102,11 +102,7 @@ func can_unlock(faction_id: String, node_key: String) -> Dictionary:
 func _check_game_condition(faction_id: String, condition: Dictionary) -> bool:
 	match condition.get("type", ""):
 		"regions_corrupted":
-			# Pocet regionu kde frakce má korupci fáze >= 1
-			var count := 0
-			for region in game_state.region_manager.regions:
-				if region.get_corruption_phase_for(faction_id) >= 1:
-					count += 1
+			var count := game_state.query.regions.count_corrupted_regions(faction_id)
 			return count >= int(condition.get("min", 0))
 
 		"orgs_active":
