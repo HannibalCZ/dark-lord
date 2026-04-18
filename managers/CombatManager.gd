@@ -135,7 +135,7 @@ func _resolve_region_battle(region_idx: int) -> Dictionary:
 		# změna vlastníka regionu
 		var prev_owner := region.owner_faction_id
 		if prev_owner != winner_faction:
-			region.owner_faction_id = winner_faction
+			game_state.region_manager.claim_region(region.id, winner_faction)
 
 			events.append({
 				"type": "region_owner_changed",

@@ -155,6 +155,21 @@ func count_player_owned_or_controlled() -> int:
 func are_adjacent(a:int, b:int) -> bool:
 	return adjacency.has(a) and b in adjacency[a]
 
+func claim_region(region_id: int, faction_id: String) -> Dictionary:
+	var r: Region = get_region(region_id)
+	if r == null:
+		return {"ok": false, "reason": "Region neexistuje."}
+	var old_owner: String = r.owner_faction_id
+	r.owner_faction_id = faction_id
+	if game_state.query != null:
+		game_state.query.regions.rebuild()
+	return {
+		"ok":        true,
+		"region_id": region_id,
+		"old_owner": old_owner,
+		"new_owner": faction_id
+	}
+
 func get_region(id: int) -> Region:
 	if id >= 0 and id < regions.size():
 		return regions[id]
