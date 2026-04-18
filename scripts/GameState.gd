@@ -120,6 +120,7 @@ func load_scenario(path: String) -> void:
 	progression_manager.condition_trackers.clear()
 	org_manager.orgs.clear()
 	org_manager._next_id = 1
+	events_manager.reset()
 
 	# (budovy/spells jsou zatím "game rules", ne scénář – nechávám init)
 	building_manager.init_buildings()
