@@ -60,6 +60,23 @@ var _prev_reputation_phases: Dictionary = {}
 # { faction_id: String }
 
 # ---------------------------
+func reset() -> void:
+	_collected_player_results.clear()
+	_collected_combat_results.clear()
+	_collected_org_events.clear()
+	_collected_spawn_events.clear()
+	_collected_ai_mission_results.clear()
+	_collected_progression_events.clear()
+	_collected_explorer_events.clear()
+	_collected_inquisitor_events.clear()
+	_pending_rogue_events.clear()
+	_pending_kill_events.clear()
+	_pending_decoy_events.clear()
+	_pending_secret_events.clear()
+	_prev_reputation_phases.clear()
+	_active_advisors.clear()
+
+# ---------------------------
 func init(gs: GameStateSingleton) -> void:
 	game_state = gs
 	EventBus.mission_resolved.connect(_on_mission_resolved)
