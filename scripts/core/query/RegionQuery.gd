@@ -80,8 +80,8 @@ func count_player_controlled_civilized() -> int:
 			total += 1
 	return total
 
-func get_regions_with_lair() -> Array:
-	var result: Array = []
+func get_regions_with_lair() -> Array[Region]:
+	var result: Array[Region] = []
 	for region in by_id:
 		if region != null and region.has_lair():
 			result.append(region)

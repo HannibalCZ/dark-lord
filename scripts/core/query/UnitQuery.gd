@@ -21,22 +21,24 @@ func rebuild() -> void:
 		by_id[u.id] = u
 
 		if not by_region.has(u.region_id):
-			by_region[u.region_id] = []
+			by_region[u.region_id] = [] as Array[Unit]
 		by_region[u.region_id].append(u)
 
 		if not by_faction.has(u.faction_id):
-			by_faction[u.faction_id] = []
+			by_faction[u.faction_id] = [] as Array[Unit]
 		by_faction[u.faction_id].append(u)
 
 func get_by_id(id: int) -> Unit:
 	return by_id.get(id, null)
 
 func in_region(region_id: int, include_lost: bool = false) -> Array[Unit]:
-	var arr: Array = by_region.get(region_id, [])
+	var raw: Array = by_region.get(region_id, [])
 	if include_lost:
-		return arr.duplicate()
+		var all: Array[Unit] = []
+		all.assign(raw)
+		return all
 	var out: Array[Unit] = []
-	for u in arr:
+	for u in raw:
 		if u.state != "lost":
 			out.append(u)
 	return out
