@@ -116,14 +116,9 @@ func _resolve_region_battle(region_idx: int) -> Dictionary:
 				continue
 			for u: Unit in by_faction[f]:
 				if u.state != "lost":
-					var prev := u.state
-					u.state = "lost"
-					events.append({
-						"type": "unit_state_changed",
-						"unit_id": u.id,
-						"from": prev,
-						"to": "lost"
-					})
+					var res := game_state.unit_manager.kill_unit(u.id)
+					if res.get("ok", false):
+						events += res.get("events", [])
 
 		logs.append({
 			"type": "battle",
@@ -168,14 +163,9 @@ func _resolve_region_battle(region_idx: int) -> Dictionary:
 		for f in factions_sorted:
 			for u: Unit in by_faction[f]:
 				if u.state != "lost":
-					var prev := u.state
-					u.state = "lost"
-					events.append({
-						"type": "unit_state_changed",
-						"unit_id": u.id,
-						"from": prev,
-						"to": "lost"
-					})
+					var res := game_state.unit_manager.kill_unit(u.id)
+					if res.get("ok", false):
+						events += res.get("events", [])
 
 		logs.append({
 			"type": "neutral",
