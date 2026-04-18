@@ -43,10 +43,36 @@ func _refresh() -> void:
 	recruit_label.text = "Rekrutace jednotek"
 	container.add_child(recruit_label)
 
+	var current_units: int = GameState.unit_manager.get_active_unit_count_for(Balance.PLAYER_FACTION)
+	var at_limit: bool = current_units >= GameState.unit_manager.unit_limit
+	var fac: Faction = GameState.faction_manager.get_faction(Balance.PLAYER_FACTION)
+	var spawn_region: int = GameState.player_start_region_id
+
 	# Tlačítko – Orčí banda
 	var orc_btn := Button.new()
 	orc_btn.text = "Povolat Orčí bandu (15 surovin)"
-	var current_units: int = GameState.unit_manager.get_active_unit_count_for(Balance.PLAYER_FACTION)
-	orc_btn.disabled = current_units >= GameState.unit_manager.unit_limit
-	orc_btn.pressed.connect(func(): GameState.exec(GameState.unit_manager.recruit_unit(Balance.PLAYER_FACTION, "orc_band", 0)))
+	orc_btn.disabled = at_limit
+	orc_btn.pressed.connect(func(): GameState.exec(GameState.unit_manager.recruit_unit(Balance.PLAYER_FACTION, "orc_band", spawn_region)))
 	container.add_child(orc_btn)
+
+	# Tlačítko – Upír
+	var vamp_cost: int = Balance.UNIT.get("vampire", {}).get("recruit_cost", {}).get("mana", 0)
+	var vampire_btn := Button.new()
+	vampire_btn.text = "Verbuj Upira (mana: %d)" % vamp_cost
+	var can_afford_vamp: bool = fac.get_resource("mana") >= vamp_cost
+	vampire_btn.disabled = at_limit or not can_afford_vamp
+	if vampire_btn.disabled:
+		vampire_btn.tooltip_text = "Dosazen limit jednotek." if at_limit else "Nedostatek many (potreba: %d)." % vamp_cost
+	vampire_btn.pressed.connect(func(): GameState.exec(GameState.unit_manager.recruit_unit(Balance.PLAYER_FACTION, "vampire", spawn_region)))
+	container.add_child(vampire_btn)
+
+	# Tlačítko – Homunkulus
+	var hom_cost: int = Balance.UNIT.get("homunculus", {}).get("recruit_cost", {}).get("mana", 0)
+	var homunculus_btn := Button.new()
+	homunculus_btn.text = "Verbuj Homuncula (mana: %d)" % hom_cost
+	var can_afford_hom: bool = fac.get_resource("mana") >= hom_cost
+	homunculus_btn.disabled = at_limit or not can_afford_hom
+	if homunculus_btn.disabled:
+		homunculus_btn.tooltip_text = "Dosazen limit jednotek." if at_limit else "Nedostatek many (potreba: %d)." % hom_cost
+	homunculus_btn.pressed.connect(func(): GameState.exec(GameState.unit_manager.recruit_unit(Balance.PLAYER_FACTION, "homunculus", spawn_region)))
+	container.add_child(homunculus_btn)
