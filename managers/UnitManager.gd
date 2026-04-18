@@ -161,6 +161,24 @@ func apply_post_move_effects(unit_id:int, from_region:int, to_region:int) -> Dic
 
 	return result
 
+func kill_unit(unit_id: int) -> Dictionary:
+	var u: Unit = game_state.query.units.get_by_id(unit_id)
+	if u == null:
+		return _result_err("Jednotka neexistuje.")
+	u.state = "lost"
+	game_state.query.units.rebuild()
+	return _result_ok({"unit_id": unit_id}, [{"type": "unit_killed", "unit_id": unit_id}])
+
+func set_busy(unit_id: int) -> void:
+	var u: Unit = game_state.query.units.get_by_id(unit_id)
+	if u != null:
+		u.state = "busy"
+
+func release_unit(unit_id: int) -> void:
+	var u: Unit = game_state.query.units.get_by_id(unit_id)
+	if u != null:
+		u.state = "healthy"
+
 func move_unit(unit_id:int, target_region_id:int) -> Dictionary:
 	# 1) validace pravidel
 	var check: Dictionary = can_move(unit_id, target_region_id)
