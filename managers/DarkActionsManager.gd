@@ -220,9 +220,8 @@ func get_available_actions_for_faction(faction_id:String) -> Array[String]:
 # -------------------------------------------------
 # 6) _find_available_agent – první zdravý agent hráče v regionu
 func _find_available_agent(region_id: int) -> Unit:
-	for unit in game_state.unit_manager.units:
-		if unit.region_id == region_id \
-				and unit.faction_id == Balance.PLAYER_FACTION \
+	for unit in game_state.query.units.in_region(region_id):
+		if unit.faction_id == Balance.PLAYER_FACTION \
 				and unit.is_available() \
 				and not unit.is_army():
 			return unit
