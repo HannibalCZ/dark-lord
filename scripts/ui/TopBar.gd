@@ -27,6 +27,8 @@ func _ready() -> void:
 	GameState.connect("game_updated", Callable(self, "_refresh"))
 	GameState.game_ended.connect(_on_game_ended)
 	next_turn_btn.pressed.connect(_on_next_turn_pressed)
+	zlato_block.get_node("Value").mouse_filter = Control.MOUSE_FILTER_PASS
+	mana_block.get_node("Value").mouse_filter  = Control.MOUSE_FILTER_PASS
 	_refresh()
 
 func _refresh() -> void:
@@ -37,6 +39,13 @@ func _refresh() -> void:
 	_update_resource_block(zlato_block,     faction.resources["gold"],     int(econ.net_gold))
 	_update_resource_block(hanebnost_block, faction.resources["infamy"],   0)
 	_update_resource_block(vyzkum_block,    faction.resources["research"], 0)
+
+	zlato_block.get_node("Value").tooltip_text = TopBar.build_economy_tooltip(
+			GameState.economy_tracker.entries, "gold",
+			int(faction.resources["gold"]))
+	mana_block.get_node("Value").tooltip_text = TopBar.build_economy_tooltip(
+			GameState.economy_tracker.entries, "mana",
+			int(faction.resources["mana"]))
 
 	units_label.text = "\u2694 %d / %d" % [
 		GameState.unit_manager.get_active_unit_count_for(Balance.PLAYER_FACTION),
@@ -124,6 +133,39 @@ static func build_breakdown_tooltip(
 		if delta == 0:
 			continue
 		var label: String = e.get("source", "Neznamy zdroj")
+		var delta_sign: String = "+" if delta >= 0 else ""
+		lines.append("  %s: %s%d" % [label, delta_sign, delta])
+
+	return "\n".join(lines)
+
+
+static func build_economy_tooltip(
+		entries: Array[Dictionary],
+		stat: String,
+		current_value: int) -> String:
+	var delta_key: String = stat + "_delta"
+	var relevant: Array[Dictionary] = []
+	for e in entries:
+		if e.get(delta_key, 0) != 0:
+			relevant.append(e)
+
+	if relevant.is_empty():
+		return "%s: %d\n(zadna zmena tento tah)" % [stat.capitalize(), current_value]
+
+	var total: int = 0
+	for e in relevant:
+		total += int(e.get(delta_key, 0))
+
+	var sign: String = "+" if total >= 0 else ""
+	var lines: Array[String] = []
+	lines.append("%s: %d (%s%d tento tah)" % [stat.capitalize(), current_value, sign, total])
+	lines.append("─────────────────")
+
+	for e in relevant:
+		var delta: int = int(e.get(delta_key, 0))
+		if delta == 0:
+			continue
+		var label: String = e.get("source_label", "Neznamy zdroj")
 		var delta_sign: String = "+" if delta >= 0 else ""
 		lines.append("  %s: %s%d" % [label, delta_sign, delta])
 
