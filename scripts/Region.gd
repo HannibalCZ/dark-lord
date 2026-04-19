@@ -292,7 +292,8 @@ func _update_controller_after_corruption(faction_id: String) -> void:
 	# když frakce dosáhne controller fáze a ještě není controllerem → stává se jím
 	if phase_id >= Balance.CORRUPTION_CONTROLLER_PHASE and controller_faction_id != faction_id:
 		controller_faction_id = faction_id
-		# sem později můžeme poslat EventBus event: region_controller_changed
+		if faction_id == Balance.PLAYER_FACTION:
+			EventBus.region_corruption_maxed.emit(id, name)
 
 	# Volitelně: pokud bys chtěl, aby controller mohl ztratit kontrolu:
 	# pokud phase klesne pod threshold a controller_faction_id == faction_id

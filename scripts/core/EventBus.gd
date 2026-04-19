@@ -32,3 +32,6 @@ signal unit_killed(unit_id: int, unit_key: String, region_id: int)
 signal decoy_triggered(region_id: int, unit_key: String)
 
 signal progression_node_unlocked(faction_id: String, node_key: String)
+
+signal region_claimed_by_player(region_id: int, region_name: String)
+signal region_corruption_maxed(region_id: int, region_name: String)

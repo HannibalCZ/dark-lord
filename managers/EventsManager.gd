@@ -53,6 +53,9 @@ var _pending_kill_events: Array[EventData] = []
 # Stínová návnada aktivována — buffrovano pri signalu decoy_triggered.
 var _pending_decoy_events: Array[EventData] = []
 
+# Hráč obsadil region vojensky nebo stínovou korupcí — buffrovano pri signalu.
+var _pending_region_control_events: Array[EventData] = []
+
 # Tajemství odhaleno průzkumníkem — buffrovano pri signalu secret_stolen.
 var _pending_secret_events: Array[EventData] = []
 
@@ -77,6 +80,7 @@ func reset() -> void:
 	_pending_kill_events.clear()
 	_pending_decoy_events.clear()
 	_pending_secret_events.clear()
+	_pending_region_control_events.clear()
 	_prev_reputation_phases.clear()
 	_active_advisors.clear()
 
@@ -97,6 +101,8 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.unit_killed.connect(_on_unit_killed)
 	EventBus.decoy_triggered.connect(_on_decoy_triggered)
 	EventBus.secret_stolen.connect(_on_secret_stolen)
+	EventBus.region_claimed_by_player.connect(_on_region_claimed_by_player)
+	EventBus.region_corruption_maxed.connect(_on_region_corruption_maxed)
 	GameState.game_ended.connect(_on_game_ended)
 
 # ---------------------------
@@ -122,6 +128,7 @@ func generate_events_for_turn() -> Array[EventData]:
 	_collect_explorer_events(events)
 	_collect_inquisitor_events(events)
 	_collect_pending_inquisitor_global_events(events)
+	_collect_pending_region_control_events(events)
 
 	_collected_player_results.clear()
 
@@ -393,6 +400,36 @@ func _filter_events(all_events: Array[EventData]) -> Array[EventData]:
 		result = result.slice(0, Balance.COUNCIL_MAX_TOTAL)
 
 	return result
+
+# ---------------------------
+# Signal handler — hráč vojensky obsadil region (Temný kapitán)
+# ---------------------------
+func _on_region_claimed_by_player(region_id: int, region_name: String) -> void:
+	_pending_region_control_events.append(EventData.create(
+		Balance.ADVISOR_KAPITAN,
+		Balance.EVENT_IMPORTANT,
+		"Pane, nase vojska obsadila region %s. Vlajka temna vlaje nad dalsim uzemim." % region_name,
+		"Region %s obsazen." % region_name
+	))
+
+
+# ---------------------------
+# Signal handler — korupce hrace dosahla faze 3 v regionu (Zvedka)
+# ---------------------------
+func _on_region_corruption_maxed(region_id: int, region_name: String) -> void:
+	_pending_region_control_events.append(EventData.create(
+		Balance.ADVISOR_ZVEDKA,
+		Balance.EVENT_IMPORTANT,
+		"Pane, nase stinove site zcela ovladly %s. Mistni mocipani tanci podle nasi pisnicke — ani o tom nevedi." % region_name,
+		"Region %s pod stinovou kontrolou." % region_name
+	))
+
+
+func _collect_pending_region_control_events(events: Array[EventData]) -> void:
+	for event in _pending_region_control_events:
+		events.append(event)
+	_pending_region_control_events.clear()
+
 
 # ---------------------------
 # Konec hry — okamzity event do Rady zasvecených
