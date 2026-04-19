@@ -29,6 +29,22 @@ const LAIR_INFLUENCE_CONTROL_THRESHOLD = 20
 const MISSION_CHANCE_MIN = 0.05
 const MISSION_CHANCE_MAX = 0.95
 
+const CORRUPTION_PHASE_NAMES: Dictionary = {
+	0: "Cisty",
+	1: "Naruseny",
+	2: "Zkaženy",
+	3: "Podvrzeny",
+	4: "Dominovany"
+}
+
+const CORRUPTION_PHASE_EFFECTS: Dictionary = {
+	0: "",
+	1: "+10% příjmu z regionu, +1 strach/tah",
+	2: "+40% příjmu z regionu, +3 strach/tah",
+	3: "+50% příjmu, +5 strach/tah, počítá se do vítězství",
+	4: "+100% příjmu z regionu, +7 strach/tah"
+}
+
 const CORRUPTION_PHASE_DATA := [
 	{
 		"id": 0,
