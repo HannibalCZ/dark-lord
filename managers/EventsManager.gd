@@ -42,6 +42,9 @@ var _collected_explorer_events: Array[Dictionary] = []
 # zpracuje se v generate_events_for_turn(). Emituje se pouze pri skutecnem dosazeni elfího regionu.
 var _collected_inquisitor_events: Array[Dictionary] = []
 
+# Inkvizitor přešel do globálního pátrání (Awareness překročilo práh).
+var _pending_inquisitor_global_events: Array[EventData] = []
+
 # Zabité jednotky — buffrovano okamzite pri signalu unit_killed,
 # zpracuje se na zacatku pristiho tahu v generate_events_for_turn().
 # Vzor: _pending_rogue_events (okamzity signal uprostred tahu).
@@ -69,6 +72,7 @@ func reset() -> void:
 	_collected_progression_events.clear()
 	_collected_explorer_events.clear()
 	_collected_inquisitor_events.clear()
+	_pending_inquisitor_global_events.clear()
 	_pending_rogue_events.clear()
 	_pending_kill_events.clear()
 	_pending_decoy_events.clear()
@@ -89,6 +93,7 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.org_went_rogue.connect(_on_org_went_rogue)
 	EventBus.explorer_appeared.connect(_on_explorer_appeared)
 	EventBus.inquisitor_returned.connect(_on_inquisitor_returned)
+	EventBus.inquisitor_gone_global.connect(_on_inquisitor_gone_global)
 	EventBus.unit_killed.connect(_on_unit_killed)
 	EventBus.decoy_triggered.connect(_on_decoy_triggered)
 	EventBus.secret_stolen.connect(_on_secret_stolen)
@@ -116,6 +121,7 @@ func generate_events_for_turn() -> Array[EventData]:
 	_collect_pending_secret_events(events)
 	_collect_explorer_events(events)
 	_collect_inquisitor_events(events)
+	_collect_pending_inquisitor_global_events(events)
 
 	_collected_player_results.clear()
 
@@ -884,6 +890,28 @@ func _on_secret_stolen(region_id: int, unit_id: int) -> void:
 			"Pane, pruzkumnik v oblasti %s narusil nase tajemstvi. Mame jeste cas ho zastavit." % region_name,
 			"Tajemstvi poskozeno v %s." % region_name
 		))
+
+
+# ---------------------------
+# ZDROJ 16 — Inkvizitor přešel do globálního pátrání (Zvědka)
+# ---------------------------
+func _on_inquisitor_gone_global() -> void:
+	_pending_inquisitor_global_events.append(EventData.create(
+		Balance.ADVISOR_ZVEDKA,
+		Balance.EVENT_CRITICAL,
+		(
+			"Pane, zajem inkvizitotrova radu prekrocil kriticke hodnoty. "
+			+ "Inkvizitor jiz nechrani pouze domovske provincie — "
+			+ "zacal aktivne patrat po stopach temne moci v celom svete."
+		),
+		"Inkvizitor presiel do globalniho patrani."
+	))
+
+
+func _collect_pending_inquisitor_global_events(events: Array[EventData]) -> void:
+	for event in _pending_inquisitor_global_events:
+		events.append(event)
+	_pending_inquisitor_global_events.clear()
 
 
 # ---------------------------
