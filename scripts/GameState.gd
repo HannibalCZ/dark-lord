@@ -401,6 +401,8 @@ func advance_turn() -> void:
 
 	# HEAT reakce
 	_check_heat_thresholds(old_heat, heat)
+	# AWARENESS reakce
+	_check_awareness_thresholds(prev_awareness, awareness)
 
 	# AI spawn (po heat thresholdech, aby paladin viděl aktuální stav)
 	process_ai_spawning()
@@ -526,6 +528,13 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 		paladin_faction.current_behavior = Faction.Behavior.PATROLLING
 	else:
 		paladin_faction.current_behavior = Faction.Behavior.PASSIVE
+
+func _check_awareness_thresholds(old_aw: int, new_aw: int) -> void:
+	if old_aw == new_aw:
+		return
+	if old_aw < Balance.AWARENESS_STAGE_INQUISITOR \
+			and new_aw >= Balance.AWARENESS_STAGE_INQUISITOR:
+		EventBus.inquisitor_gone_global.emit()
 
 func check_end_conditions() -> Dictionary:
 	# už skončeno

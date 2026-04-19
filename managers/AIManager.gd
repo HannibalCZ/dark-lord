@@ -35,7 +35,10 @@ func execute_ai_turn() -> void:
 			if u.unit_key == "inquisitor":
 				var target_id: int = _find_inquisitor_target(u)
 				if target_id == -1:
-					_ai_inquisitor_retreat(u)
+					# Globální mód bez cíle → ústup domů
+					# Lokální mód bez cíle → stůj na místě (žádný retreat)
+					if game_state.awareness >= Balance.AWARENESS_STAGE_INQUISITOR:
+						_ai_inquisitor_retreat(u)
 				else:
 					_ai_move_towards(u, target_id)
 					_check_decoy_on_arrival(u)
@@ -67,10 +70,10 @@ func _pick_profile(u: Unit) -> String:
 
 	# 2) Speciální typy s pevným nebo dynamickým profilem
 	if u.unit_key == "inquisitor":
-		if game_state.awareness >= Balance.AWARENESS_INQUISITOR_THRESHOLD:
+		if game_state.awareness >= Balance.AWARENESS_STAGE_INQUISITOR:
 			return "investigator"        # globální pátrání
 		else:
-			return "investigator_local"  # pouze vlastní provincie
+			return "investigator_local"  # pouze elfí provincie
 
 	if u.unit_key == "orc_band":
 		var lair_region: Region = _find_lair_region_for_unit(u)
@@ -273,13 +276,32 @@ func _check_decoy_on_arrival(u: Unit) -> void:
 
 # --- Inkvizitor — prioritní logika cílů, ústup a akce ---
 
-# Vrátí ID cílového regionu pro inkvizitora podle priorit:
-# 0) Region s decoy tagem (nejvyšší — přebije visible org i korupci)
-# 1) Region s visible hráčovou organizací (kdekoliv na mapě)
-# 2) Elfí region s nejvyšší hráčovou korupcí (fáze > 0)
-# 3) Globální region s nejvyšší hráčovou korupcí
-# 4) -1 → žádný cíl, inkvizitor se vrátí domů
+# Vrátí ID cílového regionu pro inkvizitora.
+# Lokální mód (Awareness < AWARENESS_STAGE_INQUISITOR):
+#   Pouze elfí regiony s hráčovou korupcí (fáze > 0). Bez decoy, bez orgs.
+# Globální mód (Awareness >= AWARENESS_STAGE_INQUISITOR):
+#   0) Region s decoy tagem (nejvyšší priorita)
+#   1) Region s visible hráčovou organizací
+#   2) Elfí region s nejvyšší hráčovou korupcí
+#   3) Globální region s nejvyšší hráčovou korupcí
+# -1 → žádný cíl
 func _find_inquisitor_target(u: Unit) -> int:
+	var is_local: bool = game_state.awareness < Balance.AWARENESS_STAGE_INQUISITOR
+
+	if is_local:
+		var elf_regions: Array[Region] = game_state.region_manager.get_regions_by_faction("elf")
+		var best_id: int = -1
+		var best_corruption: int = -1
+		for region in elf_regions:
+			var corruption: int = region.get_corruption_phase_for(Balance.PLAYER_FACTION)
+			if corruption > best_corruption:
+				best_corruption = corruption
+				best_id = region.id
+		if best_id != -1 and best_corruption > 0:
+			return best_id
+		return -1
+
+	# Globální mód — prioritní logika
 	# Priorita 0: region s decoy tagem kdekoliv na mapě
 	for region in game_state.region_manager.regions:
 		if _region_has_decoy(region.id):
@@ -313,7 +335,6 @@ func _find_inquisitor_target(u: Unit) -> int:
 	if global_target != -1:
 		return global_target
 
-	# Žádný cíl
 	return -1
 
 # Vrátí inkvizitora do nejbližšího elfího regionu pokud nemá žádný cíl.

@@ -8,7 +8,7 @@ const CORRUPTION_CONTROLLER_PHASE := 3
 
 # Awareness
 const AWARENESS_MAX = 100
-const AWARENESS_INQUISITOR_THRESHOLD = 50
+const AWARENESS_STAGE_INQUISITOR: int = 50  # inkvizitor přechází z lokálního na globální pátrání
 
 # Heat stage thresholdy
 const HEAT_STAGE_1 = 25
