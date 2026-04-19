@@ -21,6 +21,7 @@ signal game_ended(result: Dictionary) # { ok:bool, outcome:"win"/"lose", reason:
 @onready var org_manager: OrgManager = OrgManager.new()
 @onready var progression_manager: ProgressionManager = ProgressionManager.new()
 @onready var heat_tracker: HeatAwarenessTracker = HeatAwarenessTracker.new()
+@onready var economy_tracker: EconomyTracker = EconomyTracker.new()
 @onready var reputation_manager: ReputationManager = ReputationManager.new()
 
 var rng := RandomNumberGenerator.new()
@@ -332,6 +333,7 @@ func advance_turn() -> void:
 		return
 
 	heat_tracker.reset()
+	economy_tracker.reset()
 
 	# =========================
 	# A) AI plánování (férově před resolve)

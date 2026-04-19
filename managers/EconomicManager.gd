@@ -128,6 +128,9 @@ func apply_economy_cycle() -> Array[Dictionary]:
 			var ctx := EffectContext.make(game_state, null, faction.id)
 			game_state.effects_system.apply(effects, ctx)
 
+		if faction.id == Balance.PLAYER_FACTION:
+			_record_player_economy_breakdown(faction)
+
 		# log
 		logs.append({
 			"type": "economy",
@@ -158,6 +161,60 @@ func _apply_corruption_awareness() -> void:
 		var ctx := EffectContext.make(game_state, null, Balance.PLAYER_FACTION)
 		ctx.source_label = "Korupce: region %d (fáze %d)" % [region.id, phase]
 		game_state.effects_system.apply({"awareness": delta}, ctx)
+
+func _record_player_economy_breakdown(fac: Faction) -> void:
+	var tracker := game_state.economy_tracker
+	var faction_id := fac.id
+
+	# Příjem z vlastněných regionů vs. korupční kontrola
+	var owned_gold: float = 0.0
+	var owned_mana: float = 0.0
+	var owned_count: int = 0
+
+	for region in game_state.region_manager.regions:
+		var inc := _compute_region_income_for_faction(region, faction_id)
+		if region.owner_faction_id == faction_id:
+			owned_gold += float(inc.get("gold_income", 0.0))
+			owned_mana += float(inc.get("mana_income", 0.0))
+			owned_count += 1
+		elif region.controller_faction_id == faction_id:
+			var cg := int(inc.get("gold_income", 0.0))
+			var cm := int(inc.get("mana_income", 0.0))
+			tracker.record("Korupce: %s" % region.name, cg, cm)
+
+	if owned_count > 0:
+		tracker.record("Regiony (%d)" % owned_count, int(owned_gold), int(owned_mana))
+
+	# Progression bonusy
+	var prog_gold: float = fac.modifiers.get("gold_per_region", 0.0) * owned_count
+	var prog_mana: float = fac.modifiers.get("mana_income", 0.0)
+	if prog_gold != 0.0 or prog_mana != 0.0:
+		tracker.record("Progression bonus", int(prog_gold), int(prog_mana))
+
+	# Pasivní příjem organizací
+	for org in game_state.org_manager.orgs:
+		if org["owner"] != faction_id:
+			continue
+		var org_effects := game_state.org_manager.get_org_effects_scaled(org)
+		var og := int(float(org_effects.get("gold", 0)))
+		var om := int(float(org_effects.get("mana", 0)))
+		if og == 0 and om == 0:
+			continue
+		var org_type: String = org.get("org_type", "")
+		var org_name: String = Balance.ORG.get(org_type, {}).get("name", org_type)
+		tracker.record("Org: %s" % org_name, og, om)
+
+	# Upkeep jednotek
+	var upkeep_gold: float = 0.0
+	var upkeep_mana: float = 0.0
+	for u in game_state.query.units.by_faction.get(faction_id, []):
+		if u.state != "lost":
+			var cfg: Dictionary = Balance.UNIT.get(u.unit_key, {})
+			var upkeep: Dictionary = cfg.get("upkeep_cost", {})
+			upkeep_gold += float(upkeep.get("gold", 0))
+			upkeep_mana += float(upkeep.get("mana", 0))
+	if upkeep_gold != 0.0 or upkeep_mana != 0.0:
+		tracker.record("Upkeep jednotek", -int(upkeep_gold), -int(upkeep_mana))
 
 func _tick_all_region_tags(regions: Array) -> void:
 	for region in regions:
