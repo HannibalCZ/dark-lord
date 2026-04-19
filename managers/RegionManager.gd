@@ -163,6 +163,8 @@ func claim_region(region_id: int, faction_id: String) -> Dictionary:
 	r.owner_faction_id = faction_id
 	if game_state.query != null:
 		game_state.query.regions.rebuild()
+	if faction_id == Balance.PLAYER_FACTION:
+		EventBus.region_claimed_by_player.emit(region_id, r.name)
 	return {
 		"ok":        true,
 		"region_id": region_id,
