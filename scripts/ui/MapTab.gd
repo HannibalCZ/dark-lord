@@ -59,6 +59,7 @@ extends Control
 @onready var org_loyalty_label: Label     = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/OrgLoyaltyLabel
 
 var org_visibility_label: Label = null   # vytvoren dynamicky v _ready()
+var corruption_effect_label: Label = null  # vytvoren dynamicky v _ready()
 
 var _tile_by_id: Dictionary = {}  # { region_id: int -> RegionTile }
 var _connections: Array = []      # [ {a: Vector2, b: Vector2}, ... ]
@@ -190,6 +191,16 @@ func _ready() -> void:
 	var _mi_idx: int = mission_info.get_index()
 	_mission_parent.move_child(mission_success_effects, _mi_idx + 1)
 	_mission_parent.move_child(mission_fail_effects, _mi_idx + 2)
+
+	# CorruptionEffectLabel — pridano dynamicky za StatsRow v RegionSection
+	corruption_effect_label = Label.new()
+	corruption_effect_label.name = "CorruptionEffectLabel"
+	corruption_effect_label.add_theme_font_size_override("font_size", 11)
+	corruption_effect_label.add_theme_color_override("font_color", Color("#cc8822"))
+	corruption_effect_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	corruption_effect_label.visible = false
+	var _region_vbox: Node = korupce_val.get_parent().get_parent().get_parent()
+	_region_vbox.add_child(corruption_effect_label)
 
 	# Org visibility label — pridano dynamicky za org_loyalty_label
 	org_visibility_label = Label.new()
@@ -420,28 +431,11 @@ func _build_dark_action_description(action_key: String) -> String:
 	if not cost_parts.is_empty():
 		lines.append("Náklady: " + ", ".join(cost_parts))
 
-	# stručný popis efektů – jen základ
-	var eff_parts: Array[String] = []
-
-	if effects.has("gold"):
-		var g: int = int(effects["gold"])
-		if g > 0: eff_parts.append("+%d zlata" % g)
-
-	if effects.has("mana"):
-		var m: int = int(effects["mana"])
-		if m > 0: eff_parts.append("+%d many" % m)
-
-	if effects.has("heat"):
-		var h: int = int(effects["heat"])
-		if h > 0: eff_parts.append("+%d heat" % h)
-
-	if effects.has("corruption"):
-		var c: int = int(effects["corruption"])
-		if c < 0:
-			eff_parts.append("spálí %d korupce" % abs(c))
-
-	if not eff_parts.is_empty():
-		lines.append("Efekt: " + ", ".join(eff_parts))
+	var effects_str: String = _format_effects(effects)
+	if effects_str != "":
+		lines.append("Efekt: " + effects_str)
+	else:
+		lines.append("Efekt: žádný viditelný efekt")
 
 	return "\n".join(lines)
 
@@ -615,9 +609,20 @@ func _update_region_section(region: Region) -> void:
 	region_owner.text = region.controller_faction_id
 	obrana_val.text = str(region.defense)
 	prijem_val.text = _format_income(region)
-	# TODO: Region nemá get_corruption_percent() — používáme get_corruption_for()
-	korupce_val.text = "%d%%" % int(region.get_corruption_for(Balance.PLAYER_FACTION))
 	strach_val.text = "%d/100" % region.fear
+
+	var corruption_pct: int = int(region.get_corruption_for(Balance.PLAYER_FACTION))
+	var phase: int = region.get_corruption_phase_for(Balance.PLAYER_FACTION)
+	var phase_name: String = Balance.CORRUPTION_PHASE_NAMES.get(phase, "Neznama")
+	korupce_val.text = "%d%% — Faze %d (%s)" % [corruption_pct, phase, phase_name]
+
+	if corruption_effect_label != null:
+		var phase_effect: String = Balance.CORRUPTION_PHASE_EFFECTS.get(phase, "")
+		if phase_effect != "":
+			corruption_effect_label.text = "Efekt: " + phase_effect
+			corruption_effect_label.visible = true
+		else:
+			corruption_effect_label.visible = false
 
 func _format_income(region: Region) -> String:
 	var inc := region.get_income()
@@ -995,7 +1000,7 @@ func _update_doctrine_effects(region_id: int) -> void:
 	if selected < 0 or selected >= doctrines.size():
 		doctrine_effects.text = ""
 		return
-	doctrine_effects.text = _format_effects(doctrines[selected]["effects"])
+	doctrine_effects.text = _format_org_effects(doctrines[selected]["effects"])
 
 
 func _format_owner(owner: String) -> String:
@@ -1006,7 +1011,7 @@ func _format_owner(owner: String) -> String:
 		_: return owner
 
 
-func _format_effects(effects: Dictionary) -> String:
+func _format_org_effects(effects: Dictionary) -> String:
 	var parts: Array[String] = []
 	if effects.has("gold"):
 		parts.append("%+d zlato/tah" % int(effects["gold"]))
@@ -1023,6 +1028,36 @@ func _format_effects(effects: Dictionary) -> String:
 	if parts.is_empty():
 		return "Žádné pasivní efekty"
 	return "  ".join(parts)
+
+
+func _format_effects(effects: Dictionary) -> String:
+	if effects.is_empty():
+		return ""
+	var parts: Array[String] = []
+	for key in effects:
+		var val = effects[key]
+		match key:
+			"heat":
+				parts.append("%+d Heat" % int(val))
+			"awareness":
+				parts.append("%+d Zájem" % int(val))
+			"gold":
+				parts.append("%+d zlato" % int(val))
+			"mana":
+				parts.append("%+d mana" % int(val))
+			"infamy":
+				parts.append("%+d Infamy" % int(val))
+			"corruption":
+				parts.append("%+d Korupce" % int(val))
+			"org_loyalty":
+				parts.append("%+d Loajalita" % int(val))
+			"destroy_org":
+				if val:
+					parts.append("Zničí organizaci")
+			"kill_unit":
+				if val:
+					parts.append("Eliminuje jednotku")
+	return ", ".join(parts)
 
 
 func _on_doctrine_picker_item_selected(index: int) -> void:
