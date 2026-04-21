@@ -9,6 +9,9 @@ class_name Region
 @export var region_type: String
 @export var fear: int = 0
 @export var defense: int = 0
+var occupying_faction: String = ""
+# Faction která aktuálně dobývá region snižováním defense.
+# "" pokud nikdo nedobývá.
 @export var gold_income: float = 0
 @export var mana_income: float = 0
 @export var research_income: float = 0
@@ -45,7 +48,7 @@ func _init(_id: int, _name: String, _faction_id: String, _region_type: String):
 	
 	var reg_temp = Balance.REGION_TYPE.get(_region_type,{})
 	
-	defense = reg_temp.get("defense", 0)
+	defense = reg_temp.get("defense", 3)
 	gold_income = reg_temp.get("gold_income", 0)
 	mana_income = reg_temp.get("mana_income", 0)
 	research_income = reg_temp.get("research_income", 0)	

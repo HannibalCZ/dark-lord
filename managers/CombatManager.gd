@@ -133,24 +133,8 @@ func _resolve_region_battle(region_idx: int) -> Dictionary:
 			]
 		})
 
-		# změna vlastníka regionu
-		var prev_owner := region.owner_faction_id
-		if prev_owner != winner_faction:
-			game_state.region_manager.claim_region(region.id, winner_faction)
-
-			events.append({
-				"type": "region_owner_changed",
-				"region_id": region.id,
-				"from": prev_owner,
-				"to": winner_faction
-			})
-
-			logs.append({
-				"type": "success",
-				"text": "Region %s ovládnut frakcí %s (dříve %s)." % [
-					region.name, winner_faction, prev_owner
-				]
-			})
+		# Vlastnictví regionu nyní řeší
+		# GameState._process_capture_step() po vyhodnocení všech bitev.
 
 		# zniceni organizace pri obsazeni — po zmene ownera, pred emitem signalu
 		var org: Dictionary = game_state.org_manager.get_org_in_region(region.id)
