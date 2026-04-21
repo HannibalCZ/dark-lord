@@ -60,6 +60,7 @@ extends Control
 
 var org_visibility_label: Label = null   # vytvoren dynamicky v _ready()
 var corruption_effect_label: Label = null  # vytvoren dynamicky v _ready()
+var occupation_label: Label = null         # vytvoren dynamicky v _ready()
 
 var _tile_by_id: Dictionary = {}  # { region_id: int -> RegionTile }
 var _connections: Array = []      # [ {a: Vector2, b: Vector2}, ... ]
@@ -192,7 +193,7 @@ func _ready() -> void:
 	_mission_parent.move_child(mission_success_effects, _mi_idx + 1)
 	_mission_parent.move_child(mission_fail_effects, _mi_idx + 2)
 
-	# CorruptionEffectLabel — pridano dynamicky za StatsRow v RegionSection
+	# CorruptionEffectLabel a OccupationLabel — pridano dynamicky za StatsRow v RegionSection
 	corruption_effect_label = Label.new()
 	corruption_effect_label.name = "CorruptionEffectLabel"
 	corruption_effect_label.add_theme_font_size_override("font_size", 11)
@@ -201,6 +202,13 @@ func _ready() -> void:
 	corruption_effect_label.visible = false
 	var _region_vbox: Node = korupce_val.get_parent().get_parent().get_parent()
 	_region_vbox.add_child(corruption_effect_label)
+
+	occupation_label = Label.new()
+	occupation_label.name = "OccupationLabel"
+	occupation_label.add_theme_font_size_override("font_size", 11)
+	occupation_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	occupation_label.visible = false
+	_region_vbox.add_child(occupation_label)
 
 	# Org visibility label — pridano dynamicky za org_loyalty_label
 	org_visibility_label = Label.new()
@@ -607,7 +615,13 @@ func _update_region_section(region: Region) -> void:
 	# TODO: Region nemá display_name — používáme region.name
 	region_name.text = region.name
 	region_owner.text = region.controller_faction_id
-	obrana_val.text = str(region.defense)
+
+	var max_def: int = Balance.REGION_TYPE.get(region.region_type, {}).get("defense", 3)
+	var show_defence: bool = not (region.region_kind == "wildlands" and region.lair_id == "")
+	obrana_val.visible = show_defence
+	if show_defence:
+		obrana_val.text = "%d/%d" % [region.defense, max_def]
+
 	prijem_val.text = _format_income(region)
 	strach_val.text = "%d/100" % region.fear
 
@@ -623,6 +637,24 @@ func _update_region_section(region: Region) -> void:
 			corruption_effect_label.visible = true
 		else:
 			corruption_effect_label.visible = false
+
+	if occupation_label != null:
+		if not show_defence:
+			occupation_label.visible = false
+		elif region.occupying_faction != "" and region.defense <= 0:
+			occupation_label.text = "⚠ Region je na pokraji padu"
+			occupation_label.add_theme_color_override("font_color", Color("#e53935"))
+			occupation_label.visible = true
+		elif region.occupying_faction != "":
+			var attacker_fac = GameState.faction_manager.get_faction(region.occupying_faction)
+			var attacker_name: String = region.occupying_faction
+			if attacker_fac != null and attacker_fac.name != "":
+				attacker_name = attacker_fac.name
+			occupation_label.text = "Dobyvani: %s" % attacker_name
+			occupation_label.add_theme_color_override("font_color", Color("#e65100"))
+			occupation_label.visible = true
+		else:
+			occupation_label.visible = false
 
 func _format_income(region: Region) -> String:
 	var inc := region.get_income()
