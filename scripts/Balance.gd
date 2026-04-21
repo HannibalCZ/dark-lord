@@ -610,6 +610,9 @@ const AI_PROFILE = {
 	}
 }
 
+const REGION_DEFENCE_REGEN: int = 1
+# Obnova defense per tah pokud region není dobýván
+
 const REGION_TYPE = {
 	"town": {
 		"display_type_name": "Město",

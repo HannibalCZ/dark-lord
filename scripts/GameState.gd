@@ -384,6 +384,8 @@ func advance_turn() -> void:
 		entries.append(e)
 	_process_domain_events(combat_res.get("events", []))
 
+	_process_capture_step()
+
 	# =========================
 	# E) End-of-turn cleanup
 	# =========================
@@ -835,6 +837,65 @@ func _on_explorer_killed(_unit_id: int) -> void:
 	var ctx := EffectContext.make(self, null, Balance.PLAYER_FACTION)
 	ctx.source_label = "Pruzkumnik eliminovan — obchodnici zaznamenali zmizeni sveho zveda"
 	effects_system.apply({"heat": heat_boost}, ctx)
+
+func _process_capture_step() -> void:
+	for region in region_manager.regions:
+		var factions_present: Dictionary = {}
+		for u in query.units.in_region(region.id, false):
+			if u.type != "army":
+				continue
+			if not factions_present.has(u.faction_id):
+				factions_present[u.faction_id] = 0
+			factions_present[u.faction_id] += u.power
+
+		# Více frakcí → bitva probíhala nebo stále probíhá → přeskoč
+		if factions_present.size() > 1:
+			continue
+
+		var max_def: int = Balance.REGION_TYPE.get(region.region_type, {}).get("defense", 3)
+
+		# Žádná armáda → regenerace defense
+		if factions_present.is_empty():
+			region.occupying_faction = ""
+			if region.defense < max_def:
+				region.defense = min(region.defense + Balance.REGION_DEFENCE_REGEN, max_def)
+			if region.has_meta("occupation_ready"):
+				region.remove_meta("occupation_ready")
+			continue
+
+		var attacker_id: String = factions_present.keys()[0]
+		var attacker_power: int = factions_present[attacker_id]
+
+		var attacker_faction: Faction = faction_manager.get_faction(attacker_id)
+		if attacker_faction != null:
+			attacker_power += attacker_faction.modifiers.get("army_power", 0)
+
+		# Vlastní armáda v regionu → regenerace, ne dobývání
+		if attacker_id == region.owner_faction_id:
+			region.occupying_faction = ""
+			if region.defense < max_def:
+				region.defense = min(region.defense + Balance.REGION_DEFENCE_REGEN, max_def)
+			if region.has_meta("occupation_ready"):
+				region.remove_meta("occupation_ready")
+			continue
+
+		# Cizí armáda — snižuj defense
+		region.occupying_faction = attacker_id
+		region.defense = max(0, region.defense - attacker_power)
+
+		if region.defense <= 0:
+			if region.get_meta("occupation_ready", false):
+				# Druhé kolo s defense=0 — obsadit region
+				region_manager.claim_region(region.id, attacker_id)
+				region.occupying_faction = ""
+				region.defense = max_def
+				region.remove_meta("occupation_ready")
+			else:
+				# První kolo s defense=0 — připrav obsazení příští tah
+				region.set_meta("occupation_ready", true)
+		else:
+			if region.has_meta("occupation_ready"):
+				region.remove_meta("occupation_ready")
 
 func _place_procedural_secrets() -> void:
 	if not Balance.PROCEDURAL_GENERATION_ENABLED:
