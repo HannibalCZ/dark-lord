@@ -302,6 +302,19 @@ theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
 theme_override_font_sizes/font_size = 12
 autowrap_mode = 3
 
+[node name="SelectedUnitLabel" type="Label" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.2, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+
+[node name="DeselectBtn" type="Button" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer"]
+visible = false
+layout_mode = 2
+text = "Zrusit vyber"
+
 [node name="MissionRow" type="HBoxContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8

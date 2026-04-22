@@ -28,6 +28,8 @@ extends Control
 @onready var mission_select: OptionButton       = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/MissionRow/MissionPicker
 @onready var mission_confirm: Button            = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/MissionRow/MissionButton
 @onready var mission_info: Label                = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/MissionInfo
+@onready var selected_unit_label: Label         = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/SelectedUnitLabel
+@onready var deselect_btn: Button               = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/DeselectBtn
 
 # --- MovementSection ---
 @onready var movement_section: PanelContainer   = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection
@@ -65,9 +67,11 @@ var occupation_label: Label = null         # vytvoren dynamicky v _ready()
 var _tile_by_id: Dictionary = {}  # { region_id: int -> RegionTile }
 var _connections: Array = []      # [ {a: Vector2, b: Vector2}, ... ]
 var selected_region_idx: int = -1
+var _selected_unit_id: int = -1
 # parallel array — uchovává doctrine key pro každý item v doctrine_picker
 var _doctrine_keys: Array[String] = []
 var _current_movement_target_tile = null
+var _highlighted_neighbor_tiles: Array = []
 var tile_scene: PackedScene = preload("res://scenes/ui/RegionTile.tscn")
 
 const SCROLL_SPEED    := 250.0
@@ -152,6 +156,7 @@ func _ready() -> void:
 	dark_action_confirm.pressed.connect(_on_dark_action_confirm)
 	dark_action_select.item_selected.connect(_on_dark_action_selected)
 	mission_select.item_selected.connect(_on_mission_selected)
+	deselect_btn.pressed.connect(func(): _select_unit(-1))
 
 	# signály — org sekce
 	doctrine_picker.item_selected.connect(_on_doctrine_picker_item_selected)
@@ -474,7 +479,7 @@ func _update_mission_info() -> void:
 			cost_str = "\nNáklady: " + ", ".join(parts)
 
 	# šance – doporučený podpis: (key, unit, region)
-	var uid: int = unit_select.get_selected_id()
+	var uid: int = _selected_unit_id
 	if uid == -1 or selected_region_idx < 0:
 		return
 	var unit: Unit = GameState.query.units.get_by_id(uid)
@@ -575,10 +580,35 @@ func _build_grid() -> void:
 	_refresh_org_indicators()
 
 func _on_tile_selected(region_idx: int) -> void:
-	_clear_movement_target_highlight()
+	_clear_all_movement_highlights()
+
+	var player_units: Array = _get_player_units_in_region(region_idx)
+
+	# Cyklování — klik na stejný region kde je vybraná jednotka a je jich víc
+	if region_idx == selected_region_idx \
+			and _selected_unit_id != -1 \
+			and player_units.size() > 1:
+		var current_idx: int = -1
+		for i in player_units.size():
+			if player_units[i].id == _selected_unit_id:
+				current_idx = i
+				break
+		var next_idx: int = (current_idx + 1) % player_units.size()
+		selected_region_idx = region_idx
+		_refresh_selected_panel()
+		_select_unit(player_units[next_idx].id)
+		_refresh_tile_selection()
+		return
+
+	# Nový region — auto-vyber první jednotku
 	selected_region_idx = region_idx
 	_refresh_selected_panel()
 	_refresh_tile_selection()
+
+	if player_units.size() > 0:
+		_select_unit(player_units[0].id)
+	else:
+		_select_unit(-1)
 
 func _refresh_tile_selection() -> void:
 	for i in _tile_by_id:
@@ -605,7 +635,7 @@ func _refresh_selected_panel() -> void:
 	_update_units_section(selected_region_idx)
 	_update_tags_section(selected_region_idx)
 	_update_secrets_section(selected_region_idx)
-	_set_actions_enabled(unit_select.get_item_count() > 0 and unit_select.get_selected_id() != -1)
+	_set_actions_enabled(_selected_unit_id != -1)
 	scroll_container.scroll_vertical = 0
 
 # --------------------------
@@ -684,7 +714,7 @@ func _populate_unit_select(region_idx: int) -> void:
 		unit_select.select(0)
 
 func _update_unit_info() -> void:
-	var uid = unit_select.get_selected_id()
+	var uid = _selected_unit_id
 	if uid == -1:
 		unit_info.text = "Jednotka nevybrána."
 		return
@@ -697,7 +727,7 @@ func _update_unit_info() -> void:
 func _build_mission_menu(region_idx: int = selected_region_idx) -> void:
 	mission_success_effects.visible = false
 	mission_fail_effects.visible = false
-	var uid: int = unit_select.get_selected_id()
+	var uid: int = _selected_unit_id
 	if uid == -1:
 		UIHelpers.set_single_placeholder(mission_select, "— vyber jednotku —")
 		mission_confirm.disabled = true
@@ -766,13 +796,10 @@ func _set_actions_enabled(enabled: bool) -> void:
 	move_confirm.disabled = not enabled or neighbor_select.get_selected_id() == -1
 
 func _on_unit_selected(_idx: int) -> void:
-	_clear_movement_target_highlight()
-	_update_unit_info()
-	_build_mission_menu()
-	_set_actions_enabled(unit_select.get_selected_id() != -1)
+	_select_unit(unit_select.get_selected_id())
 
 func _on_mission_confirm() -> void:
-	var uid := unit_select.get_selected_id()
+	var uid := _selected_unit_id
 	if uid == -1 or selected_region_idx == -1:
 		return
 
@@ -783,8 +810,8 @@ func _on_mission_confirm() -> void:
 	GameState.exec(GameState.commands.plan_mission(uid, selected_region_idx, key))
 
 func _on_move_confirm() -> void:
-	_clear_movement_target_highlight()
-	var uid = unit_select.get_selected_id()
+	_clear_all_movement_highlights()
+	var uid = _selected_unit_id
 	var target = neighbor_select.get_selected_id()
 	if uid == -1 or target == -1:
 		return
@@ -794,6 +821,62 @@ func _clear_movement_target_highlight() -> void:
 	if _current_movement_target_tile != null:
 		_current_movement_target_tile.set_movement_target(false)
 		_current_movement_target_tile = null
+
+func _clear_all_movement_highlights() -> void:
+	for tile in _highlighted_neighbor_tiles:
+		tile.set_movement_target(false)
+	_highlighted_neighbor_tiles.clear()
+	_current_movement_target_tile = null
+
+func _get_player_units_in_region(region_id: int) -> Array:
+	var units: Array = []
+	for u in GameState.query.units.in_region(region_id, false):
+		if u.faction_id == Balance.PLAYER_FACTION and u.state == "healthy":
+			units.append(u)
+	return units
+
+func _select_unit(unit_id: int) -> void:
+	_selected_unit_id = unit_id
+	_clear_all_movement_highlights()
+	if unit_id == -1:
+		_update_selected_unit_display(null)
+		return
+	var u: Unit = GameState.query.units.get_by_id(unit_id)
+	if u == null:
+		_selected_unit_id = -1
+		_update_selected_unit_display(null)
+		return
+	_update_selected_unit_display(u)
+	_highlight_available_neighbors(u.region_id)
+	_build_mission_menu()
+	_update_mission_info()
+
+func _highlight_available_neighbors(region_id: int) -> void:
+	_clear_all_movement_highlights()
+	var u: Unit = GameState.query.units.get_by_id(_selected_unit_id)
+	if u == null or u.moves_left <= 0:
+		return
+	var neighbors = GameState.query.regions.neighbors(region_id)
+	for neighbor_id in neighbors:
+		var tile = _tile_by_id.get(neighbor_id)
+		if tile != null:
+			tile.set_movement_target(true)
+			_highlighted_neighbor_tiles.append(tile)
+
+func _update_selected_unit_display(u: Unit) -> void:
+	if u == null:
+		selected_unit_label.visible = false
+		deselect_btn.visible = false
+		return
+	selected_unit_label.text = "%s | Sila: %d | Tahy: %d" % [u.unit_key, u.power, u.moves_left]
+	selected_unit_label.visible = true
+	deselect_btn.visible = true
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey \
+			and event.keycode == KEY_ESCAPE \
+			and event.pressed:
+		_select_unit(-1)
 
 func _on_neighbor_item_selected(index: int) -> void:
 	_clear_movement_target_highlight()
@@ -1104,7 +1187,7 @@ func _on_doctrine_picker_item_selected(index: int) -> void:
 
 
 func _on_destroy_button_pressed() -> void:
-	var uid: int = unit_select.get_selected_id()
+	var uid: int = _selected_unit_id
 	if uid == -1 or selected_region_idx < 0:
 		GameState._log({"type": "warn", "text": "Vyberte jednotku schopnou provest purge."})
 		return
