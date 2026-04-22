@@ -337,29 +337,3 @@ theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
 theme_override_font_sizes/font_size = 12
 autowrap_mode = 3
 
-[node name="MovementSection" type="PanelContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent"]
-layout_mode = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="PohybLabel" type="Label" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection/VBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
-theme_override_font_sizes/font_size = 11
-text = "POHYB"
-
-[node name="MoveRow" type="HBoxContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="MovePicker" type="OptionButton" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection/VBoxContainer/MoveRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-clip_text = true
-
-[node name="MoveButton" type="Button" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection/VBoxContainer/MoveRow"]
-custom_minimum_size = Vector2(80, 0)
-layout_mode = 2
-text = "Potvrdit"
