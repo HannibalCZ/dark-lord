@@ -23,7 +23,6 @@ extends Control
 @onready var dark_action_select: OptionButton   = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/DarkActionRow/DarkActionPicker
 @onready var dark_action_confirm: Button        = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/DarkActionRow/DarkActionButton
 @onready var dark_action_info: Label            = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/DarkActionDesc
-@onready var unit_select: OptionButton          = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/UnitPicker
 @onready var unit_info: Label                   = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/UnitInfo
 @onready var mission_select: OptionButton       = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/MissionRow/MissionPicker
 @onready var mission_confirm: Button            = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/MissionRow/MissionButton
@@ -137,7 +136,6 @@ func _ready() -> void:
 
 	# signály — akce
 	mission_confirm.pressed.connect(_on_mission_confirm)
-	unit_select.item_selected.connect(_on_unit_selected)
 	dark_action_confirm.pressed.connect(_on_dark_action_confirm)
 	dark_action_select.item_selected.connect(_on_dark_action_selected)
 	mission_select.item_selected.connect(_on_mission_selected)
@@ -616,7 +614,6 @@ func _refresh_selected_panel() -> void:
 	_update_region_section(r)
 
 	_build_dark_actions_menu()
-	_populate_unit_select(selected_region_idx)
 	_update_unit_info()
 	_build_mission_menu()
 
@@ -636,10 +633,7 @@ func _update_region_section(region: Region) -> void:
 	region_owner.text = region.controller_faction_id
 
 	var max_def: int = Balance.REGION_TYPE.get(region.region_type, {}).get("defense", 3)
-	var show_defence: bool = not (region.region_kind == "wildlands" and region.lair_id == "")
-	obrana_val.visible = show_defence
-	if show_defence:
-		obrana_val.text = "%d/%d" % [region.defense, max_def]
+	obrana_val.text = "%d/%d" % [region.defense, max_def]
 
 	prijem_val.text = _format_income(region)
 	strach_val.text = "%d/100" % region.fear
@@ -658,9 +652,7 @@ func _update_region_section(region: Region) -> void:
 			corruption_effect_label.visible = false
 
 	if occupation_label != null:
-		if not show_defence:
-			occupation_label.visible = false
-		elif region.occupying_faction != "" and region.defense <= 0:
+		if region.occupying_faction != "" and region.defense <= 0:
 			occupation_label.text = "⚠ Region je na pokraji padu"
 			occupation_label.add_theme_color_override("font_color", Color("#e53935"))
 			occupation_label.visible = true
@@ -681,33 +673,6 @@ func _format_income(region: Region) -> String:
 
 # --------------------------
 # UNIT + MISE
-
-func _populate_unit_select(region_idx: int) -> void:
-	unit_select.clear()
-	unit_select.add_item("— vyber jednotku —", -1)
-	var player_id = Balance.PLAYER_FACTION
-	var first_index: int = -1
-	var count: int = 0
-
-	for u in GameState.query.units.in_region(region_idx, false):
-		if u.faction_id == player_id and u.state == "healthy":
-			var label := "%s (%s)" % [u.name, u.type]
-			unit_select.add_item(label, u.id)
-			count += 1
-			if first_index == -1:
-				first_index = unit_select.get_item_count() - 1
-
-	if count == 1 and first_index != -1:
-		unit_select.select(first_index)
-	else:
-		unit_select.select(0)
-
-	# Sync s _selected_unit_id — pokud je jednotka stále v regionu, zachovej výběr
-	if _selected_unit_id != -1:
-		for i in unit_select.item_count:
-			if unit_select.get_item_id(i) == _selected_unit_id:
-				unit_select.select(i)
-				break
 
 func _update_unit_info() -> void:
 	var uid = _selected_unit_id
@@ -775,9 +740,6 @@ func _set_actions_enabled(enabled: bool) -> void:
 	mission_select.disabled = not enabled
 	mission_confirm.disabled = not enabled
 
-func _on_unit_selected(_idx: int) -> void:
-	_select_unit(unit_select.get_selected_id())
-
 func _on_mission_confirm() -> void:
 	var uid := _selected_unit_id
 	if uid == -1 or selected_region_idx == -1:
@@ -819,6 +781,7 @@ func _select_unit(unit_id: int) -> void:
 		_update_selected_unit_display(null)
 		return
 	_update_selected_unit_display(u)
+	_update_unit_info()
 	_highlight_available_neighbors(u.region_id)
 	_build_mission_menu()
 	_update_mission_info()
@@ -861,18 +824,20 @@ func _execute_move_to(target_region_id: int) -> void:
 	if uid == -1:
 		return
 
+	# Nastav PRED exec() aby interni game_updated videl spravny region
+	selected_region_idx = target_region_id
+
 	var result = GameState.exec(
 			GameState.commands.move_unit(uid, target_region_id))
 
 	if not result.get("ok", false):
+		selected_region_idx = -1
 		_select_unit(-1)
 		return
 
 	_clear_all_movement_highlights()
 
 	var u: Unit = GameState.query.units.get_by_id(uid)
-	if u != null:
-		selected_region_idx = u.region_id
 
 	if u != null and u.moves_left > 0:
 		_highlight_available_neighbors(u.region_id)
