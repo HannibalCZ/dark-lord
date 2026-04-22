@@ -31,11 +31,6 @@ extends Control
 @onready var selected_unit_label: Label         = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/SelectedUnitLabel
 @onready var deselect_btn: Button               = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/DeselectBtn
 
-# --- MovementSection ---
-@onready var movement_section: PanelContainer   = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection
-@onready var neighbor_select: OptionButton      = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection/VBoxContainer/MoveRow/MovePicker
-@onready var move_confirm: Button               = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/MovementSection/VBoxContainer/MoveRow/MoveButton
-
 # --- UnitsSection ---
 @onready var units_section: PanelContainer  = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/UnitsSection
 @onready var units_header: Button           = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/UnitsSection/VBoxContainer/UnitsHeader
@@ -101,14 +96,6 @@ func _ready() -> void:
 	bg_actions.content_margin_bottom = 12.0
 	actions_section.add_theme_stylebox_override("panel", bg_actions)
 
-	var bg_movement := StyleBoxFlat.new()
-	bg_movement.bg_color = Color("#0f3460")
-	bg_movement.content_margin_left   = 12.0
-	bg_movement.content_margin_right  = 12.0
-	bg_movement.content_margin_top    = 12.0
-	bg_movement.content_margin_bottom = 12.0
-	movement_section.add_theme_stylebox_override("panel", bg_movement)
-
 	var bg_org := StyleBoxFlat.new()
 	bg_org.bg_color = Color("#1a2535")
 	bg_org.content_margin_left   = 12.0
@@ -150,8 +137,6 @@ func _ready() -> void:
 
 	# signály — akce
 	mission_confirm.pressed.connect(_on_mission_confirm)
-	move_confirm.pressed.connect(_on_move_confirm)
-	neighbor_select.item_selected.connect(_on_neighbor_item_selected)
 	unit_select.item_selected.connect(_on_unit_selected)
 	dark_action_confirm.pressed.connect(_on_dark_action_confirm)
 	dark_action_select.item_selected.connect(_on_dark_action_selected)
@@ -580,6 +565,11 @@ func _build_grid() -> void:
 	_refresh_org_indicators()
 
 func _on_tile_selected(region_idx: int) -> void:
+	# Pohybový check — má přednost před vším ostatním
+	if _selected_unit_id != -1 and _is_movement_target(region_idx):
+		_execute_move_to(region_idx)
+		return
+
 	_clear_all_movement_highlights()
 
 	var player_units: Array = _get_player_units_in_region(region_idx)
@@ -629,7 +619,6 @@ func _refresh_selected_panel() -> void:
 	_populate_unit_select(selected_region_idx)
 	_update_unit_info()
 	_build_mission_menu()
-	_build_neighbors_menu(selected_region_idx)
 
 	_update_org_section(selected_region_idx)
 	_update_units_section(selected_region_idx)
@@ -713,6 +702,13 @@ func _populate_unit_select(region_idx: int) -> void:
 	else:
 		unit_select.select(0)
 
+	# Sync s _selected_unit_id — pokud je jednotka stále v regionu, zachovej výběr
+	if _selected_unit_id != -1:
+		for i in unit_select.item_count:
+			if unit_select.get_item_id(i) == _selected_unit_id:
+				unit_select.select(i)
+				break
+
 func _update_unit_info() -> void:
 	var uid = _selected_unit_id
 	if uid == -1:
@@ -775,25 +771,9 @@ func _build_mission_menu(region_idx: int = selected_region_idx) -> void:
 	mission_confirm.disabled = false
 	_update_mission_info()
 
-func _build_neighbors_menu(region_idx: int) -> void:
-	_clear_movement_target_highlight()
-	neighbor_select.clear()
-	var neighbors = GameState.query.regions.neighbors(region_idx)
-	if neighbors.is_empty():
-		neighbor_select.add_item("— žádní sousedé —", -1)
-		move_confirm.disabled = true
-		return
-
-	for n in neighbors:
-		var rr: Region = GameState.query.regions.get_by_id(n)
-		neighbor_select.add_item(rr.name, n)
-	neighbor_select.select(0)
-	move_confirm.disabled = false
-
 func _set_actions_enabled(enabled: bool) -> void:
 	mission_select.disabled = not enabled
 	mission_confirm.disabled = not enabled
-	move_confirm.disabled = not enabled or neighbor_select.get_selected_id() == -1
 
 func _on_unit_selected(_idx: int) -> void:
 	_select_unit(unit_select.get_selected_id())
@@ -808,14 +788,6 @@ func _on_mission_confirm() -> void:
 		return
 
 	GameState.exec(GameState.commands.plan_mission(uid, selected_region_idx, key))
-
-func _on_move_confirm() -> void:
-	_clear_all_movement_highlights()
-	var uid = _selected_unit_id
-	var target = neighbor_select.get_selected_id()
-	if uid == -1 or target == -1:
-		return
-	GameState.exec(GameState.commands.move_unit(uid, target))
 
 func _clear_movement_target_highlight() -> void:
 	if _current_movement_target_tile != null:
@@ -878,14 +850,36 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			and event.pressed:
 		_select_unit(-1)
 
-func _on_neighbor_item_selected(index: int) -> void:
-	_clear_movement_target_highlight()
-	var target_region_id: int = neighbor_select.get_item_id(index)
-	var tile = _tile_by_id.get(target_region_id)
-	if tile == null:
+func _is_movement_target(region_id: int) -> bool:
+	for tile in _highlighted_neighbor_tiles:
+		if tile.region_id == region_id:
+			return true
+	return false
+
+func _execute_move_to(target_region_id: int) -> void:
+	var uid: int = _selected_unit_id
+	if uid == -1:
 		return
-	tile.set_movement_target(true)
-	_current_movement_target_tile = tile
+
+	var result = GameState.exec(
+			GameState.commands.move_unit(uid, target_region_id))
+
+	if not result.get("ok", false):
+		_select_unit(-1)
+		return
+
+	_clear_all_movement_highlights()
+
+	var u: Unit = GameState.query.units.get_by_id(uid)
+	if u != null:
+		selected_region_idx = u.region_id
+
+	if u != null and u.moves_left > 0:
+		_highlight_available_neighbors(u.region_id)
+	else:
+		_select_unit(-1)
+
+	GameState.game_updated.emit()
 
 func _on_turn_resolved() -> void:
 	_refresh_region_colors()
