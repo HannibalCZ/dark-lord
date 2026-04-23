@@ -22,6 +22,7 @@ var _is_selected: bool = false
 var _is_hovered: bool = false
 var _tag_pulsing: bool = false
 var _is_movement_target: bool = false
+var _is_alert_highlight: bool = false
 
 const ICON_W := 16
 const ICON_H := 16
@@ -70,6 +71,17 @@ func set_movement_target(active: bool) -> void:
 	if active:
 		highlight.color = Color(0.2, 0.7, 0.3, 0.35)
 	else:
+		if _is_alert_highlight:
+			highlight.color = Color(1.0, 0.65, 0.0, 0.35)
+		else:
+			_update_highlight()
+
+func set_alert_highlight(active: bool, color: Color = Color(1.0, 0.65, 0.0, 0.35)) -> void:
+	_is_alert_highlight = active
+	if active:
+		if not _is_movement_target:
+			highlight.color = color
+	else:
 		_update_highlight()
 
 func _update_highlight() -> void:
@@ -79,6 +91,8 @@ func _update_highlight() -> void:
 	elif _is_hovered:
 		# 10.1 – jen hover: jemný světlý nádech
 		highlight.color = Color(1, 1, 1, 0.18)           # bílé, ale slabá alpha
+	elif _is_alert_highlight:
+		highlight.color = Color(1.0, 0.65, 0.0, 0.35)
 	else:
 		# nic – průhledné
 		highlight.color = Color(1, 1, 1, 0)
