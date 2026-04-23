@@ -19,7 +19,7 @@ layout_mode = 2
 [node name="Icon" type="Label" parent="HBoxContainer/Resources/ManaBlock"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = " M"
+text = "🌀"
 
 [node name="Value" type="Label" parent="HBoxContainer/Resources/ManaBlock"]
 layout_mode = 2
@@ -37,7 +37,7 @@ layout_mode = 2
 [node name="Icon" type="Label" parent="HBoxContainer/Resources/ZlatoBlock"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = " Z"
+text = "🟡"
 
 [node name="Value" type="Label" parent="HBoxContainer/Resources/ZlatoBlock"]
 layout_mode = 2
@@ -55,7 +55,7 @@ layout_mode = 2
 [node name="Icon" type="Label" parent="HBoxContainer/Resources/HanebnostBlock"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "I"
+text = "😈"
 
 [node name="Value" type="Label" parent="HBoxContainer/Resources/HanebnostBlock"]
 layout_mode = 2
@@ -73,7 +73,7 @@ layout_mode = 2
 [node name="Icon" type="Label" parent="HBoxContainer/Resources/VyzkumBlock"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = " R"
+text = "⚗️"
 
 [node name="Value" type="Label" parent="HBoxContainer/Resources/VyzkumBlock"]
 layout_mode = 2
@@ -86,26 +86,20 @@ theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
 theme_override_font_sizes/font_size = 12
 
 [node name="VSeparator" type="VSeparator" parent="HBoxContainer"]
+modulate = Color(1, 0.239216, 1, 1)
+z_index = -1
 layout_mode = 2
-
-[node name="Units" type="HBoxContainer" parent="HBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="UnitsLabel" type="Label" parent="HBoxContainer/Units"]
-layout_mode = 2
-text = "  0 / 0"
 
 [node name="VSeparator2" type="VSeparator" parent="HBoxContainer"]
 layout_mode = 2
 
-[node name="HeatSection" type="HBoxContainer" parent="HBoxContainer"]
+[node name="HeatSection" type="VBoxContainer" parent="HBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="HeatIcon" type="Label" parent="HBoxContainer/HeatSection"]
 layout_mode = 2
-text = "Heat"
+text = "Hněv světa"
 
 [node name="HeatBar" type="ProgressBar" parent="HBoxContainer/HeatSection"]
 custom_minimum_size = Vector2(100, 12)
@@ -115,21 +109,19 @@ show_percentage = false
 
 [node name="HeatValue" type="Label" parent="HBoxContainer/HeatSection"]
 layout_mode = 2
+mouse_filter = 1
 text = "0%"
-
-[node name="VSeparator3" type="VSeparator" parent="HBoxContainer"]
-layout_mode = 2
 
 [node name="VSeparator6" type="VSeparator" parent="HBoxContainer"]
 layout_mode = 2
 
-[node name="AwarenessSection" type="HBoxContainer" parent="HBoxContainer"]
+[node name="AwarenessSection" type="VBoxContainer" parent="HBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="AwarenessIcon" type="Label" parent="HBoxContainer/AwarenessSection"]
 layout_mode = 2
-text = "Aw"
+text = "Zájem inkvizice"
 
 [node name="AwarenessBar" type="ProgressBar" parent="HBoxContainer/AwarenessSection"]
 custom_minimum_size = Vector2(100, 12)
@@ -139,10 +131,19 @@ show_percentage = false
 
 [node name="AwarenessValue" type="Label" parent="HBoxContainer/AwarenessSection"]
 layout_mode = 2
+mouse_filter = 1
 text = "0%"
 
 [node name="VSeparator5" type="VSeparator" parent="HBoxContainer"]
 layout_mode = 2
+
+[node name="Units" type="HBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="UnitsLabel" type="Label" parent="HBoxContainer/Units"]
+layout_mode = 2
+text = "  0 / 0"
 
 [node name="ControlSection" type="HBoxContainer" parent="HBoxContainer"]
 layout_mode = 2

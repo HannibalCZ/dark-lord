@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://bwg2fwkr5ae6g"]
+[gd_scene load_steps=7 format=3 uid="uid://bwg2fwkr5ae6g"]
 
 [ext_resource type="Script" uid="uid://p224r28ko4ej" path="res://scripts/ui/RegionTile.gd" id="1_3b7ur"]
 [ext_resource type="Texture2D" uid="uid://kjln75mk5yg3" path="res://art/ui/corruption_overlay.png" id="2_jel24"]
 [ext_resource type="Texture2D" uid="uid://cyw6jwqalmni0" path="res://art/ui/tag.png" id="2_otno6"]
 [ext_resource type="Texture2D" uid="uid://dm681fk2jwqub" path="res://art/ui/secret.png" id="4_7kug1"]
+[ext_resource type="Texture2D" uid="uid://b62kvqxd4m20y" path="res://images/crest.png" id="5_5te6x"]
 [ext_resource type="Texture2D" uid="uid://bgfdu2fb83wwy" path="res://art/ui/orc_camp.png" id="5_jnrrv"]
 
 [node name="RegionTile" type="Control"]
@@ -123,14 +124,15 @@ texture = ExtResource("4_7kug1")
 stretch_mode = 3
 
 [node name="OrgIcon" type="TextureRect" parent="Overlay"]
+visible = false
 layout_mode = 1
 offset_left = 2.0
 offset_top = 2.0
 offset_right = 26.0
 offset_bottom = 26.0
 mouse_filter = 2
+texture = ExtResource("5_5te6x")
 stretch_mode = 5
-visible = false
 
 [node name="LairIcon" type="TextureRect" parent="Overlay"]
 layout_mode = 1

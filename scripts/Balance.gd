@@ -515,7 +515,7 @@ const UNIT = {
 		"power": 1,
 		"recruit_cost": {},   # AI-only jednotka
 		"upkeep_cost": {},
-		"moves": 2,
+		"moves": 1,
 		"can_do": [],
 		# Průzkumník nemá mise — pohybuje se automaticky
 		# přes scout profil a generuje efekty při vstupu do regionu.

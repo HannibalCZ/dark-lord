@@ -40,10 +40,10 @@ func _refresh() -> void:
 	_update_resource_block(hanebnost_block, faction.resources["infamy"],   0)
 	_update_resource_block(vyzkum_block,    faction.resources["research"], 0)
 
-	zlato_block.get_node("Value").tooltip_text = TopBar.build_economy_tooltip(
+	zlato_block.get_node("Value").tooltip_text = build_economy_tooltip(
 			GameState.economy_tracker.entries, "gold",
 			int(faction.resources["gold"]))
-	mana_block.get_node("Value").tooltip_text = TopBar.build_economy_tooltip(
+	mana_block.get_node("Value").tooltip_text = build_economy_tooltip(
 			GameState.economy_tracker.entries, "mana",
 			int(faction.resources["mana"]))
 
@@ -75,7 +75,7 @@ func _update_resource_block(block: VBoxContainer, value: int, delta: int) -> voi
 func _update_heat_bar(value: int) -> void:
 	heat_bar.value = value
 	heat_value.text = "%d%%" % value
-	heat_value.tooltip_text = TopBar.build_breakdown_tooltip(
+	heat_value.tooltip_text = build_breakdown_tooltip(
 			GameState.heat_tracker.entries, "heat", value)
 	var style := StyleBoxFlat.new()
 	if value >= 100:
@@ -92,7 +92,7 @@ func _update_heat_bar(value: int) -> void:
 func _update_awareness_bar(value: int) -> void:
 	awareness_bar.value = value
 	awareness_value.text = "%d%%" % value
-	awareness_value.tooltip_text = TopBar.build_breakdown_tooltip(
+	awareness_value.tooltip_text = build_breakdown_tooltip(
 			GameState.heat_tracker.entries, "awareness", value)
 	var style := StyleBoxFlat.new()
 	if value >= 100:

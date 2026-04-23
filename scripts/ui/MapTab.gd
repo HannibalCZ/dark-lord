@@ -1035,5 +1035,3 @@ func _on_org_changed(_ignored) -> void:
 func _on_doctrine_externally_changed(region_id: int, _doctrine: String) -> void:
 	if region_id == selected_region_idx:
 		_populate_doctrine_picker(region_id)
-
-
