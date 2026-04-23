@@ -50,18 +50,19 @@ func setup(id: int, region: Region) -> void:
 	_update_tag_icon(region.tags)
 
 func _on_mouse_entered() -> void:
-	TweenHelper.tile_hover_in(highlight)
-	
+	if not _is_movement_target:
+		TweenHelper.tile_hover_in(highlight)
 
 func _on_mouse_exited() -> void:
-	TweenHelper.tile_hover_out(highlight, _is_selected)
+	if not _is_movement_target:
+		TweenHelper.tile_hover_out(highlight, _is_selected)
 
 func set_selected(sel: bool) -> void:
 	_is_selected = sel
 	if sel:
 		TweenHelper.tile_select(highlight)
 		TweenHelper.bounce(self)  # malý bounce při výběru
-	else:
+	elif not _is_movement_target:
 		TweenHelper.tile_deselect(highlight)
 
 func set_movement_target(active: bool) -> void:
