@@ -1,0 +1,59 @@
+[gd_scene load_steps=2 format=3 uid="uid://b4alertbar001"]
+
+[ext_resource type="Script" path="res://scripts/ui/AlertBar.gd" id="1_alertbar"]
+
+[node name="AlertBar" type="HBoxContainer"]
+script = ExtResource("1_alertbar")
+custom_minimum_size = Vector2(0, 28)
+theme_override_constants/separation = 4
+
+[node name="AgentsBadge" type="Button" parent="."]
+layout_mode = 2
+flat = true
+custom_minimum_size = Vector2(28, 28)
+text = "🗡"
+visible = false
+
+[node name="OrgBadge" type="Button" parent="."]
+layout_mode = 2
+flat = true
+custom_minimum_size = Vector2(28, 28)
+text = "⚠"
+visible = false
+
+[node name="HeatBadge" type="Button" parent="."]
+layout_mode = 2
+flat = true
+custom_minimum_size = Vector2(28, 28)
+text = "🔥"
+visible = false
+
+[node name="AwarenessBadge" type="Button" parent="."]
+layout_mode = 2
+flat = true
+custom_minimum_size = Vector2(28, 28)
+text = "👁"
+visible = false
+
+[node name="APBadge" type="Button" parent="."]
+layout_mode = 2
+flat = true
+custom_minimum_size = Vector2(28, 28)
+text = "✨"
+visible = false
+
+[node name="APLabel" type="Label" parent="APBadge"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -14.0
+offset_top = -14.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 10
+mouse_filter = 2
