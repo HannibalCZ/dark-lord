@@ -67,6 +67,7 @@ var _selected_unit_id: int = -1
 var _doctrine_keys: Array[String] = []
 var _current_movement_target_tile = null
 var _highlighted_neighbor_tiles: Array = []
+var _movement_in_progress: bool = false
 var tile_scene: PackedScene = preload("res://scenes/ui/RegionTile.tscn")
 
 const SCROLL_SPEED    := 250.0
@@ -287,6 +288,8 @@ func _center_on_player_start() -> void:
 	_clamp_map_content()
 
 func _on_game_updated() -> void:
+	if _movement_in_progress:
+		return
 	if _tile_by_id.size() != GameState.region_manager.regions.size():
 		_build_grid()
 		return
@@ -861,8 +864,10 @@ func _execute_move_to(target_region_id: int) -> void:
 	if uid == -1:
 		return
 
+	_movement_in_progress = true
 	var result = GameState.exec(
 			GameState.commands.move_unit(uid, target_region_id))
+	_movement_in_progress = false
 
 	if not result.get("ok", false):
 		_select_unit(-1)
