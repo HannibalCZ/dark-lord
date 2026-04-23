@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://b7f7udyiyxxb"]
+[gd_scene load_steps=11 format=3 uid="uid://b7f7udyiyxxb"]
 
 [ext_resource type="PackedScene" uid="uid://ckl1fu7pnsokb" path="res://scenes/ui/TopBar.tscn" id="1_rarhs"]
 [ext_resource type="PackedScene" uid="uid://bpexmyevdnxa5" path="res://scenes/ui/MapTab.tscn" id="2_vcsgt"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://dr1uf3dhxyvm2" path="res://scenes/ui/MagicTab.tscn" id="4_vcsgt"]
 [ext_resource type="PackedScene" uid="uid://1krboumaxk6e" path="res://scenes/ui/BaseTab.tscn" id="5_c01mt"]
 [ext_resource type="PackedScene" path="res://scenes/ui/CouncilPanel.tscn" id="6_council"]
+[ext_resource type="PackedScene" uid="uid://b4alertbar001" path="res://scenes/ui/AlertBar.tscn" id="9_alertbar"]
 [ext_resource type="PackedScene" path="res://scenes/ui/ProgressionTab.tscn" id="7_ptab"]
 [ext_resource type="PackedScene" path="res://scenes/ui/FactionsTab.tscn" id="8_ftab"]
 
@@ -28,6 +29,9 @@ grow_vertical = 2
 
 [node name="TopBar" parent="VBoxContainer" instance=ExtResource("1_rarhs")]
 custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="AlertBar" parent="VBoxContainer" instance=ExtResource("9_alertbar")]
 layout_mode = 2
 
 [node name="TabContainer" type="TabContainer" parent="VBoxContainer"]
@@ -71,3 +75,6 @@ layout_mode = 2
 metadata/_tab_index = 6
 
 [node name="CouncilPanel" parent="." instance=ExtResource("6_council")]
+
+[connection signal="highlight_regions_requested" from="VBoxContainer/AlertBar" to="VBoxContainer/TabContainer/MapTab" method="highlight_alert_regions"]
+[connection signal="clear_highlights_requested" from="VBoxContainer/AlertBar" to="VBoxContainer/TabContainer/MapTab" method="clear_alert_highlights"]
