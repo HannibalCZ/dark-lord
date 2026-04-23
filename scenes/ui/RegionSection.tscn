@@ -1,0 +1,156 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/RegionSection.gd" id="1"]
+
+[node name="RegionSection" type="VBoxContainer"]
+script = ExtResource("1")
+theme_override_constants/separation = 0
+
+[node name="StatPanel" type="PanelContainer" parent="."]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="StatPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="RegionName" type="Label" parent="StatPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Region"
+
+[node name="RegionOwner" type="Label" parent="StatPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="HSeparator" type="HSeparator" parent="StatPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="StatsRow" type="HBoxContainer" parent="StatPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="LeftCol" type="VBoxContainer" parent="StatPanel/VBoxContainer/StatsRow"]
+layout_mode = 2
+
+[node name="ObranaLabel" type="Label" parent="StatPanel/VBoxContainer/StatsRow/LeftCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
+theme_override_font_sizes/font_size = 11
+text = "Obrana:"
+
+[node name="ObranaVal" type="Label" parent="StatPanel/VBoxContainer/StatsRow/LeftCol"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "0"
+
+[node name="PrijemLabel" type="Label" parent="StatPanel/VBoxContainer/StatsRow/LeftCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
+theme_override_font_sizes/font_size = 11
+text = "Prijem:"
+
+[node name="PrijemVal" type="Label" parent="StatPanel/VBoxContainer/StatsRow/LeftCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.298, 0.686, 0.314, 1)
+theme_override_font_sizes/font_size = 13
+text = "0G / 0M / 0R"
+
+[node name="RightCol" type="VBoxContainer" parent="StatPanel/VBoxContainer/StatsRow"]
+layout_mode = 2
+
+[node name="KorupceLabel" type="Label" parent="StatPanel/VBoxContainer/StatsRow/RightCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
+theme_override_font_sizes/font_size = 11
+text = "Korupce:"
+
+[node name="KorupceVal" type="Label" parent="StatPanel/VBoxContainer/StatsRow/RightCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.596, 0, 1)
+theme_override_font_sizes/font_size = 13
+text = "0%"
+
+[node name="StrachLabel" type="Label" parent="StatPanel/VBoxContainer/StatsRow/RightCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
+theme_override_font_sizes/font_size = 11
+text = "Strach:"
+
+[node name="StrachVal" type="Label" parent="StatPanel/VBoxContainer/StatsRow/RightCol"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "0/100"
+
+[node name="CorruptionEffectLabel" type="Label" parent="StatPanel/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.533, 0.133, 1)
+theme_override_font_sizes/font_size = 11
+autowrap_mode = 3
+
+[node name="OccupationLabel" type="Label" parent="StatPanel/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+autowrap_mode = 3
+
+[node name="UnitsSection" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UnitsSection"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="UnitsHeader" type="Button" parent="UnitsSection/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "▶ JEDNOTKY"
+flat = true
+alignment = 0
+
+[node name="UnitsContent" type="VBoxContainer" parent="UnitsSection/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TagsSection" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TagsSection"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TagsHeader" type="Button" parent="TagsSection/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "▶ EFEKTY"
+flat = true
+alignment = 0
+
+[node name="TagsContent" type="VBoxContainer" parent="TagsSection/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SecretsSection" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SecretsSection"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SecretsHeader" type="Button" parent="SecretsSection/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "▶ TAJEMSTVI"
+flat = true
+alignment = 0
+
+[node name="SecretsContent" type="VBoxContainer" parent="SecretsSection/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
