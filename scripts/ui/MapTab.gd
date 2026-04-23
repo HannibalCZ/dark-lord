@@ -44,6 +44,7 @@ var _doctrine_keys: Array[String] = []
 var _current_movement_target_tile = null
 var _highlighted_neighbor_tiles: Array = []
 var _movement_in_progress: bool = false
+var _alert_highlighted_ids: Array[int] = []
 var tile_scene: PackedScene = preload("res://scenes/ui/RegionTile.tscn")
 
 const SCROLL_SPEED    := 250.0
@@ -209,7 +210,27 @@ func _center_on_player_start() -> void:
 	map_content.position = target
 	_clamp_map_content()
 
+func highlight_alert_regions(region_ids: Array[int], color: Color) -> void:
+	for id in _alert_highlighted_ids:
+		var tile = _tile_by_id.get(id)
+		if tile != null:
+			tile.set_alert_highlight(false)
+	_alert_highlighted_ids.clear()
+	for id in region_ids:
+		var tile = _tile_by_id.get(id)
+		if tile != null:
+			tile.set_alert_highlight(true, color)
+	_alert_highlighted_ids = region_ids.duplicate()
+
+func clear_alert_highlights() -> void:
+	for id in _alert_highlighted_ids:
+		var tile = _tile_by_id.get(id)
+		if tile != null:
+			tile.set_alert_highlight(false)
+	_alert_highlighted_ids.clear()
+
 func _on_game_updated() -> void:
+	clear_alert_highlights()
 	if _movement_in_progress:
 		return
 	if _tile_by_id.size() != GameState.region_manager.regions.size():
