@@ -45,6 +45,7 @@ var _current_movement_target_tile = null
 var _highlighted_neighbor_tiles: Array = []
 var _movement_in_progress: bool = false
 var _alert_highlighted_ids: Array[int] = []
+var _hovered_region_id: int = -1
 var tile_scene: PackedScene = preload("res://scenes/ui/RegionTile.tscn")
 
 const SCROLL_SPEED    := 250.0
@@ -499,6 +500,8 @@ func _build_grid() -> void:
 		t.position = Vector2(r.position) - Vector2(64, 64)
 		t.call_deferred("setup", i, r)
 		t.connect("tile_selected", Callable(self, "_on_tile_selected"))
+		t.mouse_entered.connect(_on_tile_hovered.bind(region_id))
+		t.mouse_exited.connect(_on_tile_unhovered.bind(region_id))
 		_tile_by_id[i] = t
 
 	_compute_map_bounds()
@@ -545,6 +548,18 @@ func _on_tile_selected(region_idx: int) -> void:
 		_select_unit(player_units[0].id)
 	else:
 		_select_unit(-1)
+
+func _on_tile_hovered(region_id: int) -> void:
+	if _hovered_region_id == region_id:
+		return
+	_hovered_region_id = region_id
+	connection_layer.queue_redraw()
+
+func _on_tile_unhovered(region_id: int) -> void:
+	if _hovered_region_id != region_id:
+		return
+	_hovered_region_id = -1
+	connection_layer.queue_redraw()
 
 func _refresh_tile_selection() -> void:
 	for i in _tile_by_id:
@@ -658,6 +673,7 @@ func _clear_all_movement_highlights() -> void:
 		tile.set_movement_target(false)
 	_highlighted_neighbor_tiles.clear()
 	_current_movement_target_tile = null
+	connection_layer.queue_redraw()
 
 func _get_player_units_in_region(region_id: int) -> Array:
 	var units: Array = []
@@ -782,6 +798,19 @@ func _on_connection_layer_draw() -> void:
 	var offset := map_content.position
 	for conn in _connections:
 		connection_layer.draw_line(conn["a"] + offset, conn["b"] + offset, Color(0.4, 0.4, 0.5, 0.6), 2.0, true)
+	if not _highlighted_neighbor_tiles.is_empty() \
+			and _hovered_region_id != -1 \
+			and _is_movement_target(_hovered_region_id) \
+			and _selected_unit_id != -1:
+		var unit := GameState.query.units.get_by_id(_selected_unit_id)
+		if unit != null:
+			var source_r := GameState.query.regions.get_by_id(unit.region_id)
+			var hover_r := GameState.query.regions.get_by_id(_hovered_region_id)
+			if source_r != null and hover_r != null:
+				connection_layer.draw_line(
+					Vector2(source_r.position) + offset,
+					Vector2(hover_r.position) + offset,
+					Color(0.2, 0.7, 0.3, 0.8), 3.0, true)
 
 func _refresh_unit_positions() -> void:
 	for i in _tile_by_id:

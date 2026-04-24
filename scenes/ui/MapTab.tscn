@@ -27,11 +27,6 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 mouse_filter = 1
 
-[node name="MapContent" type="Control" parent="HBoxContainer/MapCanvas"]
-layout_mode = 3
-anchors_preset = 0
-mouse_filter = 2
-
 [node name="ConnectionLayer" type="Control" parent="HBoxContainer/MapCanvas"]
 layout_mode = 1
 anchors_preset = 15
@@ -39,6 +34,11 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+
+[node name="MapContent" type="Control" parent="HBoxContainer/MapCanvas"]
+layout_mode = 3
+anchors_preset = 0
 mouse_filter = 2
 
 [node name="RightPanel" type="VBoxContainer" parent="HBoxContainer"]
