@@ -12,7 +12,7 @@ func execute_ai_turn() -> void:
 		if faction_id == Balance.PLAYER_FACTION:
 			continue
 		for u: Unit in game_state.query.units.by_faction[faction_id]:
-			if u.state != "healthy":
+			if u.is_lost:
 				continue
 
 			var u_cfg: Dictionary = Balance.UNIT.get(u.unit_key, {})

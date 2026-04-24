@@ -678,7 +678,7 @@ func _clear_all_movement_highlights() -> void:
 func _get_player_units_in_region(region_id: int) -> Array:
 	var units: Array = []
 	for u in GameState.query.units.in_region(region_id, false):
-		if u.faction_id == Balance.PLAYER_FACTION and u.state == "healthy":
+		if u.faction_id == Balance.PLAYER_FACTION and not u.is_busy and not u.is_lost and not u.is_wounded:
 			units.append(u)
 	return units
 

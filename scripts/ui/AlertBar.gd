@@ -45,7 +45,7 @@ func _refresh_agents_badge() -> void:
 	var idle_agents: Array = []
 	var player_units: Array = GameState.query.units.by_faction.get(Balance.PLAYER_FACTION, [])
 	for u: Unit in player_units:
-		if u.state == "healthy" and u.id not in planned_unit_ids:
+		if not u.is_busy and not u.is_lost and not u.is_wounded and u.id not in planned_unit_ids:
 			_idle_agent_regions.append(u.region_id)
 			idle_agents.append(u)
 

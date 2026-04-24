@@ -254,7 +254,7 @@ func _handle_found_org(action_key: String, region_id: int, faction_id: String) -
 	)
 
 	# spotřebuj agenta
-	agent.state = "lost"
+	agent.is_lost = true
 
 	var org_display: String = Balance.ORG[org_type]["display_name"]
 	logs.append({

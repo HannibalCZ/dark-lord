@@ -9,7 +9,9 @@ var region_id: int = -1        # ID regionu, kde se jednotka nachází (zatím -
 var name: String = ""
 var type: String = ""     # "agent" nebo "army"
 var power: int = 0
-var state: String = "healthy"  # "healthy" | "busy" | "wounded" | "lost"
+var is_busy: bool = false
+var is_wounded: bool = false
+var is_lost: bool = false
 var moves_per_turn: int = 1
 var moves_left: int = 1
 var visited_regions: Array[int] = []
@@ -34,7 +36,7 @@ func init(_id:int, _unit_temp:String, _region_id:int, _faction_id:String) -> Uni
 	return self
 
 func is_available() -> bool:
-	return state != "busy" and state != "lost"
+	return not is_busy and not is_lost
 
 func is_agent() -> bool:
 	return type == "agent"
@@ -43,13 +45,24 @@ func is_army() -> bool:
 	return type == "army"
 
 func mark_busy() -> void:
-	state = "busy"
+	is_busy = true
 
 func mark_lost() -> void:
-	state = "lost"
+	is_lost = true
 
 func mark_healthy() -> void:
-	state = "healthy"
+	is_busy = false
+	is_wounded = false
+	is_lost = false
+
+func state_label() -> String:
+	if is_lost:
+		return "lost"
+	if is_wounded:
+		return "wounded"
+	if is_busy:
+		return "busy"
+	return "healthy"
 
 func can_do_mission(key:String) -> bool:
 	var cfg: Dictionary = Balance.UNIT.get(unit_key, {})

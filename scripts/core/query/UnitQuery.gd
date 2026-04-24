@@ -39,7 +39,7 @@ func in_region(region_id: int, include_lost: bool = false) -> Array[Unit]:
 		return all
 	var out: Array[Unit] = []
 	for u in raw:
-		if u.state != "lost":
+		if not u.is_lost:
 			out.append(u)
 	return out
 
@@ -47,7 +47,7 @@ func active_count_for_faction(faction_id: String) -> int:
 	var arr: Array = by_faction.get(faction_id, [])
 	var c := 0
 	for u in arr:
-		if u.state != "lost":
+		if not u.is_lost:
 			c += 1
 	return c
 
@@ -56,7 +56,7 @@ func count_units_by_faction_and_key(faction_id: String, unit_key: String) -> int
 	var count: int = 0
 	for u in faction_units:
 		if u.unit_key == unit_key \
-				and u.state != "lost":
+				and not u.is_lost:
 			count += 1
 	return count
 
@@ -80,7 +80,7 @@ func can_move(unit_id: int, target_region_id: int) -> Dictionary:
 	var u := get_by_id(unit_id)
 	if u == null:
 		return {"ok": false, "reason": "Jednotka neexistuje."}
-	if u.state == "lost":
+	if u.is_lost:
 		return {"ok": false, "reason": "Jednotka je ztracena."}
 	if u.moves_left <= 0:
 		return {"ok": false, "reason": "Jednotce došly tahy."}
