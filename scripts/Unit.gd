@@ -9,7 +9,7 @@ var region_id: int = -1        # ID regionu, kde se jednotka nachází (zatím -
 var name: String = ""
 var type: String = ""     # "agent" nebo "army"
 var power: int = 0
-var state: String = "healthy"  # "healthy", "busy", "lost"
+var state: String = "healthy"  # "healthy" | "busy" | "wounded" | "lost"
 var moves_per_turn: int = 1
 var moves_left: int = 1
 var visited_regions: Array[int] = []
@@ -34,7 +34,7 @@ func init(_id:int, _unit_temp:String, _region_id:int, _faction_id:String) -> Uni
 	return self
 
 func is_available() -> bool:
-	return state == "healthy"
+	return state != "busy" and state != "lost"
 
 func is_agent() -> bool:
 	return type == "agent"
