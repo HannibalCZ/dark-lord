@@ -185,6 +185,8 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 
 	# 1) Získej šanci
 	var success_chance: float = get_mission_success_chance(key, unit, region)
+	if unit.is_wounded:
+		success_chance -= Balance.WOUNDED_MISSION_PENALTY
 
 	# 2) Roll
 	var roll := game_state.rng.randf()
@@ -224,7 +226,7 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 		effects_for_system.erase("destroy_org")
 		effects_for_system.erase("kill_unit")
 
-		var ctx := EffectContext.make(game_state, region, unit.faction_id)
+		var ctx := EffectContext.make(game_state, region, unit.faction_id, unit)
 		ctx.source_label = "Mise: %s (úspěch)" % key
 		var eff_logs : Array[Dictionary] = game_state.effects_system.apply(effects_for_system, ctx)
 		#game_state._apply_effects(effects, region, unit.faction_id)
@@ -257,13 +259,17 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 		}
 	else:
 		var effects: Dictionary = cfg.get("fail", {})
-		var ctx := EffectContext.make(game_state, region, unit.faction_id)
+		var ctx := EffectContext.make(game_state, region, unit.faction_id, unit)
 		ctx.source_label = "Mise: %s (selhání)" % key
 		var eff_logs : Array[Dictionary] = game_state.effects_system.apply(effects, ctx)
 		#game_state._apply_effects(effects, region, unit.faction_id)
 
-		# jednotka je ztracená
-		game_state.unit_manager.kill_unit(unit.id)
+		# resilientní jednotka dostane zranění místo smrti (pokud ještě není zraněná)
+		var unit_cfg: Dictionary = Balance.UNIT.get(unit.unit_key, {})
+		if unit_cfg.get("resilient", false) and not unit.is_wounded:
+			game_state.unit_manager.wound_unit(unit.id)
+		else:
+			game_state.unit_manager.kill_unit(unit.id)
 
 		if unit.faction_id == Balance.PLAYER_FACTION:
 			var global_fx: Dictionary = Balance.MISSION_GLOBAL_FAIL_EFFECTS
@@ -374,6 +380,8 @@ func get_available_missions_for(unit:Unit, region:Region) -> Array[String]:
 	var result: Array[String] = []
 	for key in Balance.MISSION.keys():
 		if not unit.can_do_mission(key):
+			continue
+		if key == "heal" and not unit.is_wounded:
 			continue
 		if can_do_mission(unit, region, key):
 			result.append(key)
