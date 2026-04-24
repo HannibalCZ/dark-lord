@@ -200,7 +200,7 @@ func _alive_factions(_by_faction: Dictionary) -> Array[String]:
 	for f in _by_faction.keys():
 		var has_alive := false
 		for uu: Unit in _by_faction[f]:
-			if unot u.is_lost:
+			if not uu.is_lost:
 				has_alive = true
 				break
 		if has_alive:
