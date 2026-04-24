@@ -241,7 +241,7 @@ func update_units_display(units_here: Array, enemy_here: Array) -> void:
 			player_armies += 1
 		elif u.type == "agent":
 			player_agents += 1
-		if u.state == "busy":
+		if u.is_busy:
 			has_busy_player = true
 
 	# počty pro AI

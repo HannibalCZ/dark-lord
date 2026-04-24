@@ -68,7 +68,7 @@ func _resolve_region_battle(region_idx: int) -> Dictionary:
 	for f in factions_sorted:
 		var total := 0
 		for u: Unit in by_faction[f]:
-			if u.state != "lost":
+			if not u.is_lost:
 				total += u.power
 		# Progression modifier — army_power (TYP A)
 		# Platí pro všechny frakce — připravuje půdu pro RDL (rival dark lord)
@@ -119,7 +119,7 @@ func _resolve_region_battle(region_idx: int) -> Dictionary:
 			if f == winner_faction:
 				continue
 			for u: Unit in by_faction[f]:
-				if u.state != "lost":
+				if not u.is_lost:
 					var res := game_state.unit_manager.kill_unit(u.id)
 					if res.get("ok", false):
 						var kill_events: Array[Dictionary] = []
@@ -152,7 +152,7 @@ func _resolve_region_battle(region_idx: int) -> Dictionary:
 		# remíza – všichni zničeni
 		for f in factions_sorted:
 			for u: Unit in by_faction[f]:
-				if u.state != "lost":
+				if not u.is_lost:
 					var res := game_state.unit_manager.kill_unit(u.id)
 					if res.get("ok", false):
 						var kill_events: Array[Dictionary] = []
@@ -189,7 +189,7 @@ func _pick_strongest(units_arr: Array) -> Unit:
 	var best: Unit = null
 	var best_power := -999
 	for u: Unit in units_arr:
-		if u.state != "lost":
+		if not u.is_lost:
 			if u.power > best_power:
 				best_power = u.power
 				best = u
@@ -200,7 +200,7 @@ func _alive_factions(_by_faction: Dictionary) -> Array[String]:
 	for f in _by_faction.keys():
 		var has_alive := false
 		for uu: Unit in _by_faction[f]:
-			if uu.state != "lost":
+			if unot u.is_lost:
 				has_alive = true
 				break
 		if has_alive:

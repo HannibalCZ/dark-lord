@@ -14,7 +14,7 @@ func _ready() -> void:
 func _refresh() -> void:
 	units_list.clear()
 	for u: Unit in GameState.unit_manager.units:
-		units_list.add_item("%s | %s | Síla:%d | Stav:%s" % [u.name, u.type, u.power, u.state])
+		units_list.add_item("%s | %s | Síla:%d | Stav:%s" % [u.name, u.type, u.power, u.state_label()])
 
 	missions_list.clear()
 	for m: Mission in GameState.mission_manager.planned_missions:

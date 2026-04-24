@@ -36,9 +36,9 @@ func plan_mission(unit: Unit, region: Region, mission_key:String) -> void:
 
 	var mission := Mission.new(unit, region, mission_key)
 	planned_missions.append(mission)
-	unit.state = "busy"
+	unit.is_busy = true
 	emit_signal("missions_changed")
-	
+
 	EventBus.emit_signal("mission_planned", mission)
 
 func cancel_mission(index: int) -> void:
@@ -56,7 +56,7 @@ func cancel_mission(index: int) -> void:
 				still_busy = true
 				break
 		if not still_busy:
-			m.unit.state = "healthy"	
+			m.unit.is_busy = false
 	
 	emit_signal("missions_changed")
 		
@@ -80,7 +80,7 @@ func _compute_mission_success(mission_key: String, unit: Unit, region: Region) -
 
 	# 2) projít všechny jednotky v regionu a aplikovat jejich aury
 	for u in game_state.query.units.in_region(region.id, false):
-		if u.state == "lost":
+		if u.is_lost:
 			continue
 		if u.region_id != region.id:
 			continue
@@ -166,7 +166,7 @@ func plan_ai_mission(unit: Unit, region: Region, mission_key: String) -> void:
 
 	var mission := Mission.new(unit, region, mission_key)
 	planned_ai_missions.append(mission)
-	unit.state = "busy"
+	unit.is_busy = true
 
 	# eventy pro UI animace můžeš nechat, ale typicky AI nechceš animovat stejně
 	EventBus.emit_signal("mission_planned", mission)
@@ -234,7 +234,7 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 			_handle_purge_org(region.id)
 
 		# jednotka je zaneprázdněná pouze během plánování
-		unit.state = "healthy"
+		unit.is_busy = false
 
 		if unit.faction_id == Balance.PLAYER_FACTION:
 			var global_fx: Dictionary = Balance.MISSION_GLOBAL_SUCCESS_EFFECTS

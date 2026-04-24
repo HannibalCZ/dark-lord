@@ -213,7 +213,7 @@ func load_scenario(path: String) -> void:
 		var unit_key: String = String(ud.get("unit_key", ""))
 		var region_id: int = int(ud.get("region_id", -1))
 		var fid2: String = String(ud.get("faction_id", ""))
-		var state: String = String(ud.get("state", "healthy"))
+		var state_str: String = String(ud.get("state", "healthy"))
 
 		if uid < 0 or unit_key == "" or region_id < 0 or fid2 == "":
 			push_warning("Skipping invalid unit entry: %s" % str(ud))
@@ -230,7 +230,9 @@ func load_scenario(path: String) -> void:
 			continue
 
 		var u := Unit.new().init(uid, unit_key, region_id, fid2)
-		u.state = state
+		u.is_busy = (state_str == "busy")
+		u.is_wounded = (state_str == "wounded")
+		u.is_lost = (state_str == "lost")
 		unit_manager.units.append(u)
 
 	# 6) UnitManager ID counter sync
@@ -717,7 +719,7 @@ func _spawn_faction_unit(faction_id: String, unit_key: String) -> void:
 	# 2) fallback: region kde má frakce živou jednotku
 	if region_id < 0:
 		for u in unit_manager.units:
-			if u.faction_id == faction_id and u.state != "lost":
+			if u.faction_id == faction_id and not u.is_lost:
 				region_id = u.region_id
 				break
 

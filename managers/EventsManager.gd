@@ -538,7 +538,7 @@ func _on_mission_resolved(data: Dictionary) -> void:
 		return
 
 	# Fatální = agent skončil ve stavu "lost"
-	var is_fatal: bool = (not data.get("success", true)) and (unit.state == "lost")
+	var is_fatal: bool = (not data.get("success", true)) and unit.is_lost
 
 	var entry: Dictionary = data.duplicate()
 	entry["is_fatal"] = is_fatal

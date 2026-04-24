@@ -22,7 +22,7 @@ func get_active_unit_count_for(faction_id: String) -> int:
 	if game_state != null and game_state.query != null:
 		return game_state.query.units.active_count_for_faction(faction_id)
 	# fallback
-	return units.filter(func(u): return u.state != "lost" and u.faction_id == faction_id).size()
+	return units.filter(func(u): return not u.is_lost and u.faction_id == faction_id).size()
 
 func _result_ok(payload: Dictionary = {}, events: Array = [], logs: Array = []) -> Dictionary:
 	payload["ok"] = true
@@ -145,7 +145,7 @@ func apply_post_move_effects(unit_id:int, from_region:int, to_region:int) -> Dic
 	else:
 		# fallback (jen kdyby query ještě nebyla vždy ready)
 		for other in units:
-			if other.region_id == to_region and other.type == "army" and other.state != "lost" and other.faction_id != u.faction_id:
+			if other.region_id == to_region and other.type == "army" and not other.is_lost and other.faction_id != u.faction_id:
 				enemy_army_here = true
 				break
 
@@ -165,7 +165,7 @@ func kill_unit(unit_id: int) -> Dictionary:
 	var u: Unit = game_state.query.units.get_by_id(unit_id)
 	if u == null:
 		return _result_err("Jednotka neexistuje.")
-	u.state = "lost"
+	u.is_lost = true
 	game_state.query.units.rebuild()
 	return _result_ok({"unit_id": unit_id}, [{"type": "unit_killed", "unit_id": unit_id}])
 
@@ -173,19 +173,19 @@ func wound_unit(unit_id: int) -> Dictionary:
 	var u: Unit = game_state.query.units.get_by_id(unit_id)
 	if u == null:
 		return _result_err("Jednotka neexistuje.")
-	u.state = "wounded"
+	u.is_wounded = true
 	game_state.query.units.rebuild()
 	return _result_ok({"unit_id": unit_id}, [{"type": "unit_wounded", "unit_id": unit_id}])
 
 func set_busy(unit_id: int) -> void:
 	var u: Unit = game_state.query.units.get_by_id(unit_id)
 	if u != null:
-		u.state = "busy"
+		u.is_busy = true
 
 func release_unit(unit_id: int) -> void:
 	var u: Unit = game_state.query.units.get_by_id(unit_id)
 	if u != null:
-		u.state = "healthy"
+		u.is_busy = false
 
 func move_unit(unit_id:int, target_region_id:int) -> Dictionary:
 	# 1) validace pravidel
