@@ -169,6 +169,14 @@ func kill_unit(unit_id: int) -> Dictionary:
 	game_state.query.units.rebuild()
 	return _result_ok({"unit_id": unit_id}, [{"type": "unit_killed", "unit_id": unit_id}])
 
+func wound_unit(unit_id: int) -> Dictionary:
+	var u: Unit = game_state.query.units.get_by_id(unit_id)
+	if u == null:
+		return _result_err("Jednotka neexistuje.")
+	u.state = "wounded"
+	game_state.query.units.rebuild()
+	return _result_ok({"unit_id": unit_id}, [{"type": "unit_wounded", "unit_id": unit_id}])
+
 func set_busy(unit_id: int) -> void:
 	var u: Unit = game_state.query.units.get_by_id(unit_id)
 	if u != null:
