@@ -42,29 +42,58 @@ func _refresh_agents_badge() -> void:
 			planned_unit_ids.append(m.unit.id)
 
 	_idle_agent_regions.clear()
+	var idle_agents: Array = []
 	var player_units: Array = GameState.query.units.by_faction.get(Balance.PLAYER_FACTION, [])
 	for u: Unit in player_units:
 		if u.state == "healthy" and u.id not in planned_unit_ids:
 			_idle_agent_regions.append(u.region_id)
+			idle_agents.append(u)
 
 	agents_badge.visible = not _idle_agent_regions.is_empty()
+	if idle_agents.is_empty():
+		agents_badge.tooltip_text = ""
+	else:
+		var tooltip: String = "Agenti bez mise (%d)" % idle_agents.size()
+		for u: Unit in idle_agents:
+			var region_name: String = GameState.region_manager.get_region(u.region_id).name
+			tooltip += "\n• %s — %s" % [u.name, region_name]
+		agents_badge.tooltip_text = tooltip
 
 
 func _refresh_org_badge() -> void:
 	_low_loyalty_org_regions.clear()
+	var low_loyalty_orgs: Array = []
 	for org: Dictionary in GameState.org_manager.get_player_orgs():
 		if org["loyalty"] < 30:
 			_low_loyalty_org_regions.append(org["region_id"])
+			low_loyalty_orgs.append(org)
 
 	org_badge.visible = not _low_loyalty_org_regions.is_empty()
+	if low_loyalty_orgs.is_empty():
+		org_badge.tooltip_text = ""
+	else:
+		var tooltip: String = "Nestabilní organizace (%d)" % low_loyalty_orgs.size()
+		for org: Dictionary in low_loyalty_orgs:
+			var org_name: String = Balance.ORG[org["org_type"]]["display_name"]
+			var region_name: String = GameState.region_manager.get_region(org["region_id"]).name
+			tooltip += "\n• %s — %s (loajalita: %d)" % [org_name, region_name, org["loyalty"]]
+		org_badge.tooltip_text = tooltip
 
 
 func _refresh_heat_badge() -> void:
 	heat_badge.visible = GameState.heat >= Balance.HEAT_STAGE_3
+	if heat_badge.visible:
+		heat_badge.tooltip_text = "Heat je kritický (%d)\nSíly dobra zvýšily aktivitu." % GameState.heat
+	else:
+		heat_badge.tooltip_text = ""
 
 
 func _refresh_awareness_badge() -> void:
 	awareness_badge.visible = GameState.awareness >= Balance.AWARENESS_STAGE_INQUISITOR
+	if awareness_badge.visible:
+		awareness_badge.tooltip_text = "Awareness je kritická (%d)\nInkvizitor může být aktivní." % GameState.awareness
+	else:
+		awareness_badge.tooltip_text = ""
 
 
 func _refresh_ap_badge() -> void:
@@ -72,6 +101,10 @@ func _refresh_ap_badge() -> void:
 	var ap: int = faction.dark_actions_left if faction != null else 0
 	ap_badge.visible = ap > 0
 	ap_label.text = str(ap)
+	if ap > 0:
+		ap_badge.tooltip_text = "Nevyužité Dark Actions (%d)\nZbývající AP propadnou na konci tahu." % ap
+	else:
+		ap_badge.tooltip_text = ""
 
 
 func _on_agents_badge_pressed() -> void:
