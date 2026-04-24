@@ -500,8 +500,8 @@ func _build_grid() -> void:
 		t.position = Vector2(r.position) - Vector2(64, 64)
 		t.call_deferred("setup", i, r)
 		t.connect("tile_selected", Callable(self, "_on_tile_selected"))
-		t.mouse_entered.connect(_on_tile_hovered.bind(region_id))
-		t.mouse_exited.connect(_on_tile_unhovered.bind(region_id))
+		t.tile_hovered.connect(_on_tile_hovered)
+		t.tile_unhovered.connect(_on_tile_unhovered)
 		_tile_by_id[i] = t
 
 	_compute_map_bounds()

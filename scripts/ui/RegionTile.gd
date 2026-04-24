@@ -1,5 +1,7 @@
 extends Control
 signal tile_selected(region_id: int)
+signal tile_hovered(region_id: int)
+signal tile_unhovered(region_id: int)
 
 var region_id: int = -1
 var button: Button
@@ -53,10 +55,12 @@ func setup(id: int, region: Region) -> void:
 func _on_mouse_entered() -> void:
 	if not _is_movement_target:
 		TweenHelper.tile_hover_in(highlight)
+	tile_hovered.emit(region_id)
 
 func _on_mouse_exited() -> void:
 	if not _is_movement_target:
 		TweenHelper.tile_hover_out(highlight, _is_selected)
+	tile_unhovered.emit(region_id)
 
 func set_selected(sel: bool) -> void:
 	_is_selected = sel
