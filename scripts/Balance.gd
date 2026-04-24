@@ -29,6 +29,10 @@ const LAIR_INFLUENCE_CONTROL_THRESHOLD = 20
 const MISSION_CHANCE_MIN = 0.05
 const MISSION_CHANCE_MAX = 0.95
 
+# Zranění
+const WOUNDED_MISSION_PENALTY: int = 25
+const WOUNDED_POWER_PENALTY: int = 2
+
 const CORRUPTION_PHASE_NAMES: Dictionary = {
 	0: "Cisty",
 	1: "Naruseny",
@@ -308,6 +312,19 @@ const MISSION = {
 		},
 		"ui_icon":  "res://ui/icons/missions/eliminate.png",
 		"ui_order": 10
+	},
+
+	"heal": {
+		"id":           "heal",
+		"display_name": "Léčení",
+		"description":  "Jednotka se zotaví ze zranění a vrátí se do plné bojové pohotovosti.",
+		"base_chance":  0.90,
+		"requirements": {},
+		"cost": { "ap": 1, "mana": 0, "gold": 0 },
+		"success": { "heal_unit": true },
+		"fail":    {},
+		"ui_icon":  "res://ui/icons/missions/heal.png",
+		"ui_order": 11
 	}
 
 }
@@ -460,6 +477,7 @@ const UNIT = {
 		"upkeep_cost": { "gold": 2 },
 		"moves": 1,
 		"can_do": ["raid","explore"],
+		"resilient": false,
 		# ai_profile záměrně chybí — _pick_profile() v AIManager řídí chování dynamicky
 		# podle lair_control regionu lairu (defender vs lair_raider)
 	},
@@ -470,7 +488,8 @@ const UNIT = {
 		"recruit_cost": { "mana": 15 },
 		"upkeep_cost": { "mana": 2 },
 		"moves": 2,
-		"can_do": ["corrupt","sabotage","explore","bribe","manipulate","inspect","dismantle","eliminate"]
+		"can_do": ["corrupt","sabotage","explore","bribe","manipulate","inspect","dismantle","eliminate","heal"],
+		"resilient": false,
 	},
 	"homunculus": {
 		"display_name": "Homunkulus",
@@ -479,7 +498,8 @@ const UNIT = {
 		"recruit_cost": { "mana": 10 },
 		"upkeep_cost": { "mana": 1 },
 		"moves": 2,
-		"can_do": ["corrupt","sabotage","explore"]
+		"can_do": ["corrupt","sabotage","explore","heal"],
+		"resilient": false,
 	},
 	"paladin_army": {
 		"display_name": "Paladinská armáda",
@@ -488,7 +508,8 @@ const UNIT = {
 		"recruit_cost": {},        # AI-only jednotka
 		"upkeep_cost": {},
 		"moves": 1,
-		"can_do": ["raid"],
+		"can_do": ["raid","heal"],
+		"resilient": true,
 		"aura": {
 			"mission_success": -0.50,
 			"mission_key": ["raid"],
@@ -502,7 +523,8 @@ const UNIT = {
 		"recruit_cost": {},
 		"upkeep_cost": {},
 		"moves": 2,
-		"can_do": ["purge","dismantle"],
+		"can_do": ["purge","dismantle","heal"],
+		"resilient": true,
 		"aura": {
 			"mission_success": -0.50,
 			"mission_key": ["corrupt", "sabotage"],
@@ -517,6 +539,7 @@ const UNIT = {
 		"upkeep_cost": {},
 		"moves": 1,
 		"can_do": [],
+		"resilient": false,
 		# Průzkumník nemá mise — pohybuje se automaticky
 		# přes scout profil a generuje efekty při vstupu do regionu.
 		"faction": "merchant",
@@ -609,6 +632,10 @@ const AI_PROFILE = {
 		"action_at_target": null
 	}
 }
+
+# AI váhy pro rozhodnutí léčit se
+const AI_HEAL_HEAT_THRESHOLD: int = 60  # heat pod touto hodnotou → AI zvažuje heal
+const AI_HEAL_IGNORE_HEAT: int = 85     # heat nad touto hodnotou → AI léčení ignoruje
 
 const REGION_DEFENCE_REGEN: int = 1
 # Obnova defense per tah pokud region není dobýván
