@@ -39,6 +39,14 @@ func apply(e: Dictionary, ctx: EffectContext) -> Array[Dictionary]:
 		if _has_any_region_fields(e):
 			logs.append({"type":"warn", "text":"Effects contain region fields but region == null. Region part ignored. Effects=%s" % str(e)})
 
+	# ---- UNIT ----
+	if e.has("heal_unit"):
+		if ctx.unit != null:
+			ctx.unit.is_wounded = false
+			logs.append({"type": "unit", "text": "Jednotka %s byla vyléčena." % ctx.unit.name})
+		else:
+			logs.append({"type": "warn", "text": "heal_unit effect: ctx.unit is null, ignored."})
+
 	# ---- TAGS ----
 	_apply_tags(e, region, logs)
 
