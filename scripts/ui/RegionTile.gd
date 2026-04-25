@@ -236,6 +236,7 @@ func update_units_display(units_here: Array, enemy_here: Array) -> void:
 	var player_agents := 0
 	var has_busy_player: bool = false
 
+	var has_wounded_player: bool = false
 	for u in units_here:
 		if u.type == "army":
 			player_armies += 1
@@ -243,6 +244,8 @@ func update_units_display(units_here: Array, enemy_here: Array) -> void:
 			player_agents += 1
 		if u.is_busy:
 			has_busy_player = true
+		if u.is_wounded:
+			has_wounded_player = true
 
 	# počty pro AI
 	var enemy_armies := 0
@@ -261,6 +264,7 @@ func update_units_display(units_here: Array, enemy_here: Array) -> void:
 	if p_total > 0:
 		var tex := _select_icon(player_armies, player_agents)
 		player_icon.texture = tex
+		player_icon.modulate = Color(1.0, 0.35, 0.35, 1.0) if has_wounded_player else Color.WHITE
 		player_icon.visible = true
 
 		if p_total > 1:

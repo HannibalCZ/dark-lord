@@ -595,7 +595,8 @@ func _update_unit_info() -> void:
 	if u == null:
 		unit_info.text = "Jednotka nenalezena."
 		return
-	unit_info.text = "Jednotka: %s (%s) | Síla: %d | Zbývá tahů: %d" % [u.name, u.type, u.power, u.moves_left]
+	var wound_suffix: String = "  ⚔ Zraněna" if u.is_wounded else ""
+	unit_info.text = "Jednotka: %s (%s) | Síla: %d | Zbývá tahů: %d%s" % [u.name, u.type, u.power, u.moves_left, wound_suffix]
 
 func _build_mission_menu(region_idx: int = selected_region_idx) -> void:
 	mission_success_effects.visible = false
@@ -678,7 +679,7 @@ func _clear_all_movement_highlights() -> void:
 func _get_player_units_in_region(region_id: int) -> Array:
 	var units: Array = []
 	for u in GameState.query.units.in_region(region_id, false):
-		if u.faction_id == Balance.PLAYER_FACTION and not u.is_busy and not u.is_lost and not u.is_wounded:
+		if u.faction_id == Balance.PLAYER_FACTION and not u.is_busy and not u.is_lost:
 			units.append(u)
 	return units
 
@@ -716,7 +717,12 @@ func _update_selected_unit_display(u: Unit) -> void:
 		selected_unit_label.visible = false
 		deselect_btn.visible = false
 		return
-	selected_unit_label.text = "%s | Sila: %d | Tahy: %d" % [u.unit_key, u.power, u.moves_left]
+	if u.is_wounded:
+		selected_unit_label.text = "⚔ %s | Sila: %d | Tahy: %d" % [u.unit_key, u.power, u.moves_left]
+		selected_unit_label.modulate = Color(1.0, 0.35, 0.35, 1.0)
+	else:
+		selected_unit_label.text = "%s | Sila: %d | Tahy: %d" % [u.unit_key, u.power, u.moves_left]
+		selected_unit_label.modulate = Color.WHITE
 	selected_unit_label.visible = true
 	deselect_btn.visible = true
 
