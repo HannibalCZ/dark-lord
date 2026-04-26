@@ -262,7 +262,7 @@ func update_units_display(units_here: Array, enemy_here: Array) -> void:
 	# ----------------------------------------------------
 	var p_total := player_armies + player_agents
 	if p_total > 0:
-		var tex := _select_icon(player_armies, player_agents)
+		var tex := _select_icon(units_here)
 		player_icon.texture = tex
 		player_icon.modulate = Color(1.0, 0.35, 0.35, 1.0) if has_wounded_player else Color.WHITE
 		player_icon.visible = true
@@ -281,7 +281,7 @@ func update_units_display(units_here: Array, enemy_here: Array) -> void:
 	# ----------------------------------------------------
 	var e_total := enemy_armies + enemy_agents
 	if e_total > 0:
-		var tex := _select_icon(enemy_armies, enemy_agents)
+		var tex := _select_icon(enemy_here)
 		enemy_icon.texture = tex
 		enemy_icon.visible = true
 
@@ -314,14 +314,21 @@ func update_units_display(units_here: Array, enemy_here: Array) -> void:
 		_align_right_bottom(enemy_icon, enemy_count)
 
 	# ----------------------------------------------------
-	# Helper: který typ ikony zobrazit?
+	# Helpers
 	# ----------------------------------------------------
-func _select_icon(armies: int, agents: int) -> Texture:
-	if armies > 0:
+func _dominant_unit(units: Array) -> Unit:
+	return units.reduce(func(a, b): return a if a.power >= b.power else b)
+
+func _select_icon(units: Array) -> Texture2D:
+	if units.is_empty():
+		return null
+	var u: Unit = _dominant_unit(units)
+	var icon_path: String = Balance.UNIT.get(u.unit_key, {}).get("icon", "")
+	if icon_path != "" and ResourceLoader.exists(icon_path):
+		return load(icon_path)
+	if u.type == "army":
 		return preload("res://art/ui/army.png")
-	elif agents > 0:
-		return preload("res://art/ui/agent.png")
-	return null
+	return preload("res://art/ui/agent.png")
 
 func _align_center_bottom(icon: TextureRect, count: Label) -> void:
 	# Ikona: dole uprostřed

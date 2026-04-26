@@ -478,6 +478,7 @@ const UNIT = {
 		"moves": 1,
 		"can_do": ["raid","explore"],
 		"resilient": false,
+		"icon": "res://art/units/orc_band.png",
 		# ai_profile záměrně chybí — _pick_profile() v AIManager řídí chování dynamicky
 		# podle lair_control regionu lairu (defender vs lair_raider)
 	},
@@ -490,6 +491,7 @@ const UNIT = {
 		"moves": 2,
 		"can_do": ["corrupt","sabotage","explore","bribe","manipulate","inspect","dismantle","eliminate","heal"],
 		"resilient": false,
+		"icon": "res://art/units/vampire.png",
 	},
 	"homunculus": {
 		"display_name": "Homunkulus",
@@ -500,6 +502,7 @@ const UNIT = {
 		"moves": 2,
 		"can_do": ["corrupt","sabotage","explore","heal"],
 		"resilient": false,
+		"icon": "res://art/units/homunculus.png",
 	},
 	"paladin_army": {
 		"display_name": "Paladinská armáda",
@@ -510,6 +513,7 @@ const UNIT = {
 		"moves": 1,
 		"can_do": ["raid","heal"],
 		"resilient": true,
+		"icon": "res://art/units/paladin_army.png",
 		"aura": {
 			"mission_success": -0.50,
 			"mission_key": ["raid"],
@@ -525,6 +529,7 @@ const UNIT = {
 		"moves": 2,
 		"can_do": ["purge","dismantle","heal"],
 		"resilient": true,
+		"icon": "res://art/units/inquisitor.png",
 		"aura": {
 			"mission_success": -0.50,
 			"mission_key": ["corrupt", "sabotage"],
@@ -540,6 +545,7 @@ const UNIT = {
 		"moves": 1,
 		"can_do": [],
 		"resilient": false,
+		"icon": "res://art/units/explorer.png",
 		# Průzkumník nemá mise — pohybuje se automaticky
 		# přes scout profil a generuje efekty při vstupu do regionu.
 		"faction": "merchant",
