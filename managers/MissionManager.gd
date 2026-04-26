@@ -268,6 +268,7 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 		var unit_cfg: Dictionary = Balance.UNIT.get(unit.unit_key, {})
 		if unit_cfg.get("resilient", false) and not unit.is_wounded:
 			game_state.unit_manager.wound_unit(unit.id)
+			unit.is_busy = false
 		else:
 			game_state.unit_manager.kill_unit(unit.id)
 
