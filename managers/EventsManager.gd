@@ -197,10 +197,11 @@ func _collect_movement_events(events: Array[EventData]) -> void:
 # ---------------------------
 func _collect_mission_events(events: Array[EventData]) -> void:
 	for result in _collected_player_results:
-		var mission_key: String = String(result.get("mission_key", ""))
-		var region_id:   int    = int(result.get("region_id", -1))
-		var success:     bool   = bool(result.get("success", false))
-		var is_fatal:    bool   = bool(result.get("is_fatal", false))
+		var mission_key:        String = String(result.get("mission_key", ""))
+		var region_id:          int    = int(result.get("region_id", -1))
+		var success:            bool   = bool(result.get("success", false))
+		var is_fatal:           bool   = bool(result.get("is_fatal", false))
+		var is_wounded_outcome: bool   = bool(result.get("is_wounded_outcome", false))
 
 		var region: Region = (
 			game_state.region_manager.get_region(region_id)
@@ -224,6 +225,16 @@ func _collect_mission_events(events: Array[EventData]) -> void:
 			) % [mission_name, region_name]
 			var fx_str: String = _format_mission_result_effects(mission_cfg.get("success", {}))
 			summary = "Mise %s v %s: USPECH — %s" % [mission_key, region_name, fx_str]
+
+		elif is_wounded_outcome:
+			priority  = Balance.EVENT_IMPORTANT
+			narrative = (
+				"Agent provádějící misi '%s' v oblasti %s byl zraněn, Pane. "
+				+ "Mise selhala — agent potřebuje čas na zotavení. "
+				+ "Doporučuji jej dočasně odvolat z aktivní služby."
+			) % [mission_name, region_name]
+			var fx_str: String = _format_mission_result_effects(mission_cfg.get("fail", {}))
+			summary = "Mise %s v %s: NEUSPECH — agent zraněn — %s" % [mission_key, region_name, fx_str]
 
 		elif is_fatal:
 			priority  = Balance.EVENT_CRITICAL
@@ -537,11 +548,13 @@ func _on_mission_resolved(data: Dictionary) -> void:
 			_collected_ai_mission_results.append(data)
 		return
 
-	# Fatální = agent skončil ve stavu "lost"
-	var is_fatal: bool = (not data.get("success", true)) and unit.is_lost
+	# Fatální = agent skončil ve stavu "lost"; wounded = zraněn ale přežil
+	var is_fatal: bool = (not data.get("success", true)) and (unit.is_lost or unit.is_wounded)
+	var is_wounded_outcome: bool = (not data.get("success", true)) and unit.is_wounded and not unit.is_lost
 
 	var entry: Dictionary = data.duplicate()
 	entry["is_fatal"] = is_fatal
+	entry["is_wounded_outcome"] = is_wounded_outcome
 	_collected_player_results.append(entry)
 
 # ---------------------------

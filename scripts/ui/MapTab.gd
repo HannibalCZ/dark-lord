@@ -646,6 +646,7 @@ func _build_mission_menu(region_idx: int = selected_region_idx) -> void:
 		UIHelpers.add_option_with_key(mission_select, label, key)
 
 	mission_select.select(1)
+	mission_select.disabled = false
 	mission_confirm.disabled = false
 	_update_mission_info()
 
