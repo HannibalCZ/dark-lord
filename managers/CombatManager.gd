@@ -148,6 +148,24 @@ func _resolve_region_battle(region_idx: int) -> Dictionary:
 				})
 				game_state.org_manager.remove_org(region.id)
 
+		# zniceni Lairu paladínskou armádou
+		if region.has_lair():
+			var has_paladin := false
+			for u: Unit in (by_faction.get(winner_faction, []) as Array):
+				if not u.is_lost and u.unit_key == "paladin_army":
+					has_paladin = true
+					break
+			if has_paladin:
+				region.lair_id = ""
+				region.lair_control = "neutral"
+				region.lair_influence = 0
+				region.lair_directive = "defensive"
+				region.lair_spawn_counter = 0
+				logs.append({
+					"type": "battle",
+					"text": "Paladínská armáda zničila doupě v regionu %s." % region.name
+				})
+
 	else:
 		# remíza – všichni zničeni
 		for f in factions_sorted:
