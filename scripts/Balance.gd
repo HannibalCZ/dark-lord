@@ -26,6 +26,8 @@ const WIN_CORRUPTION_PHASE = 3       # minimální fáze korupce pro "pod kontro
 const LAIR_INFLUENCE_CONTROL_THRESHOLD = 20
 const LAIR_INFLUENCE_DECAY: int = 2
 const LAIR_INFLUENCE_LOSS_THRESHOLD: int = 0
+const LAIR_DIRECTIVE_DEFENSIVE = "defensive"
+const LAIR_DIRECTIVE_RAIDER = "raider"
 
 # Mise
 const MISSION_CHANCE_MIN = 0.05
@@ -592,6 +594,18 @@ const AI_PROFILE = {
 		},
 		"move_towards_target": true,
 		"action_at_target": "raid"
+	},
+	"lair_raider_active": {
+		"target": {
+			"select": "nearest",
+			"filters": {
+				"region_kind": "civilized",
+				"no_tag": "raid"
+			}
+		},
+		"move_towards_target": true,
+		"action_at_target": "raid",
+		"apply_raid_tag": true
 	},
 	# --- Scout profil — průzkumník obchodníků ---
 	# Nepoužívá standardní target/move_towards_target systém.
