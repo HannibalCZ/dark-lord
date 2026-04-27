@@ -154,3 +154,26 @@ alignment = 0
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 4
+
+[node name="LairDirectiveSection" type="VBoxContainer" parent="."]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="LairDirectiveLabel" type="Label" parent="LairDirectiveSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
+theme_override_font_sizes/font_size = 11
+text = "Direktiva doupěte:"
+
+[node name="LairDirectiveOptions" type="HBoxContainer" parent="LairDirectiveSection"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DefensiveButton" type="Button" parent="LairDirectiveSection/LairDirectiveOptions"]
+layout_mode = 2
+text = "Bránit"
+
+[node name="RaiderButton" type="Button" parent="LairDirectiveSection/LairDirectiveOptions"]
+layout_mode = 2
+text = "Raidit"
