@@ -789,7 +789,7 @@ const LAIR = {
 		"spawn_unit": "orc_band",    # id z Balance.UNIT
 		"spawn_rate": 1,             # zatím klidně "každé kolo 1 jednotka"
 		"max_units": 2,              # maximální počet jednotek z lairu v regionu
-		"faction_id": "orc",         # nebo "neutral_monsters" – podle toho, co máš
+		"faction_id": "lair",        # nebo "neutral_monsters" – podle toho, co máš
 	},
 }
 

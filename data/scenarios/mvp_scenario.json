@@ -24,7 +24,8 @@
 	{ "id": "paladin", "name": "Cech Paladinů", "ai_spawn_unit": "paladin_army", "resources": {} },
 	{ "id": "elf", "name": "Říše elfů", "ai_spawn_unit": "inquisitor", "resources": {} },
 	{ "id": "merchant", "name": "Obchodní města", "ai_spawn_unit": "", "resources": {} },
-	{ "id": "orc", "name": "Orčí tlupa", "ai_spawn_unit": "orc_band", "resources": {} }
+	{ "id": "orc", "name": "Orčí tlupa", "ai_spawn_unit": "orc_band", "resources": {} },
+	{ "id": "lair", "name": "Lair", "resources": {} }
   ],
   "units": [
 	{ "id": 0,   "unit_key": "vampire",      "region_id": 16, "faction_id": "player",  "state": "healthy" },

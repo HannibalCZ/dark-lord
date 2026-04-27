@@ -7,7 +7,7 @@
   },
   "regions": [
 	{ "id": 0,  "name": "Severni divocina",     "owner_faction_id": "orc",      "region_type": "wasteland", "region_kind": "wildlands",      "position": {"x": 60,  "y": 60},   "neighbors": [1, 2] },
-	{ "id": 1,  "name": "Orci tabořiště",        "owner_faction_id": "orc",      "region_type": "wasteland", "region_kind": "wildlands",      "position": {"x": 240, "y": 60},   "neighbors": [0, 2, 3], "lair": { "id": "orc_camp", "control": "orc", "influence": 0 } },
+	{ "id": 1,  "name": "Orci tabořiště",        "owner_faction_id": "orc",      "region_type": "wasteland", "region_kind": "wildlands",      "position": {"x": 240, "y": 60},   "neighbors": [0, 2, 3], "lair": { "id": "orc_camp", "control": "neutral", "influence": 0 } },
 	{ "id": 2,  "name": "Orci pevnost",          "owner_faction_id": "orc",      "region_type": "wasteland", "region_kind": "wildlands",      "position": {"x": 60,  "y": 220},  "neighbors": [0, 1, 3, 6] },
 	{ "id": 3,  "name": "Zlata plan",            "owner_faction_id": "paladin",  "region_type": "plains",     "region_kind": "civilized", "position": {"x": 420, "y": 220},  "neighbors": [1, 2, 4, 7] },
 	{ "id": 4,  "name": "Stražna věž",           "owner_faction_id": "paladin",  "region_type": "plains",     "region_kind": "civilized", "position": {"x": 600, "y": 220},  "neighbors": [3, 5, 7, 8] },
@@ -22,7 +22,7 @@
 	{ "id": 13, "name": "Přistav kupcu",         "owner_faction_id": "merchant", "region_type": "town",       "region_kind": "civilized", "position": {"x": 240, "y": 700},  "neighbors": [10, 14] },
 	{ "id": 14, "name": "Temny hvozd",           "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wildlands",      "position": {"x": 420, "y": 700},  "neighbors": [11, 13, 15, 16] },
 	{ "id": 15, "name": "Zapomenuta zřicenina",  "owner_faction_id": "neutral",  "region_type": "wasteland",       "region_kind": "wildlands",      "position": {"x": 600, "y": 700},  "neighbors": [8, 14, 17] },
-	{ "id": 16, "name": "Stinovy lair",          "owner_faction_id": "player",   "region_type": "wasteland",       "region_kind": "wildlands",      "position": {"x": 420, "y": 860},  "neighbors": [14, 17, 18] },
+	{ "id": 16, "name": "Citadela",          "owner_faction_id": "player",   "region_type": "wasteland",       "region_kind": "wildlands",      "position": {"x": 420, "y": 860},  "neighbors": [14, 17, 18] },
 	{ "id": 17, "name": "Prokleta bažina",       "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wildlands",      "position": {"x": 600, "y": 860},  "neighbors": [15, 16, 18] },
 	{ "id": 18, "name": "Zapomenute hlubiny",    "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wildlands",      "position": {"x": 420, "y": 1020}, "neighbors": [16, 17] }
   ]
