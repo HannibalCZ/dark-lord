@@ -37,6 +37,7 @@ var lair_id: String = ""           # odkaz do Balance.LAIR
 var lair_control: String = "neutral"  # "neutral", "player", "ai"…
 var lair_influence: int = 0        # jednoduchý číselný ukazatel, jak moc je doupě na tvojí straně
 var lair_spawn_counter: int = 0    # počítadlo tahů do dalšího spawnu (resetuje se na 0 po spawnu)
+var lair_directive: String = "defensive"  # "defensive" | "raider"
 
 func _init(_id: int, _name: String, _faction_id: String, _region_type: String):
 	id = _id

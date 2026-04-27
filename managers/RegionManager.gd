@@ -180,6 +180,12 @@ func get_region(id: int) -> Region:
 func get_regions_by_faction(faction_id: String) -> Array[Region]:
 	return regions.filter(func(r): return r.owner_faction_id == faction_id)
 
+func apply_raid_tag(region_id: int) -> void:
+	var region: Region = get_region(region_id)
+	if region == null:
+		return
+	region.add_tag(Balance.TAGS["raid"].duplicate())
+
 func count_player_regions() -> int:
 	return regions.filter(func(r): return r.owner_faction_id == Balance.PLAYER_FACTION).size()
 

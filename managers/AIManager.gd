@@ -78,7 +78,10 @@ func _pick_profile(u: Unit) -> String:
 	if u.unit_key == "orc_band":
 		var lair_region: Region = _find_lair_region_for_unit(u)
 		if lair_region != null and lair_region.lair_control == "player":
-			return "lair_raider"   # lair pod hráčovým vlivem → útočí na civilizované regiony
+			if lair_region.lair_directive == Balance.LAIR_DIRECTIVE_RAIDER:
+				return "lair_raider_active"
+			else:
+				return "defender"
 		else:
 			return "defender"      # lair je neutral/ai → stojí na místě a brání
 
@@ -126,6 +129,14 @@ func _ai_move_towards(u: Unit, target_id: int) -> void:
 			"to_region_id": next_step
 		})
 
+# Vrátí ID nejbližšího civilizovaného regionu bez raid tagu.
+# Deleguje na find_nearest_with_filters s filtry region_kind + no_tag.
+func _find_raid_target(u: Unit) -> int:
+	return game_state.query.regions.find_nearest_with_filters(
+		u.region_id, u.faction_id,
+		{"region_kind": "civilized", "no_tag": "raid"}
+	)
+
 # Spustí misi pokud je jednotka na cílovém regionu a akce projde validací can_do.
 # Pokud action_at_target == null, jednotka stojí — boj proběhne implicitně.
 func _ai_execute_action(u: Unit, target_id: int, prof: Dictionary) -> void:
@@ -147,6 +158,10 @@ func _ai_execute_action(u: Unit, target_id: int, prof: Dictionary) -> void:
 	if not game_state.mission_manager.can_do_mission(u, region, action_key):
 		return
 	game_state.mission_manager.plan_ai_mission(u, region, action_key)
+
+	# apply_raid_tag: po naplánování mise označí region jako vypleněný (lair_raider_active)
+	if prof.get("apply_raid_tag", false):
+		game_state.region_manager.apply_raid_tag(target_id)
 
 # --- Scout (průzkumník) pohybová a akční logika ---
 

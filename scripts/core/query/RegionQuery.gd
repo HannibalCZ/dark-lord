@@ -207,6 +207,13 @@ func _matches_filters(region_id: int, actor_faction_id: String, filters: Diction
 		if not r.has_lair():
 			return false
 
+	# no_tag: region NESMÍ mít tag se zadaným ID
+	if filters.has("no_tag"):
+		var forbidden_tag: String = String(filters["no_tag"])
+		for tag in r.tags:
+			if tag.get("id", "") == forbidden_tag:
+				return false
+
 	return true
 
 # Vrací region s nejvyšší korupcí hráčské frakce, který projde filters.
