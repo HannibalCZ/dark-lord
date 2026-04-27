@@ -171,11 +171,10 @@ func _apply_region(e: Dictionary, region: Region, source_faction_id: String, gs:
 		region.add_secret_progress(delta_secret)
 		_check_secret_completion(region, source_faction_id, gs, logs)
 
-	# Lair influence
+	# Lair influence — kontrola gain/loss probíhá v LairManager.process_end_of_turn()
 	if e.has("lair_influence"):
 		var delta_influence := int(e["lair_influence"])
 		region.add_influence(delta_influence)
-		_check_lair_influence(region, source_faction_id, gs, logs)
 
 
 func _apply_tags(e: Dictionary, region: Region, logs: Array[Dictionary]) -> void:
@@ -228,17 +227,6 @@ func _check_secret_completion(region: Region, source_faction_id: String, gs: Gam
 
 		region.secret_state = "resolved"
 		logs.append({"type":"secret", "text":"🗝️ Tajemství odhaleno v regionu %s" % str(region.id)})
-
-func _check_lair_influence(region: Region, source_faction_id: String, gs: GameStateSingleton, logs: Array[Dictionary]) -> void:
-	if not region.has_lair():
-		return
-
-	if region.lair_influence >= Balance.LAIR_INFLUENCE_CONTROL_THRESHOLD and region.lair_control != Balance.PLAYER_FACTION:
-		region.lair_control = Balance.PLAYER_FACTION
-		logs.append({"type":"lair", "text":"🕳️ Doupě v regionu %s přešlo pod vliv Temného pána." % str(region.id)})
-	elif region.lair_influence <= Balance.LAIR_INFLUENCE_LOSS_THRESHOLD and region.lair_control == Balance.PLAYER_FACTION:
-		region.lair_control = "neutral"
-		logs.append({"type":"lair", "text":"🕳️ Vliv nad doupětem v regionu %s byl ztracen." % str(region.id)})
 
 # -----------------------
 # Field presence helpers

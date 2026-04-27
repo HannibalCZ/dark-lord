@@ -23,6 +23,7 @@ signal game_ended(result: Dictionary) # { ok:bool, outcome:"win"/"lose", reason:
 @onready var heat_tracker: HeatAwarenessTracker = HeatAwarenessTracker.new()
 @onready var economy_tracker: EconomyTracker = EconomyTracker.new()
 @onready var reputation_manager: ReputationManager = ReputationManager.new()
+@onready var lair_manager: LairManager = LairManager.new()
 
 var rng := RandomNumberGenerator.new()
 var turn:int = 1
@@ -59,6 +60,7 @@ func _ready() -> void:
 	org_manager.game_state         = self
 	progression_manager.game_state = self
 	reputation_manager.game_state  = self
+	lair_manager.game_state        = self
 	events_manager.init(self)
 
 	query = GameQuery.new(self)
@@ -351,7 +353,7 @@ func advance_turn() -> void:
 	# =========================
 	# C) World tick (lairs/budovy/ekonomika/cooldowny/dooms)
 	# =========================
-	process_lairs_end_of_turn()
+	lair_manager.process_end_of_turn()
 	# 1) efekty budov
 	entries += building_manager.apply_end_of_turn_effects()
 
@@ -638,47 +640,6 @@ func _process_domain_events(events: Array) -> void:
 	for p in unit_moved_payloads:
 		emit_signal("unit_moved", p["unit_id"], p["from"], p["to"])
 
-func process_lairs_end_of_turn() -> void:
-	for region in query.regions.get_regions_with_lair():
-
-		if region.lair_control == Balance.PLAYER_FACTION:
-			var decay_ctx := EffectContext.make(self, region, Balance.PLAYER_FACTION)
-			decay_ctx.source_label = "Přirozený útlum vlivu v doupěti"
-			var decay_logs := effects_system.apply({"lair_influence": -Balance.LAIR_INFLUENCE_DECAY}, decay_ctx)
-			for le in decay_logs:
-				_log(le)
-
-		var lair_conf: Dictionary = Balance.LAIR.get(region.lair_id, {})
-		if lair_conf.is_empty():
-			continue
-
-		var spawn_unit_id: String = lair_conf.get("spawn_unit", "")
-		if spawn_unit_id == "":
-			continue
-
-		var max_units: int = int(lair_conf.get("max_units", 0))
-		if max_units <= 0:
-			continue
-
-		var lair_faction_id: String = String(lair_conf.get("faction_id", "neutral"))
-
-		# Počítáme živé jednotky frakce lairu globálně (přes UnitQuery cache)
-		var count_alive: int = query.units.active_count_for_faction(lair_faction_id)
-
-		if count_alive >= max_units:
-			continue
-
-		# spawn_rate: spawni jen každých N tahů
-		var spawn_rate: int = int(lair_conf.get("spawn_rate", 1))
-		region.lair_spawn_counter += 1
-		if region.lair_spawn_counter < spawn_rate:
-			continue
-		region.lair_spawn_counter = 0
-
-		var spawn_res := unit_manager.spawn_unit_free(lair_faction_id, spawn_unit_id, region.id)
-		for le in spawn_res.get("logs"):
-			_log(le)
-		_process_domain_events(spawn_res.get("events"))
 
 func process_ai_spawning() -> void:
 	for faction_id in Balance.AI_SPAWN:
