@@ -233,10 +233,12 @@ func _check_lair_influence(region: Region, source_faction_id: String, gs: GameSt
 	if not region.has_lair():
 		return
 
-	# MVP rule (your original): influence >= 20 -> player controls lair
 	if region.lair_influence >= Balance.LAIR_INFLUENCE_CONTROL_THRESHOLD and region.lair_control != Balance.PLAYER_FACTION:
 		region.lair_control = Balance.PLAYER_FACTION
 		logs.append({"type":"lair", "text":"🕳️ Doupě v regionu %s přešlo pod vliv Temného pána." % str(region.id)})
+	elif region.lair_influence <= Balance.LAIR_INFLUENCE_LOSS_THRESHOLD and region.lair_control == Balance.PLAYER_FACTION:
+		region.lair_control = "neutral"
+		logs.append({"type":"lair", "text":"🕳️ Vliv nad doupětem v regionu %s byl ztracen." % str(region.id)})
 
 # -----------------------
 # Field presence helpers

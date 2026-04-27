@@ -24,6 +24,8 @@ const WIN_CORRUPTION_PHASE = 3       # minimální fáze korupce pro "pod kontro
 
 # Doupata
 const LAIR_INFLUENCE_CONTROL_THRESHOLD = 20
+const LAIR_INFLUENCE_DECAY: int = 2
+const LAIR_INFLUENCE_LOSS_THRESHOLD: int = 0
 
 # Mise
 const MISSION_CHANCE_MIN = 0.05
@@ -211,25 +213,6 @@ const MISSION = {
 		"ui_icon": "res://ui/icons/missions/explore.png",
 		"ui_order": 5
 	},
-	"bribe": {
-		"id": "bribe",
-		"display_name": "Uplatit doupě",
-		"description": "Zaplať zlato obyvatelům doupěte a získej jejich přízeň.",
-		"base_chance": 0.80,
-		"requirements": {
-			"requires_lair": true
-		},
-		"cost": { "ap": 1, "mana": 0, "gold": 10 },
-		"success": {
-			"lair_influence": 5,      # nový typ efektu – ovlivní region.lair_influence
-		},
-		"fail": {
-			"heat": 3,
-		},
-		"ui_icon": "res://ui/icons/missions/bribe.png",
-		"ui_order": 6
-	},
-
 	"manipulate": {
 		"id": "manipulate",
 		"display_name": "Zmanipulovat doupě",
@@ -489,7 +472,7 @@ const UNIT = {
 		"recruit_cost": { "mana": 15 },
 		"upkeep_cost": { "mana": 2 },
 		"moves": 2,
-		"can_do": ["corrupt","sabotage","explore","bribe","manipulate","inspect","dismantle","eliminate","heal"],
+		"can_do": ["corrupt","sabotage","explore","manipulate","inspect","dismantle","eliminate","heal"],
 		"resilient": false,
 		"icon": "res://art/units/vampire.png",
 	},
@@ -706,8 +689,8 @@ const TAGS = {
 	"raid": {
 		"id": "raid",
 		"display_name": "Vypleněno",
-		"mul": { "gold_income": 0 },
-		"duration": 2,
+		"mul": { "gold_income": 0.5 },
+		"duration": 3,
 		"ticks_down": true,
 		"visible": true,
 		"source": "mission:raid",
