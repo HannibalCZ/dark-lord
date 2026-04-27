@@ -28,7 +28,7 @@
   ],
   "units": [
 	{ "id": 0,   "unit_key": "vampire",      "region_id": 16, "faction_id": "player",  "state": "healthy" },
-	{ "id": 1,   "unit_key": "homunculus",   "region_id": 16, "faction_id": "player",  "state": "healthy" },
+	{ "id": 1,   "unit_key": "agent",   "region_id": 16, "faction_id": "player",  "state": "healthy" },
 
 	{ "id": 100, "unit_key": "paladin_army", "region_id": 7,  "faction_id": "paladin", "state": "healthy" },
 	{ "id": 101, "unit_key": "inquisitor",   "region_id": 5,  "faction_id": "elf",     "state": "healthy" }

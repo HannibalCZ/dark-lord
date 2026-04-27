@@ -67,12 +67,12 @@ func _refresh() -> void:
 	container.add_child(vampire_btn)
 
 	# Tlačítko – Homunkulus
-	var hom_cost: int = Balance.UNIT.get("homunculus", {}).get("recruit_cost", {}).get("mana", 0)
+	var hom_cost: int = Balance.UNIT.get("homunculus", {}).get("recruit_cost", {}).get("gold", 0)
 	var homunculus_btn := Button.new()
-	homunculus_btn.text = "Verbuj Homuncula (mana: %d)" % hom_cost
-	var can_afford_hom: bool = fac.get_resource("mana") >= hom_cost
+	homunculus_btn.text = "Verbuj Agenta (gold: %d)" % hom_cost
+	var can_afford_hom: bool = fac.get_resource("gold") >= hom_cost
 	homunculus_btn.disabled = at_limit or not can_afford_hom
 	if homunculus_btn.disabled:
 		homunculus_btn.tooltip_text = "Dosazen limit jednotek." if at_limit else "Nedostatek many (potreba: %d)." % hom_cost
-	homunculus_btn.pressed.connect(func(): GameState.exec(GameState.unit_manager.recruit_unit(Balance.PLAYER_FACTION, "homunculus", spawn_region)))
+	homunculus_btn.pressed.connect(func(): GameState.exec(GameState.unit_manager.recruit_unit(Balance.PLAYER_FACTION, "agent", spawn_region)))
 	container.add_child(homunculus_btn)

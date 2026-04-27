@@ -140,7 +140,11 @@ func _compute_mission_success(mission_key: String, unit: Unit, region: Region) -
 	var player_faction = game_state.faction_manager.get_faction(Balance.PLAYER_FACTION)
 	if player_faction != null and unit.faction_id == Balance.PLAYER_FACTION:
 		region_delta += player_faction.modifiers.get("mission_success", 0.0)
-
+		
+	# 3b) odecist malus za zranenou jednotku
+	if unit.is_wounded:
+		unit_delta -= Balance.WOUNDED_MISSION_PENALTY
+	
 	# 4) spočítat výslednou šanci
 	var total_chance: float = base + region_delta + unit_delta
 	total_chance = clamp(total_chance, Balance.MISSION_CHANCE_MIN, Balance.MISSION_CHANCE_MAX)
@@ -185,8 +189,6 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 
 	# 1) Získej šanci
 	var success_chance: float = get_mission_success_chance(key, unit, region)
-	if unit.is_wounded:
-		success_chance -= Balance.WOUNDED_MISSION_PENALTY
 
 	# 2) Roll
 	var roll := game_state.rng.randf()

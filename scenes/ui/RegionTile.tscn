@@ -63,11 +63,16 @@ grow_horizontal = 0
 texture = ExtResource("2_otno6")
 
 [node name="PlayerIcon" type="TextureRect" parent="Overlay"]
+custom_minimum_size = Vector2(60, 60)
 layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
-grow_vertical = 0
+offset_top = -80.0
+offset_bottom = -80.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 4
 
 [node name="PlayerCount" type="Label" parent="Overlay"]
 modulate = Color(0.94902, 0.796078, 0, 1)
@@ -82,16 +87,16 @@ horizontal_alignment = 1
 vertical_alignment = 2
 
 [node name="EnemyIcon" type="TextureRect" parent="Overlay"]
+custom_minimum_size = Vector2(60, 60)
 layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -40.0
-offset_top = -40.0
-grow_horizontal = 0
-grow_vertical = 0
+offset_top = -80.0
+offset_bottom = -80.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 5
 
 [node name="EnemyCount" type="Label" parent="Overlay"]
 layout_mode = 1
