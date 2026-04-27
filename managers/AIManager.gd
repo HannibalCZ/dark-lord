@@ -76,7 +76,7 @@ func _pick_profile(u: Unit) -> String:
 			return "investigator_local"  # pouze elfí provincie
 
 	if u.unit_key == "orc_band":
-		var lair_region: Region = _find_lair_region_for_unit(u)
+		var lair_region: Region = game_state.lair_manager.get_lair_region_for_faction(u.faction_id)
 		if lair_region != null and lair_region.lair_control == "player":
 			if lair_region.lair_directive == Balance.LAIR_DIRECTIVE_RAIDER:
 				return "lair_raider_active"
@@ -161,7 +161,7 @@ func _ai_execute_action(u: Unit, target_id: int, prof: Dictionary) -> void:
 
 	# apply_raid_tag: po naplánování mise označí region jako vypleněný (lair_raider_active)
 	if prof.get("apply_raid_tag", false):
-		game_state.region_manager.apply_raid_tag(target_id)
+		game_state.lair_manager.apply_raid_tag(target_id)
 
 # --- Scout (průzkumník) pohybová a akční logika ---
 
@@ -400,13 +400,3 @@ func _ai_inquisitor_execute_action(u: Unit) -> void:
 	if game_state.mission_manager.can_do_mission(u, region, "purge"):
 		game_state.mission_manager.plan_ai_mission(u, region, "purge")
 
-# Najde region s lairem jehož faction_id odpovídá frakci jednotky.
-# Vrátí první takový region nebo null — používá se pro určení stavu lairu orc_band.
-func _find_lair_region_for_unit(u: Unit) -> Region:
-	for region in game_state.query.regions.get_regions_with_lair():
-		var lair_conf: Dictionary = Balance.LAIR.get(region.lair_id, {})
-		if lair_conf.is_empty():
-			continue
-		if String(lair_conf.get("faction_id", "")) == u.faction_id:
-			return region
-	return null
