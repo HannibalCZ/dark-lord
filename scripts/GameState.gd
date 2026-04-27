@@ -641,6 +641,13 @@ func _process_domain_events(events: Array) -> void:
 func process_lairs_end_of_turn() -> void:
 	for region in query.regions.get_regions_with_lair():
 
+		if region.lair_control == Balance.PLAYER_FACTION:
+			var decay_ctx := EffectContext.make(self, region, Balance.PLAYER_FACTION)
+			decay_ctx.source_label = "Přirozený útlum vlivu v doupěti"
+			var decay_logs := effects_system.apply({"lair_influence": -Balance.LAIR_INFLUENCE_DECAY}, decay_ctx)
+			for le in decay_logs:
+				_log(le)
+
 		var lair_conf: Dictionary = Balance.LAIR.get(region.lair_id, {})
 		if lair_conf.is_empty():
 			continue
