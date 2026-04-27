@@ -23,6 +23,12 @@ extends VBoxContainer
 @onready var secrets_header: Button          = $SecretsSection/VBoxContainer/SecretsHeader
 @onready var secrets_content: VBoxContainer  = $SecretsSection/VBoxContainer/SecretsContent
 
+@onready var lair_directive_section: VBoxContainer = $LairDirectiveSection
+@onready var defensive_button: Button              = $LairDirectiveSection/LairDirectiveOptions/DefensiveButton
+@onready var raider_button: Button                 = $LairDirectiveSection/LairDirectiveOptions/RaiderButton
+
+var _region: Region = null
+
 func _ready() -> void:
 	var bg_stat := StyleBoxFlat.new()
 	bg_stat.bg_color = Color("#1e1e2e")
@@ -59,6 +65,8 @@ func _ready() -> void:
 	units_header.pressed.connect(func(): _toggle_section(units_content, units_header))
 	tags_header.pressed.connect(func(): _toggle_section(tags_content, tags_header))
 	secrets_header.pressed.connect(func(): _toggle_section(secrets_content, secrets_header))
+	defensive_button.pressed.connect(_on_defensive_pressed)
+	raider_button.pressed.connect(_on_raider_pressed)
 
 func show_for_region(region_id: int) -> void:
 	if region_id == -1:
@@ -68,10 +76,12 @@ func show_for_region(region_id: int) -> void:
 	var region: Region = GameState.query.regions.get_by_id(region_id)
 	if region == null:
 		return
+	_region = region
 	_update_region_section(region)
 	_update_units_section(region_id)
 	_update_tags_section(region_id)
 	_update_secrets_section(region_id)
+	_refresh_lair_directive(region)
 
 # --------------------------
 # REGION SECTION
@@ -243,6 +253,30 @@ func _update_secrets_section(region_id: int) -> void:
 		label.text = "%s: %d/%d" % [sname, progress, difficulty]
 	label.add_theme_font_size_override("font_size", 12)
 	secrets_content.add_child(label)
+
+# --------------------------
+# LAIR DIRECTIVE
+
+func _refresh_lair_directive(region: Region) -> void:
+	if not region.has_lair() or region.lair_control != "player":
+		lair_directive_section.visible = false
+		return
+	lair_directive_section.visible = true
+	var is_defensive: bool = region.lair_directive == Balance.LAIR_DIRECTIVE_DEFENSIVE
+	defensive_button.disabled = is_defensive
+	raider_button.disabled = not is_defensive
+
+func _on_defensive_pressed() -> void:
+	if _region == null:
+		return
+	_region.lair_directive = Balance.LAIR_DIRECTIVE_DEFENSIVE
+	_refresh_lair_directive(_region)
+
+func _on_raider_pressed() -> void:
+	if _region == null:
+		return
+	_region.lair_directive = Balance.LAIR_DIRECTIVE_RAIDER
+	_refresh_lair_directive(_region)
 
 # --------------------------
 # TOGGLE HELPER
