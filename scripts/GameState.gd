@@ -536,7 +536,7 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 	elif eff_new >= Balance.HEAT_STAGE_3:
 		paladin_faction.current_behavior = Faction.Behavior.AGGRESSIVE
 	elif eff_new >= Balance.HEAT_STAGE_2:
-		paladin_faction.current_behavior = Faction.Behavior.AGGRESSIVE
+		paladin_faction.current_behavior = Faction.Behavior.ACTING
 	elif eff_new >= Balance.HEAT_STAGE_1:
 		paladin_faction.current_behavior = Faction.Behavior.PATROLLING
 	else:

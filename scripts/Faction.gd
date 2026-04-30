@@ -4,8 +4,9 @@ class_name Faction
 enum Behavior {
 	PASSIVE,      # Heat < 25  — výchozí stav
 	PATROLLING,   # Heat >= 25 — hlídkování na vlastním území
-	AGGRESSIVE,   # Heat >= 50 — útok na lairy
-	COORDINATED   # Heat >= 75 — koordinovaný útok
+	ACTING,   # Heat >= 50 — útok na lairy
+	AGGRESSIVE,   # Heat >= 75 — pripravi se na hranice
+	COORDINATED   # Heat >= 100 — koordinovaný útok
 }
 
 var current_behavior: Behavior = Behavior.PASSIVE

@@ -95,6 +95,8 @@ func _pick_profile(u: Unit) -> String:
 			return "final_assault"
 		Faction.Behavior.AGGRESSIVE:
 			return "paladin_threat"
+		Faction.Behavior.ACTING:
+			return "lair_hunter"
 		Faction.Behavior.PATROLLING:
 			return "defender"
 		_:
@@ -399,4 +401,3 @@ func _ai_inquisitor_execute_action(u: Unit) -> void:
 	# Fallback: purge korupce
 	if game_state.mission_manager.can_do_mission(u, region, "purge"):
 		game_state.mission_manager.plan_ai_mission(u, region, "purge")
-
