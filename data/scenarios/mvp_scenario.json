@@ -16,16 +16,17 @@
 	  "id": "player",
 	  "name": "Temný Pán",
 	  "is_player": true,
+	  "alignment": "neutral",
 	  "unit_limit": 3,
 	  "dark_actions_max": 1,
 	  "dark_actions_left": 1,
 	  "resources": { "gold": 30, "mana": 10, "research":30 }
 	},
-	{ "id": "paladin", "name": "Cech Paladinů", "ai_spawn_unit": "paladin_army", "resources": {} },
-	{ "id": "elf", "name": "Říše elfů", "ai_spawn_unit": "inquisitor", "resources": {} },
-	{ "id": "merchant", "name": "Obchodní města", "ai_spawn_unit": "", "resources": {} },
-	{ "id": "orc", "name": "Orčí tlupa", "ai_spawn_unit": "orc_band", "resources": {} },
-	{ "id": "lair", "name": "Lair", "resources": {} }
+	{ "id": "paladin", "name": "Cech Paladinů", "alignment": "good", "ai_spawn_unit": "paladin_army", "resources": {} },
+	{ "id": "elf", "name": "Říše elfů", "alignment": "good", "ai_spawn_unit": "inquisitor", "resources": {} },
+	{ "id": "merchant", "name": "Obchodní města", "alignment": "good", "ai_spawn_unit": "", "resources": {} },
+	{ "id": "orc", "name": "Orčí tlupa", "alignment": "neutral", "ai_spawn_unit": "orc_band", "resources": {} },
+	{ "id": "lair", "name": "Lair", "alignment": "neutral", "resources": {} }
   ],
   "units": [
 	{ "id": 0,   "unit_key": "vampire",      "region_id": 16, "faction_id": "player",  "state": "healthy" },

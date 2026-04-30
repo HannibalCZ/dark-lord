@@ -174,6 +174,13 @@ func _matches_filters(region_id: int, actor_faction_id: String, filters: Diction
 				return false
 			if r.owner_faction_id == actor_faction_id:
 				return false
+		"good_faction":
+			var owner_fac: Faction = game.faction_manager.get_faction(r.owner_faction_id)
+			if owner_fac == null or owner_fac.alignment != "good":
+				return false
+		"player":
+			if r.owner_faction_id != Balance.PLAYER_FACTION:
+				return false
 		_:
 			return false
 

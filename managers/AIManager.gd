@@ -92,9 +92,9 @@ func _pick_profile(u: Unit) -> String:
 
 	match faction.current_behavior:
 		Faction.Behavior.COORDINATED:
-			return "raider"
+			return "final_assault"
 		Faction.Behavior.AGGRESSIVE:
-			return "lair_hunter"
+			return "paladin_threat"
 		Faction.Behavior.PATROLLING:
 			return "defender"
 		_:

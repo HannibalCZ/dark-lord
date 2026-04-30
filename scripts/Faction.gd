@@ -13,6 +13,7 @@ var current_behavior: Behavior = Behavior.PASSIVE
 @export var id:String
 @export var name:String
 @export var is_player:bool = false
+var alignment: String = "neutral"
 
 var resources := {
 	"gold": 0.0,
