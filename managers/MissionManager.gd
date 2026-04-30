@@ -141,8 +141,8 @@ func _compute_mission_success(mission_key: String, unit: Unit, region: Region) -
 	if player_faction != null and unit.faction_id == Balance.PLAYER_FACTION:
 		region_delta += player_faction.modifiers.get("mission_success", 0.0)
 		
-	# 3b) odecist malus za zranenou jednotku
-	if unit.is_wounded:
+	# 3b) odecist malus za zranenou jednotku (preskoc u garantovanych misí)
+	if unit.is_wounded and base < 1.0:
 		unit_delta -= Balance.WOUNDED_MISSION_PENALTY
 	
 	# 4) spočítat výslednou šanci

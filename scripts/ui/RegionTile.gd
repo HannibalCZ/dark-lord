@@ -250,12 +250,15 @@ func update_units_display(units_here: Array, enemy_here: Array) -> void:
 	# počty pro AI
 	var enemy_armies := 0
 	var enemy_agents := 0
+	var has_wounded_enemy: bool = false
 
 	for u in enemy_here:
 		if u.type == "army":
 			enemy_armies += 1
 		elif u.type == "agent":
 			enemy_agents += 1
+		if u.is_wounded:
+			has_wounded_enemy = true
 
 	# ----------------------------------------------------
 	# Player units
@@ -283,6 +286,7 @@ func update_units_display(units_here: Array, enemy_here: Array) -> void:
 	if e_total > 0:
 		var tex := _select_icon(enemy_here)
 		enemy_icon.texture = tex
+		enemy_icon.modulate = Color(1.0, 0.35, 0.35, 1.0) if has_wounded_enemy else Color.WHITE
 		enemy_icon.visible = true
 
 		if e_total > 1:

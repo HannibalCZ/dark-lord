@@ -34,7 +34,7 @@ const MISSION_CHANCE_MIN = 0.05
 const MISSION_CHANCE_MAX = 0.95
 
 # Zranění
-const WOUNDED_MISSION_PENALTY: int = 25
+const WOUNDED_MISSION_PENALTY: float = 0.25
 const WOUNDED_POWER_PENALTY: int = 2
 
 const CORRUPTION_PHASE_NAMES: Dictionary = {

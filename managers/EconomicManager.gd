@@ -201,7 +201,7 @@ func _record_player_economy_breakdown(fac: Faction) -> void:
 		if og == 0 and om == 0:
 			continue
 		var org_type: String = org.get("org_type", "")
-		var org_name: String = Balance.ORG.get(org_type, {}).get("name", org_type)
+		var org_name: String = Balance.ORG.get(org_type, {}).get("display_name", org_type)
 		tracker.record("Org: %s" % org_name, og, om)
 
 	# Upkeep jednotek
