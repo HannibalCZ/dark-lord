@@ -552,14 +552,6 @@ const AI_PROFILE = {
 		"action_at_target": null
 		# defender stojí na vlastním území a bojuje implicitně
 	},
-	"raider": {
-		"target": {
-			"select": "nearest",
-			"filters": { "region_kind": "civilized", "owner_rule": "not_self" }
-		},
-		"move_towards_target": true,
-		"action_at_target": "raid"
-	},
 	"lair_hunter": {
 		"target": {
 			"select": "nearest",
@@ -606,6 +598,24 @@ const AI_PROFILE = {
 		"move_towards_target": true,
 		"action_at_target": "raid",
 		"apply_raid_tag": true
+	},
+	"paladin_threat": {
+		# Heat 85 — přesun do území frakcí dobra blízko hráče
+		"target": {
+			"select": "nearest",
+			"filters": { "owner_rule": "good_faction" }
+		},
+		"move_towards_target": true,
+		"action_at_target": null
+	},
+	"final_assault": {
+		# Heat 100 — přímý útok na hráčovu základnu
+		"target": {
+			"select": "nearest",
+			"filters": { "owner_rule": "player" }
+		},
+		"move_towards_target": true,
+		"action_at_target": null
 	},
 	# --- Scout profil — průzkumník obchodníků ---
 	# Nepoužívá standardní target/move_towards_target systém.

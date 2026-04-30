@@ -168,6 +168,8 @@ func load_scenario(path: String) -> void:
 		fac.name = String(fd.get("name", fid))
 		fac.is_player = bool(fd.get("is_player", false))
 
+		fac.alignment = String(fd.get("alignment", "neutral"))
+
 		if fd.has("ai_spawn_unit"):
 			fac.ai_spawn_unit = String(fd.get("ai_spawn_unit", ""))
 
@@ -528,8 +530,11 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 		})
 
 	# --- BEHAVIOR ENUM — zalozeno na efektivnim heat vcetne rep_mod ---
-	if eff_new >= Balance.HEAT_STAGE_3:
+	# HEAT_MAX (100) musí být před STAGE_3 (85) — obě podmínky by jinak platily současně
+	if eff_new >= Balance.HEAT_MAX:
 		paladin_faction.current_behavior = Faction.Behavior.COORDINATED
+	elif eff_new >= Balance.HEAT_STAGE_3:
+		paladin_faction.current_behavior = Faction.Behavior.AGGRESSIVE
 	elif eff_new >= Balance.HEAT_STAGE_2:
 		paladin_faction.current_behavior = Faction.Behavior.AGGRESSIVE
 	elif eff_new >= Balance.HEAT_STAGE_1:
