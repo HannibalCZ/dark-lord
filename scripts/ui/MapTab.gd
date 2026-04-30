@@ -30,7 +30,6 @@ extends Control
 @onready var org_owner: Label             = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/OrgHeader/OrgOwner
 @onready var doctrine_picker: OptionButton = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/DoctrinePicker
 @onready var doctrine_effects: Label      = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/DoctrineEffects
-@onready var destroy_button: Button       = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/DestroyButton
 @onready var org_loyalty_label: Label     = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/OrgLoyaltyLabel
 
 var org_visibility_label: Label = null   # vytvoren dynamicky v _ready()
@@ -87,7 +86,6 @@ func _ready() -> void:
 
 	# signály — org sekce
 	doctrine_picker.item_selected.connect(_on_doctrine_picker_item_selected)
-	destroy_button.pressed.connect(_on_destroy_button_pressed)
 
 	GameState.connect("unit_moved", Callable(self, "_on_unit_moved"))
 	GameState.connect("turn_resolved", Callable(self, "_on_turn_resolved"))
@@ -933,7 +931,6 @@ func _update_org_section(region_id: int) -> void:
 
 	if data["is_player_org"]:
 		org_owner.visible = false
-		destroy_button.visible = false
 		doctrine_picker.visible = true
 		doctrine_effects.visible = true
 		_populate_doctrine_picker(region_id)
@@ -942,7 +939,6 @@ func _update_org_section(region_id: int) -> void:
 		org_owner.text = _format_owner(data["owner"])
 		doctrine_picker.visible = false
 		doctrine_effects.visible = false
-		destroy_button.visible = true
 
 	# Loajalita — cti primo z org Dictionary, ne z display_data
 	var org: Dictionary = GameState.org_manager.get_org_in_region(region_id)
@@ -1074,14 +1070,6 @@ func _on_doctrine_picker_item_selected(index: int) -> void:
 		return  # žádná změna
 	GameState.org_manager.set_doctrine(selected_region_idx, new_key)
 	_update_doctrine_effects(selected_region_idx)
-
-
-func _on_destroy_button_pressed() -> void:
-	var uid: int = _selected_unit_id
-	if uid == -1 or selected_region_idx < 0:
-		GameState._log({"type": "warn", "text": "Vyberte jednotku schopnou provest purge."})
-		return
-	GameState.exec(GameState.commands.plan_mission(uid, selected_region_idx, "purge"))
 
 
 func _on_org_changed(_ignored) -> void:
