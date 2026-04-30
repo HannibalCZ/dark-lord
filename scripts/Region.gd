@@ -23,7 +23,7 @@ var corruption_levels : Dictionary = {}   # { "darklord": 40, "elves": 15 }
 
 # --- TYP REGIONU PRO MECHANIKY ---
 # "civilized" – města/pláně/hory pod kontrolou frakcí (korupce, raid…)
-# "wildlands" – divočina vhodná pro secrets, lairy, dominion
+# "wilderness" – divočina vhodná pro secrets, lairy, dominion
 var region_kind: String = "civilized"
 
 # --- SECRET MECHANIKA ---
@@ -59,7 +59,7 @@ func _init(_id: int, _name: String, _faction_id: String, _region_type: String):
 		"town", "plains", "mountains":
 			region_kind = "civilized"
 		"forest", "wasteland":
-			region_kind = "wildlands"
+			region_kind = "wilderness"
 		_:
 			region_kind = "civilized" # fallback
 

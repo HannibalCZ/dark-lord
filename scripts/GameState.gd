@@ -884,10 +884,10 @@ func _place_procedural_secrets() -> void:
 		proc_rng.seed = Balance.PROCEDURAL_SEED
 
 	# Získej způsobilé regiony
-	# Způsobilé: region_kind == "wildlands", mimo startovní region, bez secret_id z JSON
+	# Způsobilé: region_kind == "wilderness", mimo startovní region, bez secret_id z JSON
 	var eligible: Array[Region] = []
 	for region in region_manager.regions:
-		if region.region_kind != "wildlands":
+		if region.region_kind != "wilderness":
 			continue
 		if region.id == player_start_region_id:
 			continue
