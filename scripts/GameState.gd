@@ -383,12 +383,12 @@ func advance_turn() -> void:
 	# =========================
 	# D) Souboje (po world ticku)
 	# =========================
+	_process_capture_step()
+
 	var combat_res: Dictionary = combat_manager.resolve_all_combats()
 	for e in combat_res.get("logs", []):
 		entries.append(e)
 	_process_domain_events(combat_res.get("events", []))
-
-	_process_capture_step()
 
 	# =========================
 	# E) End-of-turn cleanup
