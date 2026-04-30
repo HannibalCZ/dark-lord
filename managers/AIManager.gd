@@ -184,7 +184,7 @@ func _ai_move_scout(u: Unit) -> void:
 # Vybírá sousední region pro průzkumníka podle priorit:
 # 0) Soused s decoy tagem (nejvyšší — přebije vše ostatní)
 # 1) Soused se skrytým tajemstvím (has_secret() a secret_known == false)
-# 2) Nenavštívený "wildlands" soused
+# 2) Nenavštívený "wilderness" soused
 # 3) Libovolný nenavštívený soused
 # 4) Náhodný soused (všechny navštíveny)
 func _scout_pick_next_region(u: Unit) -> int:
@@ -208,7 +208,7 @@ func _scout_pick_next_region(u: Unit) -> int:
 		if r.has_secret() and not r.secret_known:
 			return nb_id
 
-	# Priorita 2: nenavštívený wildlands soused
+	# Priorita 2: nenavštívený wilderness soused
 	var unvisited_wild: Array[int] = []
 	for nb_id: int in neighbors:
 		if nb_id in u.visited_regions:
@@ -216,7 +216,7 @@ func _scout_pick_next_region(u: Unit) -> int:
 		var r: Region = game_state.region_manager.get_region(nb_id)
 		if r == null:
 			continue
-		if r.region_kind == "wildlands":
+		if r.region_kind == "wilderness":
 			unvisited_wild.append(nb_id)
 	if not unvisited_wild.is_empty():
 		return unvisited_wild[game_state.rng.randi_range(0, unvisited_wild.size() - 1)]

@@ -7,7 +7,7 @@ var game: GameStateSingleton
 var by_id: Array[Region] = []                 # indexované přímo region_id (rychlé)
 var by_owner: Dictionary = {}                 # faction_id -> Array[Region]
 var by_controller: Dictionary = {}            # faction_id -> Array[Region]
-var by_kind: Dictionary = {}                  # "civilized"/"wildlands" -> Array[Region]
+var by_kind: Dictionary = {}                  # "civilized"/"wilderness" -> Array[Region]
 
 func _init(gs: GameStateSingleton) -> void:
 	game = gs

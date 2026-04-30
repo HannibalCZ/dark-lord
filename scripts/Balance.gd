@@ -192,7 +192,7 @@ const MISSION = {
 		"description": "Tvůj agent postupně odhaluje tajemství skryté v divočině.",
 		"base_chance": 0.80,
 		"requirements": {
-			"region_kind_in": ["wildlands"],
+			"region_kind_in": ["wilderness"],
 			"requires_secret": true,
 			"secret_known": true,
 			"secret_state_not_in": ["resolved"]
@@ -1304,7 +1304,7 @@ const PROCEDURAL_SEED: int = 12345
 
 # Hustota tajemstvi — jaka cast zpusobilych
 # regionu dostane tajemstvi.
-# Zpusobile regiony: region_kind == "wildlands"
+# Zpusobile regiony: region_kind == "wilderness"
 # mimo startovni region hrace.
 const PROCEDURAL_SECRET_DENSITY_MIN: float = 0.25
 const PROCEDURAL_SECRET_DENSITY_MAX: float = 0.33
