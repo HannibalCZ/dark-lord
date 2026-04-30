@@ -151,12 +151,6 @@ func apply_post_move_effects(unit_id:int, from_region:int, to_region:int) -> Dic
 
 	var result: Dictionary = { "ok": true }
 
-	# jednoduché pravidlo: armáda bez odporu → zabere region
-	if u.type == "army" and not enemy_army_here and r.owner_faction_id != u.faction_id:
-		game_state.region_manager.claim_region(r.id, u.faction_id)
-		result["region_captured"] = true
-		result["captured_region_id"] = to_region
-
 	# sem časem: intercepty, pasti, spouštěče tagů…
 
 	return result
