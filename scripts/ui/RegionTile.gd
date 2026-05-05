@@ -2,6 +2,7 @@ extends Control
 signal tile_selected(region_id: int)
 signal tile_hovered(region_id: int)
 signal tile_unhovered(region_id: int)
+signal unit_sprite_clicked(region_id: int)
 
 var region_id: int = -1
 var button: Button
@@ -35,6 +36,7 @@ func _ready() -> void:
 	button.pressed.connect(_on_pressed)
 	button.mouse_entered.connect(_on_mouse_entered)
 	button.mouse_exited.connect(_on_mouse_exited)
+	player_icon.gui_input.connect(_on_player_icon_gui_input)
 
 	var shader := Shader.new()
 	shader.code = "shader_type canvas_item;\nvoid fragment() {\n\tvec2 c = UV - vec2(0.5);\n\tif (length(c) > 0.5) { discard; }\n\tCOLOR = texture(TEXTURE, UV);\n}"
@@ -194,6 +196,14 @@ func _update_lair_icon(region: Region) -> void:
 
 func _on_pressed() -> void:
 	tile_selected.emit(region_id)
+
+func _on_player_icon_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton \
+			and event.button_index == MOUSE_BUTTON_LEFT \
+			and event.pressed \
+			and player_icon.visible:
+		unit_sprite_clicked.emit(region_id)
+		get_viewport().set_input_as_handled()
 	
 func play_feedback(success: bool):
 	var color
