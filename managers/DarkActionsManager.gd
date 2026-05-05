@@ -75,6 +75,34 @@ func can_cast(faction_id:String, action_key:String, region_id:int = -1) -> Dicti
 		if req_org.get("owner", "") != Balance.PLAYER_FACTION:
 			return {"ok": false, "reason": "Organizace v regionu nepatri hraci."}
 
+	if req.has("region_kind_in"):
+		var rk_region := game_state.query.regions.get_by_id(region_id)
+		if rk_region == null or not req["region_kind_in"].has(rk_region.region_kind):
+			return {"ok": false, "reason": "Region musí být správného druhu."}
+
+	if req.has("min_corruption_phase"):
+		var mc_region := game_state.query.regions.get_by_id(region_id)
+		var phase := mc_region.get_corruption_phase_for(Balance.PLAYER_FACTION) if mc_region != null else 0
+		if phase < int(req["min_corruption_phase"]):
+			return {"ok": false, "reason": "Region nemá dostatečnou úroveň korupce."}
+
+	# --- Podmanění requirements ---
+	if req.get("requires_neutral_region", false):
+		if not game_state.query.regions.is_neutral(region_id):
+			return {"ok": false, "reason": "Region musí být neutrální."}
+
+	if req.get("requires_no_undiscovered_secret", false):
+		if game_state.query.regions.has_undiscovered_secret(region_id):
+			return {"ok": false, "reason": "Region obsahuje neobjevené tajemství."}
+
+	if req.get("requires_no_uncontrolled_lair", false):
+		if game_state.query.regions.has_uncontrolled_lair(region_id):
+			return {"ok": false, "reason": "Region obsahuje neloajální Lair."}
+
+	if req.get("requires_adjacent_player_territory", false):
+		if not game_state.query.regions.is_adjacent_to_player_territory(region_id):
+			return {"ok": false, "reason": "Region musí sousedit s vaším územím."}
+
 	return {"ok": true}
 
 
