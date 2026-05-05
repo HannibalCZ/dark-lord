@@ -239,6 +239,36 @@ func find_highest_corruption_with_filters(actor_faction_id: String, filters: Dic
 			best_id = r.id
 	return best_id
 
+# --- Podmanění queries ---
+
+func is_neutral(region_id: int) -> bool:
+	var r := get_by_id(region_id)
+	if r == null:
+		return false
+	return r.owner_faction_id == "neutral"
+
+func has_undiscovered_secret(region_id: int) -> bool:
+	var r := get_by_id(region_id)
+	if r == null:
+		return false
+	return r.has_secret() and not r.secret_known
+
+func has_uncontrolled_lair(region_id: int) -> bool:
+	var r := get_by_id(region_id)
+	if r == null:
+		return false
+	return r.has_lair() and r.lair_control != Balance.PLAYER_FACTION
+
+func is_adjacent_to_player_territory(region_id: int) -> bool:
+	var r := get_by_id(region_id)
+	if r == null:
+		return false
+	for n: int in neighbors(region_id):
+		var nb := get_by_id(n)
+		if nb != null and nb.owner_faction_id == Balance.PLAYER_FACTION:
+			return true
+	return false
+
 func find_next_step_towards(start_id: int, target_id: int) -> int:
 	if start_id == target_id:
 		return start_id
