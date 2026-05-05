@@ -173,6 +173,21 @@ visible = false
 layout_mode = 2
 text = "Zrusit vyber"
 
+[node name="UnitSelectContainer" type="HBoxContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="UnitSelectLabel" type="Label" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/UnitSelectContainer"]
+layout_mode = 2
+text = "Jednotka:"
+theme_override_font_sizes/font_size = 12
+
+[node name="UnitSelect" type="OptionButton" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/UnitSelectContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
+
 [node name="MissionRow" type="HBoxContainer" parent="HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
