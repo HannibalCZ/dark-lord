@@ -451,6 +451,24 @@ const DARK_ACTIONS = {
 			"org_loyalty": ORG_REINFORCE_LOYALTY_BOOST
 		}
 	},
+	"subjugation": {
+		"display_name": "Podmanění",
+		"description": "Rozšiř svůj vliv do neutrálního území silou vůle a temných paktů.",
+		"type": "region",
+		"ap_cost": 1,
+		"mana_cost": 0,
+		"gold_cost": 15,
+		"cooldown": 3,
+		"effects": {
+			"claim_region": true
+		},
+		"requirements": {
+			"requires_neutral_region": true,
+			"requires_no_undiscovered_secret": true,
+			"requires_no_uncontrolled_lair": true,
+			"requires_adjacent_player_territory": true
+		}
+	},
 }
 
 const UNIT = {
