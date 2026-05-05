@@ -45,6 +45,7 @@ var _highlighted_neighbor_tiles: Array = []
 var _movement_in_progress: bool = false
 var _alert_highlighted_ids: Array[int] = []
 var _hovered_region_id: int = -1
+var _selection_mode: String = "region"  # "region" | "unit"
 var tile_scene: PackedScene = preload("res://scenes/ui/RegionTile.tscn")
 
 const SCROLL_SPEED    := 250.0
@@ -503,6 +504,7 @@ func _build_grid() -> void:
 		t.connect("tile_selected", Callable(self, "_on_tile_selected"))
 		t.tile_hovered.connect(_on_tile_hovered)
 		t.tile_unhovered.connect(_on_tile_unhovered)
+		t.unit_sprite_clicked.connect(_on_unit_sprite_clicked)
 		_tile_by_id[i] = t
 
 	_compute_map_bounds()
@@ -522,33 +524,23 @@ func _on_tile_selected(region_idx: int) -> void:
 
 	_clear_all_movement_highlights()
 
-	var player_units: Array = _get_player_units_in_region(region_idx)
-
-	# Cyklování — klik na stejný region kde je vybraná jednotka a je jich víc
-	if region_idx == selected_region_idx \
-			and _selected_unit_id != -1 \
-			and player_units.size() > 1:
-		var current_idx: int = -1
-		for i in player_units.size():
-			if player_units[i].id == _selected_unit_id:
-				current_idx = i
-				break
-		var next_idx: int = (current_idx + 1) % player_units.size()
-		selected_region_idx = region_idx
-		_refresh_selected_panel()
-		_select_unit(player_units[next_idx].id)
-		_refresh_tile_selection()
-		return
-
-	# Nový region — auto-vyber první jednotku
 	selected_region_idx = region_idx
 	_refresh_selected_panel()
 	_refresh_tile_selection()
+	_select_unit(-1)
+	_selection_mode = "region"
 
-	if player_units.size() > 0:
-		_select_unit(player_units[0].id)
-	else:
-		_select_unit(-1)
+func _on_unit_sprite_clicked(region_id: int) -> void:
+	_selection_mode = "unit"
+	var player_units: Array = _get_player_units_in_region(region_id)
+	if player_units.is_empty():
+		return
+	if selected_region_idx == region_id and _selected_unit_id != -1:
+		return
+	selected_region_idx = region_id
+	_refresh_selected_panel()
+	_refresh_tile_selection()
+	_select_unit(player_units[0].id)
 
 func _on_tile_hovered(region_id: int) -> void:
 	if _hovered_region_id == region_id:
