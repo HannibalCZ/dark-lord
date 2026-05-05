@@ -42,6 +42,15 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(1, 1, 1, 0)
 
+[node name="Button" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+flat = true
+
 [node name="Overlay" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -49,6 +58,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 1
 
 [node name="TagIcon" type="TextureRect" parent="Overlay"]
 layout_mode = 1
@@ -60,6 +70,7 @@ offset_top = 5.0
 offset_right = -5.0
 offset_bottom = 23.0
 grow_horizontal = 0
+mouse_filter = 2
 texture = ExtResource("2_otno6")
 
 [node name="PlayerIcon" type="TextureRect" parent="Overlay"]
@@ -84,6 +95,7 @@ anchor_bottom = 1.0
 offset_top = -23.0
 offset_right = 40.0
 grow_vertical = 0
+mouse_filter = 2
 horizontal_alignment = 1
 vertical_alignment = 2
 
@@ -97,6 +109,7 @@ offset_top = -80.0
 offset_bottom = -80.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 expand_mode = 5
 
 [node name="EnemyCount" type="Label" parent="Overlay"]
@@ -110,6 +123,7 @@ offset_left = -40.0
 offset_top = -23.0
 grow_horizontal = 0
 grow_vertical = 0
+mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0, 0, 1)
 horizontal_alignment = 1
 
@@ -126,6 +140,7 @@ offset_right = 64.0
 offset_bottom = 64.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 texture = ExtResource("4_7kug1")
 stretch_mode = 3
 
@@ -144,16 +159,8 @@ stretch_mode = 5
 layout_mode = 1
 offset_right = 40.0
 offset_bottom = 40.0
+mouse_filter = 2
 texture = ExtResource("5_jnrrv")
-
-[node name="Button" type="Button" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-flat = true
 
 [node name="BorderOverlay" type="Panel" parent="."]
 layout_mode = 1
