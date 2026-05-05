@@ -23,6 +23,8 @@ extends Control
 @onready var mission_info: Label                = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/MissionInfo
 @onready var selected_unit_label: Label         = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/SelectedUnitLabel
 @onready var deselect_btn: Button               = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/DeselectBtn
+@onready var unit_select_container: HBoxContainer = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/UnitSelectContainer
+@onready var unit_select: OptionButton            = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/UnitSelectContainer/UnitSelect
 
 # --- OrgSection ---
 @onready var org_section: PanelContainer  = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection
@@ -84,6 +86,7 @@ func _ready() -> void:
 	dark_action_select.item_selected.connect(_on_dark_action_selected)
 	mission_select.item_selected.connect(_on_mission_selected)
 	deselect_btn.pressed.connect(func(): _select_unit(-1))
+	unit_select.item_selected.connect(_on_unit_select_item_selected)
 
 	# signály — org sekce
 	doctrine_picker.item_selected.connect(_on_doctrine_picker_item_selected)
@@ -528,6 +531,7 @@ func _on_tile_selected(region_idx: int) -> void:
 	_refresh_selected_panel()
 	_refresh_tile_selection()
 	_select_unit(-1)
+	unit_select_container.visible = false
 	_selection_mode = "region"
 
 func _on_unit_sprite_clicked(region_id: int) -> void:
@@ -541,6 +545,7 @@ func _on_unit_sprite_clicked(region_id: int) -> void:
 	_refresh_selected_panel()
 	_refresh_tile_selection()
 	_select_unit(player_units[0].id)
+	_build_unit_menu(region_id)
 
 func _on_tile_hovered(region_id: int) -> void:
 	if _hovered_region_id == region_id:
@@ -676,6 +681,25 @@ func _get_player_units_in_region(region_id: int) -> Array:
 		if u.faction_id == Balance.PLAYER_FACTION and not u.is_busy and not u.is_lost:
 			units.append(u)
 	return units
+
+func _build_unit_menu(region_id: int) -> void:
+	var player_units: Array = _get_player_units_in_region(region_id)
+	if player_units.size() <= 1:
+		unit_select_container.visible = false
+		return
+	unit_select_container.visible = true
+	unit_select.clear()
+	for u in player_units:
+		unit_select.add_item("%s (%s)" % [u.name, "⚔" if u.is_wounded else u.type], u.id)
+	for i in range(unit_select.item_count):
+		if unit_select.get_item_id(i) == _selected_unit_id:
+			unit_select.select(i)
+			break
+
+func _on_unit_select_item_selected(index: int) -> void:
+	var unit_id: int = unit_select.get_item_id(index)
+	_select_unit(unit_id)
+	_build_mission_menu()
 
 func _select_unit(unit_id: int) -> void:
 	_selected_unit_id = unit_id
