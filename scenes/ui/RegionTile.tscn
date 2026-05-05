@@ -72,6 +72,7 @@ offset_top = -80.0
 offset_bottom = -80.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 0
 expand_mode = 4
 
 [node name="PlayerCount" type="Label" parent="Overlay"]
