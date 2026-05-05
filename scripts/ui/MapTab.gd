@@ -574,12 +574,27 @@ func _refresh_selected_panel() -> void:
 	region_section.show_for_region(selected_region_idx)
 
 	_build_dark_actions_menu()
+	_update_org_section(selected_region_idx)
+	scroll_container.scroll_vertical = 0
+
+	if _selection_mode == "unit" and _selected_unit_id != -1:
+		_show_unit_context()
+	else:
+		_show_region_context()
+
+func _show_unit_context() -> void:
+	mission_select.visible = true
+	mission_confirm.visible = true
 	_update_unit_info()
 	_build_mission_menu()
+	_set_actions_enabled(true)
 
-	_update_org_section(selected_region_idx)
-	_set_actions_enabled(_selected_unit_id != -1)
-	scroll_container.scroll_vertical = 0
+func _show_region_context() -> void:
+	mission_select.visible = false
+	mission_confirm.visible = false
+	unit_select_container.visible = false
+	unit_info.text = "Vyberte jednotku kliknutím na její ikonu."
+	_set_actions_enabled(false)
 
 # --------------------------
 # UNIT + MISE
