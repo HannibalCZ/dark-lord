@@ -527,12 +527,12 @@ func _on_tile_selected(region_idx: int) -> void:
 
 	_clear_all_movement_highlights()
 
+	_selection_mode = "region"
+	_select_unit(-1)
+	unit_select_container.visible = false
 	selected_region_idx = region_idx
 	_refresh_selected_panel()
 	_refresh_tile_selection()
-	_select_unit(-1)
-	unit_select_container.visible = false
-	_selection_mode = "region"
 
 func _on_unit_sprite_clicked(region_id: int) -> void:
 	_selection_mode = "unit"
