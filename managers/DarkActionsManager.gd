@@ -178,6 +178,15 @@ func cast(faction_id:String, action_key:String, region_id:int = -1) -> Dictionar
 		var found_logs: Array[Dictionary] = _handle_found_org(action_key, region_id, faction_id)
 		logs += found_logs
 
+	# zpracování speciálního efektu claim_region — strukturální změna vlastnictví, mimo EffectsSystem
+	if effects.has("claim_region"):
+		if target_region != null:
+			game_state.region_manager.claim_region(region_id, Balance.PLAYER_FACTION)
+			logs.append({
+				"type": "dark_action",
+				"text": "Region %s byl podmaněn Temným pánem." % target_region.name
+			})
+
 	events = [{
 		"type": "dark_action_cast",
 		"action": action_key,
