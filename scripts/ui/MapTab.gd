@@ -357,8 +357,9 @@ func _build_dark_action_description(action_key: String) -> String:
 	var def: Dictionary = Balance.DARK_ACTIONS.get(action_key, {})
 
 	var name: String = def.get("display_name", action_key)
-	var mana_cost: int = int(def.get("mana_cost", 0))
 	var ap_cost: int = int(def.get("ap_cost", 0))
+	var mana_cost: int = int(def.get("mana_cost", 0))
+	var gold_cost: int = int(def.get("gold_cost", 0))
 
 	var effects: Dictionary = def.get("effects", {})
 
@@ -371,6 +372,8 @@ func _build_dark_action_description(action_key: String) -> String:
 		cost_parts.append("AP: %d" % ap_cost)
 	if mana_cost > 0:
 		cost_parts.append("Mana: %d" % mana_cost)
+	if gold_cost > 0:
+		cost_parts.append("Zlato: %d" % gold_cost)
 	if not cost_parts.is_empty():
 		lines.append("Náklady: " + ", ".join(cost_parts))
 
