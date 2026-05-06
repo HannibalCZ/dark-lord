@@ -279,6 +279,7 @@ func update_units_display(units_here: Array, enemy_here: Array) -> void:
 		player_icon.texture = tex
 		player_icon.modulate = Color(1.0, 0.35, 0.35, 1.0) if has_wounded_player else Color.WHITE
 		player_icon.visible = true
+		player_icon.mouse_filter = Control.MOUSE_FILTER_STOP
 
 		if p_total > 1:
 			player_count.text = str(p_total)
@@ -287,6 +288,7 @@ func update_units_display(units_here: Array, enemy_here: Array) -> void:
 			player_count.visible = false
 	else:
 		player_icon.visible = false
+		player_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		player_count.visible = false
 
 	# ----------------------------------------------------
