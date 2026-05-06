@@ -542,9 +542,9 @@ func _on_unit_sprite_clicked(region_id: int) -> void:
 	if selected_region_idx == region_id and _selected_unit_id != -1:
 		return
 	selected_region_idx = region_id
+	_select_unit(player_units[0].id)
 	_refresh_selected_panel()
 	_refresh_tile_selection()
-	_select_unit(player_units[0].id)
 	_build_unit_menu(region_id)
 
 func _on_tile_hovered(region_id: int) -> void:
