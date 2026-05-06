@@ -583,6 +583,7 @@ func _refresh_selected_panel() -> void:
 		_show_region_context()
 
 func _show_unit_context() -> void:
+	region_section.visible = false
 	mission_select.visible = true
 	mission_confirm.visible = true
 	_update_unit_info()
@@ -590,6 +591,7 @@ func _show_unit_context() -> void:
 	_set_actions_enabled(true)
 
 func _show_region_context() -> void:
+	region_section.visible = true
 	mission_select.visible = false
 	mission_confirm.visible = false
 	unit_select_container.visible = false
