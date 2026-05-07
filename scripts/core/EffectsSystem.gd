@@ -183,14 +183,6 @@ func _apply_region(e: Dictionary, region: Region, source_faction_id: String, gs:
 		region.fear = clamp(region.fear + delta, 0, 100)
 		logs.append({"type": "region", "text": "Strach v regionu %s se změnil o %d." % [region.name, delta]})
 
-	if e.has("add_tag"):
-		var tag_id: String = e["add_tag"]
-		if Balance.TAGS.has(tag_id):
-			region.add_tag(Balance.TAGS[tag_id].duplicate())
-			logs.append({"type": "region", "text": "Region %s dostal tag %s." % [region.name, Balance.TAGS[tag_id]["display_name"]]})
-		else:
-			logs.append({"type": "warn", "text": "add_tag: neznámý tag '%s'" % tag_id})
-
 
 func _apply_tags(e: Dictionary, region: Region, logs: Array[Dictionary]) -> void:
 	if not e.has("tags"):
@@ -213,6 +205,7 @@ func _apply_tags(e: Dictionary, region: Region, logs: Array[Dictionary]) -> void
 			logs.append({"type":"warn", "text":"Unknown tag_id in effects: %s" % tid})
 			continue
 		region.add_tag(t)
+		logs.append({"type": "region", "text": "Region %s dostal tag %s." % [region.name, t.get("display_name", tid)]})
 
 
 # -----------------------
@@ -257,4 +250,4 @@ func _has_any_faction_fields(e: Dictionary) -> bool:
 func _has_any_region_fields(e: Dictionary) -> bool:
 	return e.has("defense") or e.has("corruption") or e.has("purge_corruption_all") \
 		or e.has("secret_progress") or e.has("lair_influence") \
-		or e.has("fear") or e.has("add_tag")
+		or e.has("fear")
