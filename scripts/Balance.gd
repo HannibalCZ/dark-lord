@@ -37,6 +37,15 @@ const MISSION_CHANCE_MAX = 0.95
 const WOUNDED_MISSION_PENALTY: float = 0.25
 const WOUNDED_POWER_PENALTY: int = 2
 
+# Stavové tagy regionu
+const UNREST_CORRUPTION_MIN: int = 2
+const UNREST_FEAR_MIN: int = 3
+const DECADENCE_CORRUPTION_MIN: int = 2
+const DECADENCE_SABOTAGE_REQUIRED: bool = true
+const HYSTERIA_FEAR_MIN: int = 4
+const HYSTERIA_SABOTAGE_REQUIRED: bool = true
+const UNREST_REVOLT_CHANCE: float = 0.25
+
 const CORRUPTION_PHASE_NAMES: Dictionary = {
 	0: "Cisty",
 	1: "Naruseny",
@@ -125,7 +134,7 @@ const MISSION = {
 			"mana": 0,
 			"gold": 0,
 		},
-		"success": { "heat":6, "gold":5, "defense":-15, "tags": ["blockade"] },
+		"success": { "heat":6, "gold":5, "defense":-15, "tags": ["blockade"], "add_tag": "sabotaged" },
 		"fail":    { "heat": 4 },
 		"ui_icon": "res://ui/icons/missions/sabotage.png",
 		"ui_order": 1
@@ -310,6 +319,21 @@ const MISSION = {
 		"fail":    {},
 		"ui_icon":  "res://ui/icons/missions/heal.png",
 		"ui_order": 11
+	},
+
+	"spread_fear": {
+		"id":           "spread_fear",
+		"display_name": "Šíření strachu",
+		"description":  "Agent šíří paniku a hrůzu mezi obyvateli regionu.",
+		"base_chance":  0.65,
+		"requirements": {
+			"requires_lair": false
+		},
+		"cost": { "ap": 1, "mana": 0, "gold": 0 },
+		"success": { "fear": 2 },
+		"fail":    { "heat": 2 },
+		"ui_icon":  "res://ui/icons/missions/spread_fear.png",
+		"ui_order": 12
 	}
 
 }
@@ -492,7 +516,7 @@ const UNIT = {
 		"recruit_cost": { "mana": 15 },
 		"upkeep_cost": { "mana": 2 },
 		"moves": 2,
-		"can_do": ["corrupt","sabotage","explore","manipulate","inspect","dismantle","eliminate","heal"],
+		"can_do": ["corrupt","sabotage","explore","manipulate","inspect","dismantle","eliminate","heal","spread_fear"],
 		"resilient": true,
 		"icon": "res://art/units/vampire.png",
 	},
@@ -503,7 +527,7 @@ const UNIT = {
 		"recruit_cost": { "gold": 10 },
 		"upkeep_cost": { "gold": 1 },
 		"moves": 2,
-		"can_do": ["corrupt","sabotage","explore"],
+		"can_do": ["corrupt","sabotage","explore","spread_fear"],
 		"resilient": false,
 		"icon": "res://art/units/agent.png",
 	},
@@ -538,6 +562,18 @@ const UNIT = {
 			"mission_key": ["corrupt", "sabotage"],
 			"affects": "enemies"
 		}       # AI agent, dělá purge a loví agenty
+	},
+	"militia": {
+		"display_name": "Milice",
+		"type": "army",
+		"power": 1,
+		"recruit_cost": {},
+		"upkeep_cost": {},
+		"moves": 0,
+		"can_do": [],
+		"resilient": false,
+		"icon": "res://art/units/militia.png",
+		"ai_profile": "militia_placeholder"
 	},
 	"explorer": {
 		"display_name": "Průzkumník",
@@ -633,6 +669,11 @@ const AI_PROFILE = {
 			"filters": { "owner_rule": "player" }
 		},
 		"move_towards_target": true,
+		"action_at_target": null
+	},
+	"militia_placeholder": {
+		"target": { "select": "none", "filters": {} },
+		"move_towards_target": false,
 		"action_at_target": null
 	},
 	# --- Scout profil — průzkumník obchodníků ---
@@ -779,6 +820,50 @@ const TAGS = {
 		"ticks_down": true,
 		"visible": true,
 		"source": "secret:ancient_ruins",
+	},
+
+	"sabotaged": {
+		"id": "sabotaged",
+		"display_name": "Sabotováno",
+		"duration": 4,
+		"ticks_down": true,
+		"visible": true,
+		"source": "agent",
+		"mul": { "defense": 0.5 },
+		"add": {}
+	},
+
+	"unrest": {
+		"id": "unrest",
+		"display_name": "Nepokoje",
+		"duration": -1,
+		"ticks_down": false,
+		"visible": true,
+		"source": "state",
+		"mul": {},
+		"add": {}
+	},
+
+	"decadence": {
+		"id": "decadence",
+		"display_name": "Dekadence",
+		"duration": -1,
+		"ticks_down": false,
+		"visible": true,
+		"source": "state",
+		"mul": {},
+		"add": {}
+	},
+
+	"hysteria": {
+		"id": "hysteria",
+		"display_name": "Hysterie",
+		"duration": -1,
+		"ticks_down": false,
+		"visible": true,
+		"source": "state",
+		"mul": {},
+		"add": {}
 	}
 }
 
