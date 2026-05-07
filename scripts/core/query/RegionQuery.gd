@@ -239,6 +239,23 @@ func find_highest_corruption_with_filters(actor_faction_id: String, filters: Dic
 			best_id = r.id
 	return best_id
 
+# --- Tag queries ---
+
+func has_tag(region_id: int, tag_id: String) -> bool:
+	var r := get_by_id(region_id)
+	if r == null:
+		return false
+	for tag in r.tags:
+		if tag.get("id", "") == tag_id:
+			return true
+	return false
+
+func get_region_tags(region_id: int) -> Array:
+	var r := get_by_id(region_id)
+	if r == null:
+		return []
+	return r.tags.duplicate()
+
 # --- Podmanění queries ---
 
 func is_neutral(region_id: int) -> bool:

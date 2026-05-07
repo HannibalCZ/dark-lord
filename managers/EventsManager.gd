@@ -56,6 +56,9 @@ var _pending_decoy_events: Array[EventData] = []
 # Hráč obsadil region vojensky nebo stínovou korupcí — buffrovano pri signalu.
 var _pending_region_control_events: Array[EventData] = []
 
+# Milice spawnutá v regionu s Nepokoji — buffrovano pri signalu militia_spawned.
+var _pending_militia_events: Array[EventData] = []
+
 # Tajemství odhaleno průzkumníkem — buffrovano pri signalu secret_stolen.
 var _pending_secret_events: Array[EventData] = []
 
@@ -81,6 +84,7 @@ func reset() -> void:
 	_pending_decoy_events.clear()
 	_pending_secret_events.clear()
 	_pending_region_control_events.clear()
+	_pending_militia_events.clear()
 	_prev_reputation_phases.clear()
 	_active_advisors.clear()
 
@@ -103,6 +107,7 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.secret_stolen.connect(_on_secret_stolen)
 	EventBus.region_claimed_by_player.connect(_on_region_claimed_by_player)
 	EventBus.region_corruption_maxed.connect(_on_region_corruption_maxed)
+	EventBus.militia_spawned.connect(_on_militia_spawned)
 	GameState.game_ended.connect(_on_game_ended)
 
 # ---------------------------
@@ -129,6 +134,7 @@ func generate_events_for_turn() -> Array[EventData]:
 	_collect_inquisitor_events(events)
 	_collect_pending_inquisitor_global_events(events)
 	_collect_pending_region_control_events(events)
+	_collect_pending_militia_events(events)
 
 	_collected_player_results.clear()
 
@@ -440,6 +446,30 @@ func _collect_pending_region_control_events(events: Array[EventData]) -> void:
 	for event in _pending_region_control_events:
 		events.append(event)
 	_pending_region_control_events.clear()
+
+
+# ---------------------------
+# ZDROJ 17 — Milice spawnutá v regionu s Nepokoji (Temný kapitán)
+# ---------------------------
+func _on_militia_spawned(region_id: int) -> void:
+	if game_state == null:
+		return
+	var region: Region = game_state.region_manager.get_region(region_id)
+	if region == null:
+		return
+	var region_name: String = region.name if region.name != "" else "region %d" % region_id
+	_pending_militia_events.append(EventData.create(
+		Balance.ADVISOR_KAPITAN,
+		Balance.EVENT_IMPORTANT,
+		"Pane, nepokoje v %s přerostly ve vzpouru. Místní milice se chopila zbraní." % region_name,
+		"Milice spawnutá v regionu %s." % region_name
+	))
+
+
+func _collect_pending_militia_events(events: Array[EventData]) -> void:
+	for event in _pending_militia_events:
+		events.append(event)
+	_pending_militia_events.clear()
 
 
 # ---------------------------
