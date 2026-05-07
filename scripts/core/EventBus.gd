@@ -38,3 +38,5 @@ signal region_corruption_maxed(region_id: int, region_name: String)
 
 signal lair_control_changed(region_id: int, new_controller: String)
 signal lair_unit_spawned(region_id: int, faction_id: String, unit_key: String)
+
+signal militia_spawned(region_id: int)
