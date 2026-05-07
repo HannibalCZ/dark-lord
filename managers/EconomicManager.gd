@@ -216,7 +216,3 @@ func _record_player_economy_breakdown(fac: Faction) -> void:
 	if upkeep_gold != 0.0 or upkeep_mana != 0.0:
 		tracker.record("Upkeep jednotek", -int(upkeep_gold), -int(upkeep_mana))
 
-func _tick_all_region_tags(regions: Array) -> void:
-	for region in regions:
-		region.tick_tags()
-		

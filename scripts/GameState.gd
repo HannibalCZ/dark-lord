@@ -24,6 +24,7 @@ signal game_ended(result: Dictionary) # { ok:bool, outcome:"win"/"lose", reason:
 @onready var economy_tracker: EconomyTracker = EconomyTracker.new()
 @onready var reputation_manager: ReputationManager = ReputationManager.new()
 @onready var lair_manager: LairManager = LairManager.new()
+@onready var tags_manager: TagsManager = TagsManager.new()
 
 var rng := RandomNumberGenerator.new()
 var turn:int = 1
@@ -61,6 +62,7 @@ func _ready() -> void:
 	progression_manager.game_state = self
 	reputation_manager.game_state  = self
 	lair_manager.game_state        = self
+	tags_manager.game_state        = self
 	events_manager.init(self)
 
 	query = GameQuery.new(self)
@@ -373,6 +375,9 @@ func advance_turn() -> void:
 
 	# 3) ekonomika
 	entries += economic_manager.apply_economy_cycle()
+
+	# 3b) tagy — tick duration tagů, stavové tagy, chain reactions
+	tags_manager.process_end_of_turn()
 
 	# 4) cooldowny dark actions
 	dark_actions_manager.tick_cooldowns()
