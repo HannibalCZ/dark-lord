@@ -146,7 +146,12 @@ func _update_units_section(region_id: int) -> void:
 	for u in units:
 		var label := Label.new()
 		var faction_name := _format_faction(u.faction_id)
-		label.text = "%s  [%s]  sila: %d  stav: %s" % [u.name, faction_name, u.power, u.state_label()]
+		var warband_str: String = ""
+		if u.is_warband():
+			var t: int = u.turns_remaining
+			var tah_str: String = "tah" if t == 1 else ("tahy" if t < 5 else "tahů")
+			warband_str = "  ⏳ %d %s" % [t, tah_str]
+		label.text = "%s  [%s]  sila: %d  stav: %s%s" % [u.name, faction_name, u.power, u.state_label(), warband_str]
 		label.add_theme_font_size_override("font_size", 12)
 		if u.faction_id == Balance.PLAYER_FACTION:
 			label.add_theme_color_override("font_color", Color("#4caf50"))

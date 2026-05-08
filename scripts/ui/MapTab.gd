@@ -611,7 +611,12 @@ func _update_unit_info() -> void:
 		unit_info.text = "Jednotka nenalezena."
 		return
 	var wound_suffix: String = "  ⚔ Zraněna" if u.is_wounded else ""
-	unit_info.text = "Jednotka: %s (%s) | Síla: %d | Zbývá tahů: %d%s" % [u.name, u.type, u.power, u.moves_left, wound_suffix]
+	var warband_suffix: String = ""
+	if u.is_warband():
+		var t: int = u.turns_remaining
+		var tah_str: String = "tah" if t == 1 else ("tahy" if t < 5 else "tahů")
+		warband_suffix = "  ⏳ Warband — zbývá %d %s" % [t, tah_str]
+	unit_info.text = "Jednotka: %s (%s) | Síla: %d | Zbývá tahů: %d%s%s" % [u.name, u.type, u.power, u.moves_left, wound_suffix, warband_suffix]
 
 func _build_mission_menu(region_idx: int = selected_region_idx) -> void:
 	mission_success_effects.visible = false
