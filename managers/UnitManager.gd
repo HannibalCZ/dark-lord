@@ -72,6 +72,9 @@ func recruit_unit(faction_id:String, unit_key:String, spawn_region_id:int) -> Di
 	# 6) vytvoř jednotku s unikátním ID
 	var new_id: int = _next_unit_id()
 	var u: Unit = Unit.new().init(new_id, unit_key, spawn_region_id, faction_id)
+	var lifespan: int = cfg.get("lifespan", -1)
+	if lifespan > 0:
+		u.turns_remaining = lifespan
 	units.append(u)
 
 	var logs := [
