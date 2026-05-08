@@ -182,36 +182,32 @@ func _update_tags_section(region_id: int) -> void:
 	for tag in visible_tags:
 		var label := Label.new()
 		var dname: String = tag.get("display_name", tag.get("id", "?"))
+		var duration_str: String
+		if tag.get("ticks_down", false):
+			duration_str = "(ještě %d tahů)" % tag.get("duration", 0)
+		else:
+			duration_str = "(aktivní)"
 		var effects_str: String = _format_tag_effects(tag)
 		if effects_str != "":
-			label.text = "* %s - %s" % [dname, effects_str]
+			label.text = "* %s %s - %s" % [dname, duration_str, effects_str]
 		else:
-			label.text = "* %s" % dname
+			label.text = "* %s %s" % [dname, duration_str]
 		label.add_theme_font_size_override("font_size", 12)
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD
 		tags_content.add_child(label)
 
 func _format_tag_effects(tag: Dictionary) -> String:
 	var parts: Array[String] = []
-	var stat_labels := {
-		"gold_income":       "prijem zlata",
-		"mana_income":       "prijem many",
-		"research_income":   "prijem vyzkumu",
-		"fear":              "strach",
-		"defense":           "obrana",
-		"ai_agent_priority": "priorita AI"
-	}
 
 	var mul: Dictionary = tag.get("mul", {})
-	for stat in mul:
-		var val: float = float(mul[stat])
-		var lbl: String = stat_labels.get(stat, stat)
-		parts.append("%s x%s" % [lbl, _fmt_float(val)])
+	for key in mul:
+		var val: float = float(mul[key])
+		parts.append("× %s %s" % [_fmt_float(val), key.replace("_", " ")])
 
 	var add_vals: Dictionary = tag.get("add", {})
-	for stat in add_vals:
-		var val: float = float(add_vals[stat])
-		var lbl: String = stat_labels.get(stat, stat)
+	for key in add_vals:
+		var val: float = float(add_vals[key])
+		var lbl: String = key.replace("_", " ")
 		if val >= 0.0:
 			parts.append("+%s %s" % [_fmt_float(val), lbl])
 		else:
@@ -222,7 +218,7 @@ func _format_tag_effects(tag: Dictionary) -> String:
 func _fmt_float(val: float) -> String:
 	if is_equal_approx(val, float(int(val))):
 		return str(int(val))
-	return "%.2g" % val
+	return "%.2f" % val
 
 # --------------------------
 # SECRETS SECTION
