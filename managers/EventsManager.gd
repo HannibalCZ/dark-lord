@@ -59,6 +59,9 @@ var _pending_region_control_events: Array[EventData] = []
 # Milice spawnutá v regionu s Nepokoji — buffrovano pri signalu militia_spawned.
 var _pending_militia_events: Array[EventData] = []
 
+# Warband se rozešla po vypršení lifespanu — buffrovano pri signalu warband_disbanded.
+var _pending_warband_events: Array[EventData] = []
+
 # Tajemství odhaleno průzkumníkem — buffrovano pri signalu secret_stolen.
 var _pending_secret_events: Array[EventData] = []
 
@@ -85,6 +88,7 @@ func reset() -> void:
 	_pending_secret_events.clear()
 	_pending_region_control_events.clear()
 	_pending_militia_events.clear()
+	_pending_warband_events.clear()
 	_prev_reputation_phases.clear()
 	_active_advisors.clear()
 
@@ -108,6 +112,7 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.region_claimed_by_player.connect(_on_region_claimed_by_player)
 	EventBus.region_corruption_maxed.connect(_on_region_corruption_maxed)
 	EventBus.militia_spawned.connect(_on_militia_spawned)
+	EventBus.warband_disbanded.connect(_on_warband_disbanded)
 	GameState.game_ended.connect(_on_game_ended)
 
 # ---------------------------
@@ -135,6 +140,7 @@ func generate_events_for_turn() -> Array[EventData]:
 	_collect_pending_inquisitor_global_events(events)
 	_collect_pending_region_control_events(events)
 	_collect_pending_militia_events(events)
+	_collect_pending_warband_events(events)
 
 	_collected_player_results.clear()
 
@@ -470,6 +476,26 @@ func _collect_pending_militia_events(events: Array[EventData]) -> void:
 	for event in _pending_militia_events:
 		events.append(event)
 	_pending_militia_events.clear()
+
+
+# ---------------------------
+# ZDROJ 18 — Warband se rozešla po vypršení lifespanu (Temný kapitán)
+# ---------------------------
+func _on_warband_disbanded(unit_id: int, unit_name: String, region_id: int) -> void:
+	var region: Region = game_state.query.regions.get_by_id(region_id)
+	var region_name: String = region.name if region != null else "neznámém regionu"
+	_pending_warband_events.append(EventData.create(
+		Balance.ADVISOR_KAPITAN,
+		Balance.EVENT_IMPORTANT,
+		"%s se rozešla. Najatí bojovníci opustili %s a vrátili se do svých domovů." % [unit_name, region_name],
+		"Warband rozpuštěna v regionu %s." % region_name
+	))
+
+
+func _collect_pending_warband_events(events: Array[EventData]) -> void:
+	for event in _pending_warband_events:
+		events.append(event)
+	_pending_warband_events.clear()
 
 
 # ---------------------------
