@@ -19,6 +19,7 @@ var visited_regions: Array[int] = []
 # Používá scout profil v AIManager pro prioritizaci
 # nenavštívených sousedů při pohybu průzkumníka.
 # Aktualizuje se v UnitManager.move_unit() (Task 5).
+var turns_remaining: int = -1  # -1 = permanentní, >0 = warband s lifespanem
 
 func init(_id:int, _unit_temp:String, _region_id:int, _faction_id:String) -> Unit:
 	id = _id
@@ -63,6 +64,9 @@ func state_label() -> String:
 	if is_busy:
 		return "busy"
 	return "healthy"
+
+func is_warband() -> bool:
+	return turns_remaining > 0
 
 func can_do_mission(key:String) -> bool:
 	var cfg: Dictionary = Balance.UNIT.get(unit_key, {})

@@ -515,6 +515,8 @@ const UNIT = {
 		"icon": "res://art/units/orc_band.png",
 		# ai_profile záměrně chybí — _pick_profile() v AIManager řídí chování dynamicky
 		# podle lair_control regionu lairu (defender vs lair_raider)
+		# lifespan: -1 = permanentní (absence klíče má stejný efekt)
+		"lifespan": 5,
 	},
 	"vampire": {
 		"display_name": "Upír",
@@ -1066,6 +1068,8 @@ const EXPLORER_SPAWN = {
 # Šance (v procentech) že průzkumník odhalí tajemství při průchodu regionem
 # s dosud neznámým tajemstvím. Roll 1–100, úspěch pokud <= EXPLORER_SECRET_STEAL.
 const EXPLORER_SECRET_STEAL: int = 50
+
+const WARBAND_DEFAULT_LIFESPAN: int = 5
 
 static func get_org_effects(org_type: String, doctrine: String) -> Dictionary:
 	return ORG[org_type]["doctrines"][doctrine]["effects"]
