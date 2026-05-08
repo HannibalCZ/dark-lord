@@ -424,6 +424,8 @@ func advance_turn() -> void:
 	# Průzkumník — jednorázový spawn oddělený od process_ai_spawning()
 	_try_spawn_explorer()
 
+	_process_warband_lifespans()
+
 	# =========================
 	# F) Rada zasvěcených — generuj eventy z tohoto tahu
 	#    MUSÍ být před old_heat = heat (EventsManager čte starou vs novou hodnotu)
@@ -817,6 +819,20 @@ func _on_explorer_killed(_unit_id: int) -> void:
 	var ctx := EffectContext.make(self, null, Balance.PLAYER_FACTION)
 	ctx.source_label = "Pruzkumnik eliminovan — obchodnici zaznamenali zmizeni sveho zveda"
 	effects_system.apply({"heat": heat_boost}, ctx)
+
+func _process_warband_lifespans() -> void:
+	for unit in unit_manager.units:
+		if unit.is_lost:
+			continue
+		if not unit.is_warband():
+			continue
+		unit.turns_remaining -= 1
+		if unit.turns_remaining <= 0:
+			var region_id: int = unit.region_id
+			var unit_name: String = unit.name
+			var unit_id: int = unit.id
+			unit_manager.kill_unit(unit.id)
+			EventBus.warband_disbanded.emit(unit_id, unit_name, region_id)
 
 func _process_capture_step() -> void:
 	for region in region_manager.regions:
