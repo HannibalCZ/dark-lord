@@ -37,6 +37,9 @@ const MISSION_CHANCE_MAX = 0.95
 const WOUNDED_MISSION_PENALTY: float = 0.25
 const WOUNDED_POWER_PENALTY: int = 2
 
+# Tag bonusy pro mise — klíč "mission_success_[category]" v tag.add{}
+const SABOTAGED_MISSION_BONUS: int = 20
+
 # Stavové tagy regionu
 const UNREST_CORRUPTION_MIN: int = 2
 const UNREST_FEAR_MIN: int = 3
@@ -119,6 +122,7 @@ const CORRUPTION_PHASE_DATA := [
 const MISSION = {
 	"sabotage": {
 		"id": "sabotage",
+		"category": "destructive",
 		"display_name": "Sabotáž",
 		"description": "Oslab infrastrukturu regionu a získej trochu zlata. Zvyšuje pozornost sil dobra.",
 		"base_chance": 0.70,
@@ -137,6 +141,7 @@ const MISSION = {
 	},
 	"corrupt": {
 		"id": "corrupt",
+		"category": "subversion",
 		"display_name": "Korupce",
 		"description": "Šíří skrytou korupci ve frakci, aby převzala kontrolu nad regionem.",
 		"base_chance": 0.80,
@@ -155,6 +160,7 @@ const MISSION = {
 	},
 	"raid": {
 		"id": "raid",
+		"category": "destructive",
 		"display_name": "Nájezd",
 		"description": "Vyplení region a získá zlato, ale zvyšuje HEAT a poškozuje obranu.",
 		"base_chance": 0.60,
@@ -193,6 +199,7 @@ const MISSION = {
 	},
 	"explore": {
 		"id": "explore",
+		"category": "recon",
 		"display_name": "Pátrání",
 		"description": "Tvůj agent postupně odhaluje tajemství skryté v divočině.",
 		"base_chance": 0.80,
@@ -222,6 +229,7 @@ const MISSION = {
 	},
 	"manipulate": {
 		"id": "manipulate",
+		"category": "influence",
 		"display_name": "Zmanipulovat doupě",
 		"description": "Použij temná šeptání a kouzla k ovlivnění doupěte.",
 		"base_chance": 0.50,
@@ -278,6 +286,7 @@ const MISSION = {
 
 	"eliminate": {
 		"id":           "eliminate",
+		"category":     "destructive",
 		"display_name": "Eliminace",
 		"description":  "Agent zlikviduje nepratelskou jednotku v tomto regionu.",
 		"base_chance":  0.60,
@@ -306,6 +315,7 @@ const MISSION = {
 
 	"heal": {
 		"id":           "heal",
+		"category":     "support",
 		"display_name": "Léčení",
 		"description":  "Jednotka se zotaví ze zranění a vrátí se do plné bojové pohotovosti.",
 		"base_chance":  1,
@@ -319,6 +329,7 @@ const MISSION = {
 
 	"spread_fear": {
 		"id":           "spread_fear",
+		"category":     "destructive",
 		"display_name": "Šíření strachu",
 		"description":  "Agent šíří paniku a hrůzu mezi obyvateli regionu.",
 		"base_chance":  0.65,
@@ -826,7 +837,7 @@ const TAGS = {
 		"visible": true,
 		"source": "agent",
 		"mul": { "defense": 0.5 },
-		"add": {}
+		"add": { "mission_success_destructive": 20 }  # viz SABOTAGED_MISSION_BONUS
 	},
 
 	"unrest": {
