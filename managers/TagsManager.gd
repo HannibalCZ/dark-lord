@@ -28,21 +28,6 @@ func _evaluate_state_tags(region: Region) -> void:
 	elif not unrest_cond and _has_tag(region, "unrest"):
 		region.remove_tag("unrest")
 
-	# decadence: corruption fáze >= min AND sabotaged tag přítomen
-	var decadence_cond: bool = corruption_phase >= Balance.DECADENCE_CORRUPTION_MIN \
-		and _has_tag(region, "sabotaged")
-	if decadence_cond and not _has_tag(region, "decadence"):
-		region.add_tag(Balance.TAGS["decadence"].duplicate())
-	elif not decadence_cond and _has_tag(region, "decadence"):
-		region.remove_tag("decadence")
-
-	# hysteria: fear >= min AND sabotaged tag přítomen
-	var hysteria_cond: bool = fear >= Balance.HYSTERIA_FEAR_MIN \
-		and _has_tag(region, "sabotaged")
-	if hysteria_cond and not _has_tag(region, "hysteria"):
-		region.add_tag(Balance.TAGS["hysteria"].duplicate())
-	elif not hysteria_cond and _has_tag(region, "hysteria"):
-		region.remove_tag("hysteria")
 
 func check_chain_reactions() -> void:
 	for region in game_state.region_manager.regions:

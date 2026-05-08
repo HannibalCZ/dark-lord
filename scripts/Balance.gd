@@ -40,10 +40,6 @@ const WOUNDED_POWER_PENALTY: int = 2
 # Stavové tagy regionu
 const UNREST_CORRUPTION_MIN: int = 2
 const UNREST_FEAR_MIN: int = 3
-const DECADENCE_CORRUPTION_MIN: int = 2
-const DECADENCE_SABOTAGE_REQUIRED: bool = true
-const HYSTERIA_FEAR_MIN: int = 4
-const HYSTERIA_SABOTAGE_REQUIRED: bool = true
 const UNREST_REVOLT_CHANCE: float = 0.25
 
 const CORRUPTION_PHASE_NAMES: Dictionary = {
@@ -844,27 +840,6 @@ const TAGS = {
 		"add": {}
 	},
 
-	"decadence": {
-		"id": "decadence",
-		"display_name": "Dekadence",
-		"duration": -1,
-		"ticks_down": false,
-		"visible": true,
-		"source": "state",
-		"mul": {},
-		"add": {}
-	},
-
-	"hysteria": {
-		"id": "hysteria",
-		"display_name": "Hysterie",
-		"duration": -1,
-		"ticks_down": false,
-		"visible": true,
-		"source": "state",
-		"mul": {},
-		"add": {}
-	}
 }
 
 const SECRET = {
