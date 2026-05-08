@@ -134,7 +134,7 @@ const MISSION = {
 			"mana": 0,
 			"gold": 0,
 		},
-		"success": { "heat":6, "gold":5, "defense":-15, "tags": ["blockade", "sabotaged"] },
+		"success": { "heat":6, "gold":5, "defense":-15, "tags": ["sabotaged"] },
 		"fail":    { "heat": 4 },
 		"ui_icon": "res://ui/icons/missions/sabotage.png",
 		"ui_order": 1
