@@ -144,7 +144,16 @@ func _compute_mission_success(mission_key: String, unit: Unit, region: Region) -
 	# 3b) odecist malus za zranenou jednotku (preskoc u garantovanych misí)
 	if unit.is_wounded and base < 1.0:
 		unit_delta -= Balance.WOUNDED_MISSION_PENALTY
-	
+
+	# 3c) bonusy z region tagů pro kategorii mise (data-driven: tag.add["mission_success_<category>"])
+	var mission_category: String = cfg.get("category", "")
+	if mission_category != "":
+		for tag in region.tags:
+			var tag_add: Dictionary = tag.get("add", {})
+			var bonus_key: String = "mission_success_%s" % mission_category
+			if tag_add.has(bonus_key):
+				region_delta += float(tag_add[bonus_key]) / 100.0
+
 	# 4) spočítat výslednou šanci
 	var total_chance: float = base + region_delta + unit_delta
 	total_chance = clamp(total_chance, Balance.MISSION_CHANCE_MIN, Balance.MISSION_CHANCE_MAX)
