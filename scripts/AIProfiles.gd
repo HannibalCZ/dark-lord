@@ -60,34 +60,45 @@ const ACTORS: Dictionary = {
 		},
 
 		"actions": {
-			# Hlídkování — základní reakce na rostoucí Heat
+			# Očekávaná skóre per Heat threshold (referenční tabulka pro ladění):
+			# Heat  | patrol | threaten | assault | Vítěz
+			# < 25  |  0.30  |   0.20   |  0.10   | patrol
+			# 25-50 |  0.45  |   0.20   |  0.10   | patrol
+			# 50-85 |  0.90  |   0.40   |  0.10   | patrol
+			# 85-100|  0.27  |   0.80   |  0.20   | threaten
+			# 100+  |  0.27  |   0.80   |  1.00   | assault
+
+			# Hlídkování — základní reakce na rostoucí Heat; potlačeno při eskalaci (×0.3 nad 85)
 			"patrol": {
 				"base_score": 0.3,
 				"goal": "maintain_order",
 				"score_modifiers": [
 					{ "condition": "heat > 25", "multiplier": 1.5 },
-					{ "condition": "heat > 50", "multiplier": 2.0 }
+					{ "condition": "heat > 50", "multiplier": 2.0 },
+					{ "condition": "heat > 85", "multiplier": 0.3 }
 				],
 				"handler": "spawn_unit",
 				"handler_params": { "unit_key": "paladin_army" }
 			},
 
-			# Výhrůžka — mobilizace při vysokém Heat
+			# Výhrůžka — mobilizace od Heat 50, dominuje na 85–100
 			"threaten": {
-				"base_score": 0.1,
+				"base_score": 0.2,
 				"goal": "eliminate_darkness",
 				"score_modifiers": [
-					{ "condition": "heat > 85", "multiplier": 5.0 }
+					{ "condition": "heat > 50", "multiplier": 2.0 },
+					{ "condition": "heat > 85", "multiplier": 4.0 }
 				],
 				"handler": "move_army_toward_player",
 				"handler_params": {}
 			},
 
-			# Útok — eskalace při překročení Heat stropu
+			# Útok — eskalace nad 85, dominuje při Heat 100+
 			"assault": {
-				"base_score": 0.05,
+				"base_score": 0.1,
 				"goal": "eliminate_darkness",
 				"score_modifiers": [
+					{ "condition": "heat > 85", "multiplier": 2.0 },
 					{ "condition": "heat > 100", "multiplier": 10.0 }
 				],
 				"handler": "attack_player_base",
