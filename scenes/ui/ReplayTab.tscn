@@ -21,3 +21,16 @@ grow_vertical = 2
 custom_minimum_size = Vector2(0, 300)
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="WorldAISeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="WorldAITitle" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "— WorldAI Decision Log —"
+
+[node name="WorldAILog" type="RichTextLabel" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = false

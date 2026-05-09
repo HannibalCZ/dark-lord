@@ -93,6 +93,24 @@ func _process_actor(actor: AIActor, profile: Dictionary) -> void:
 	_execute_action(actor, action_def)
 
 # ---------------------------------------------------------------------------
+# Public read API
+# ---------------------------------------------------------------------------
+
+# Vrátí snapshot stavu všech aktérů pro debug UI.
+# Nevolej _actors přímo zvenčí — používej tuto metodu.
+func get_all_actor_snapshots() -> Array:
+	var result: Array = []
+	for faction_id in _actors.keys():
+		var actor: AIActor = _actors[faction_id]
+		result.append({
+			"faction_id": faction_id,
+			"active_plan": actor.current_plan,
+			"plan_turn": actor.plan_turn,
+			"log": actor.last_decision_log.duplicate()
+		})
+	return result
+
+# ---------------------------------------------------------------------------
 # Action dispatch
 # ---------------------------------------------------------------------------
 
