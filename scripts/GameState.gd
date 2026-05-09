@@ -25,6 +25,7 @@ signal game_ended(result: Dictionary) # { ok:bool, outcome:"win"/"lose", reason:
 @onready var reputation_manager: ReputationManager = ReputationManager.new()
 @onready var lair_manager: LairManager = LairManager.new()
 @onready var tags_manager: TagsManager = TagsManager.new()
+@onready var world_ai_manager: WorldAIManager = WorldAIManager.new()
 
 var rng := RandomNumberGenerator.new()
 var turn:int = 1
@@ -63,6 +64,7 @@ func _ready() -> void:
 	reputation_manager.game_state  = self
 	lair_manager.game_state        = self
 	tags_manager.game_state        = self
+	world_ai_manager.game_state    = self
 	events_manager.init(self)
 
 	query = GameQuery.new(self)
@@ -207,6 +209,9 @@ func load_scenario(path: String) -> void:
 	# Pro MVP to necháme jako "player unit cap". Pokud ve scénáři není, fallback na UnitManager default.
 	if player_unit_limit_from_scenario >= 0:
 		unit_manager.unit_limit = player_unit_limit_from_scenario
+
+	# 4c) Inicializace WorldAI aktérů — musí být po načtení frakcí
+	world_ai_manager.init_actors()
 
 	# 5) Units
 	var units_arr: Array = data.get("units", [])
@@ -378,6 +383,9 @@ func advance_turn() -> void:
 
 	# 3b) tagy — tick duration tagů, stavové tagy, chain reactions
 	tags_manager.process_end_of_turn()
+
+	# 3c) WorldAI — utility scoring a plánování aktérů
+	world_ai_manager.process_turn()
 
 	# 4) cooldowny dark actions
 	dark_actions_manager.tick_cooldowns()
