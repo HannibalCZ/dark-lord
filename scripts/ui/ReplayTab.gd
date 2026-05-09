@@ -58,7 +58,8 @@ func _refresh_world_ai() -> void:
 		# Seřaď akce sestupně podle skóre
 		var pairs: Array = []
 		for action_key in scores.keys():
-			pairs.append([action_key, scores[action_key]])
+			var s: float = scores[action_key].get("score", 0.0) if scores[action_key] is Dictionary else float(scores[action_key])
+			pairs.append([action_key, s])
 		pairs.sort_custom(func(a, b): return a[1] > b[1])
 
 		var score_parts: Array[String] = []

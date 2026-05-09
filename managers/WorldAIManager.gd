@@ -43,7 +43,7 @@ func _process_actor(actor: AIActor, profile: Dictionary) -> void:
 	var actions: Dictionary = profile.get("actions", {})
 	var threshold: float = profile.get("plan_switch_threshold", 0.25)
 
-	# Vypočítej skóre pro všechny akce
+	# Vypočítej skóre pro všechny akce — každé je Dictionary { score, base, breakdown }
 	var scores: Dictionary = {}
 	for action_key in actions.keys():
 		scores[action_key] = _calculate_action_score(action_key, actions[action_key], actor.faction_id)
@@ -52,35 +52,43 @@ func _process_actor(actor: AIActor, profile: Dictionary) -> void:
 	var best_action: String = ""
 	var best_score: float = -1.0
 	for action_key in scores.keys():
-		if scores[action_key] > best_score:
-			best_score = scores[action_key]
+		var s: float = scores[action_key]["score"]
+		if s > best_score:
+			best_score = s
 			best_action = action_key
 
 	# Plan persistence — přepni pouze pokud rozdíl překročí threshold
 	var should_switch: bool = false
+	var reason: String
 	if actor.current_plan == "":
 		should_switch = true
-	elif best_action != actor.current_plan:
-		var current_score: float = scores.get(actor.current_plan, 0.0)
-		should_switch = (best_score - current_score) > threshold
-
-	# Zaloguj rozhodnutí — designer vidí skóre všech akcí a důvod přepnutí
-	var reason: String
-	if should_switch and actor.current_plan != "":
-		reason = "threshold překročen"
-	elif actor.current_plan == "":
 		reason = "nový plán"
+	elif best_action != actor.current_plan:
+		var current_score: float = scores.get(actor.current_plan, {"score": 0.0}).get("score", 0.0)
+		var delta: float = best_score - current_score
+		if delta > threshold:
+			should_switch = true
+			reason = "threshold překročen (rozdíl %.2f > %.2f)" % [delta, threshold]
+		else:
+			reason = "pokračuje v plánu"
 	else:
 		reason = "pokračuje v plánu"
 
+	# Extrahuj breakdowns pro pohodlný přístup z debug UI
+	var breakdowns: Dictionary = {}
+	for action_key in scores.keys():
+		breakdowns[action_key] = scores[action_key].get("breakdown", [])
+
+	# Zaloguj rozhodnutí — designer vidí skóre všech akcí a důvod přepnutí
 	actor.last_decision_log = {
 		"turn": game_state.turn,
 		"faction": actor.faction_id,
 		"scores": scores,
+		"breakdowns": breakdowns,
 		"current_plan": actor.current_plan,
 		"best_action": best_action,
 		"switched": should_switch,
-		"reason": reason
+		"reason": reason,
 	}
 
 	if should_switch:
@@ -173,17 +181,27 @@ func _handler_attack_player_base(actor: AIActor, params: Dictionary) -> void:
 # Utility scoring
 # ---------------------------------------------------------------------------
 
-# Vypočítá výsledné utility skóre akce aplikací všech score_modifiers.
-# Modifikátory se násobí v pořadí — podmínky jsou nezávislé, ne exkluzivní.
-func _calculate_action_score(action_key: String, action_def: Dictionary, faction_id: String) -> float:
-	var score: float = action_def.get("base_score", 0.0)
-	var modifiers: Array = action_def.get("score_modifiers", [])
-	for modifier in modifiers:
+# Vypočítá utility skóre akce. Vrací Dictionary: { score, base, breakdown }.
+# breakdown je Array kroků — každý krok zaznamenává stav před/po aplikaci multiplikátoru.
+func _calculate_action_score(action_key: String, action_def: Dictionary, faction_id: String) -> Dictionary:
+	var base: float = action_def.get("base_score", 0.0)
+	var score: float = base
+	var breakdown: Array = []
+	for modifier in action_def.get("score_modifiers", []):
 		var condition: String = modifier.get("condition", "")
 		var multiplier: float = modifier.get("multiplier", 1.0)
-		if _evaluate_condition(condition, faction_id):
-			score *= multiplier
-	return score
+		var met: bool = _evaluate_condition(condition, faction_id)
+		var score_after: float = score * multiplier if met else score
+		breakdown.append({
+			"condition": condition,
+			"met": met,
+			"multiplier": multiplier,
+			"score_before": score,
+			"score_after": score_after,
+		})
+		if met:
+			score = score_after
+	return {"score": score, "base": base, "breakdown": breakdown}
 
 # Vyhodnotí condition string formátu "stat op value" (např. "heat > 25").
 # Při neplatném formátu vrátí false a zaloguje warning — nikdy nezpůsobí crash.

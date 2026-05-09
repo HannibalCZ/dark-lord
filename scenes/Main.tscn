@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://b7f7udyiyxxb"]
+[gd_scene load_steps=12 format=3 uid="uid://b7f7udyiyxxb"]
 
 [ext_resource type="PackedScene" uid="uid://ckl1fu7pnsokb" path="res://scenes/ui/TopBar.tscn" id="1_rarhs"]
 [ext_resource type="PackedScene" uid="uid://bpexmyevdnxa5" path="res://scenes/ui/MapTab.tscn" id="2_vcsgt"]
@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/ProgressionTab.tscn" id="7_ptab"]
 [ext_resource type="PackedScene" path="res://scenes/ui/FactionsTab.tscn" id="8_ftab"]
 [ext_resource type="PackedScene" path="res://scenes/ui/AlertBar.tscn" id="9_alertbar"]
+[ext_resource type="PackedScene" uid="uid://c_aidebug_tscn" path="res://scenes/ui/AIDebugTab.tscn" id="10_aidebug"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -73,6 +74,11 @@ metadata/_tab_index = 5
 visible = false
 layout_mode = 2
 metadata/_tab_index = 6
+
+[node name="AIDebugTab" parent="VBoxContainer/TabContainer" instance=ExtResource("10_aidebug")]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 7
 
 [node name="CouncilPanel" parent="." instance=ExtResource("6_council")]
 
