@@ -88,6 +88,69 @@ func _process_actor(actor: AIActor, profile: Dictionary) -> void:
 		actor.plan_utility = best_score
 		actor.plan_turn = game_state.turn
 
+	# Vykonej akci pro aktuální plán (ať switch nebo pokračování)
+	var action_def: Dictionary = actions.get(actor.current_plan, {})
+	_execute_action(actor, action_def)
+
+# ---------------------------------------------------------------------------
+# Action dispatch
+# ---------------------------------------------------------------------------
+
+# Přečte handler klíč z action_def a deleguje na příslušný handler.
+func _execute_action(actor: AIActor, action_def: Dictionary) -> void:
+	var handler: String = action_def.get("handler", "")
+	var params: Dictionary = action_def.get("handler_params", {})
+	match handler:
+		"spawn_unit":
+			_handler_spawn_unit(actor, params)
+		"move_army_toward_player":
+			_handler_move_army_toward_player(actor, params)
+		"attack_player_base":
+			_handler_attack_player_base(actor, params)
+		"":
+			pass  # žádná akce
+		_:
+			push_warning("WorldAI: neznámý handler '%s'" % handler)
+
+# Spawn paladínské armády.
+# POZOR: process_ai_spawning() v GameState.advance_turn() (sekce E) již spawní
+# paladin_army při heat >= 85 se spawn_rate 4 a limitem 3 jednotek.
+# Tento handler zatím pouze loguje záměr — nevykonává duplicitní spawn.
+# Budoucí migrace: přesunout spawn logiku sem a odstranit z process_ai_spawning().
+func _handler_spawn_unit(actor: AIActor, params: Dictionary) -> void:
+	var unit_key: String = params.get("unit_key", "")
+	actor.last_decision_log["handler_result"] = {
+		"handler": "spawn_unit",
+		"unit_key": unit_key,
+		"status": "delegated_to_existing",
+		"note": "process_ai_spawning() v GameState sekce E"
+	}
+
+# Přesun paladínských armád směrem k hráči (heat 85 — fáze výhrůžky).
+# POZOR: AIManager.execute_ai_turn() již pohybuje všemi paladin_army jednotkami
+# přes profil paladin_threat (AGGRESSIVE behavior) nastaveným v _check_heat_thresholds().
+# Tento handler zatím pouze loguje záměr — nevykonává duplicitní pohyb.
+# Budoucí migrace: přesunout pohybovou logiku sem a řídit přes WorldAI plán.
+func _handler_move_army_toward_player(actor: AIActor, params: Dictionary) -> void:
+	actor.last_decision_log["handler_result"] = {
+		"handler": "move_army_toward_player",
+		"status": "delegated_to_existing",
+		"note": "AIManager paladin_threat profil (AGGRESSIVE behavior)"
+	}
+
+# Útok na hráčovu základnu (heat 100 — závěrečná výprava).
+# POZOR: AIManager.execute_ai_turn() již pohybuje paladin_army jednotkami
+# přes profil final_assault (COORDINATED behavior) nastaveným v _check_heat_thresholds().
+# Tento handler zatím pouze loguje záměr — nevykonává duplicitní útok.
+# Budoucí migrace: přesunout útočnou logiku sem a řídit přes WorldAI plán.
+func _handler_attack_player_base(actor: AIActor, params: Dictionary) -> void:
+	actor.last_decision_log["handler_result"] = {
+		"handler": "attack_player_base",
+		"target_region": game_state.player_start_region_id,
+		"status": "delegated_to_existing",
+		"note": "AIManager final_assault profil (COORDINATED behavior)"
+	}
+
 # ---------------------------------------------------------------------------
 # Utility scoring
 # ---------------------------------------------------------------------------
