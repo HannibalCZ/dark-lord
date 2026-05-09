@@ -70,15 +70,13 @@ func _format_snapshot(snapshot: Dictionary) -> String:
 	# Seřaď sestupně podle skóre
 	var action_keys: Array = scores.keys()
 	action_keys.sort_custom(func(a, b):
-		var sa: float = scores[a].get("score", 0.0) if scores[a] is Dictionary else float(scores[a])
-		var sb: float = scores[b].get("score", 0.0) if scores[b] is Dictionary else float(scores[b])
-		return sa > sb
+		return scores[a].get("score", 0.0) > scores[b].get("score", 0.0)
 	)
 
 	for action_key in action_keys:
 		var score_dict: Dictionary = scores.get(action_key, {})
-		var final_score: float = score_dict.get("score", 0.0) if score_dict is Dictionary else float(score_dict)
-		var base_score: float = score_dict.get("base", 0.0) if score_dict is Dictionary else 0.0
+		var final_score: float = score_dict.get("score", 0.0)
+		var base_score: float = score_dict.get("base", 0.0)
 		var breakdown: Array = breakdowns.get(action_key, [])
 		var is_winner: bool = (action_key == best_action)
 
