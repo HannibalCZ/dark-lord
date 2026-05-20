@@ -118,6 +118,9 @@ func _process_actor(actor: AIActor, profile: Dictionary) -> void:
 		actor.plan_utility = best_score
 		actor.plan_turn = game_state.turn
 
+	# Strategický cíl pro aktuální plán — každý tah čerstvě
+	actor.current_target_region_id = _compute_target_region(actor)
+
 	# Vykonej akci pro aktuální plán (ať switch nebo pokračování)
 	var action_def: Dictionary = actions.get(actor.current_plan, {})
 	_execute_action(actor, action_def)
@@ -139,6 +142,10 @@ func get_all_actor_snapshots() -> Array:
 			"log": actor.last_decision_log.duplicate()
 		})
 	return result
+
+# Vrátí AIActor pro danou frakci, nebo null pokud frakce nemá WorldAI aktéra.
+func get_actor(faction_id: String) -> AIActor:
+	return _actors.get(faction_id, null)
 
 # ---------------------------------------------------------------------------
 # Action dispatch
@@ -297,6 +304,29 @@ func _evaluate_condition(condition: String, faction_id: String) -> bool:
 		_:
 			push_warning("WorldAI: neznámý operátor '%s' v condition '%s'" % [op, condition])
 			return false
+
+# Vypočítá strategický cílový region pro aktuální plán aktéra.
+# Referenční bod: player_start_region_id (paladíni útočí na hráčův lair).
+# Vrátí -1 pokud plán nemá target blok nebo region nelze najít.
+func _compute_target_region(actor: AIActor) -> int:
+	var action_def: Dictionary = AIProfiles.ACTORS.get(actor.faction_id, {}) \
+									.get("actions", {}).get(actor.current_plan, {})
+	var target_def: Dictionary = action_def.get("target", {})
+	if target_def.is_empty():
+		return -1
+
+	var ref_id: int = game_state.player_start_region_id
+	if ref_id < 0:
+		return -1
+
+	var select: String = target_def.get("select", "nearest")
+	var filters: Dictionary = target_def.get("filters", {})
+	match select:
+		"nearest":
+			return game_state.query.regions.find_nearest_with_filters(
+				ref_id, actor.faction_id, filters)
+		_:
+			return -1
 
 # Načte aktuální hodnotu herního statu podle klíče.
 # infamy je vlastnost player frakce — AI aktéři reagují na hráčovu reputaci.

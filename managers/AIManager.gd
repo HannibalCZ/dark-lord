@@ -46,7 +46,13 @@ func execute_ai_turn() -> void:
 						_ai_inquisitor_execute_action(u)
 				continue
 
-			var target_id: int = _ai_pick_target_region(u, prof)
+			# WorldAI aktér pro tuto frakci — pokud existuje a má platný target, použij ho
+			var _world_actor: AIActor = game_state.world_ai_manager.get_actor(u.faction_id)
+			var target_id: int = -1
+			if _world_actor != null and _world_actor.current_target_region_id >= 0:
+				target_id = _world_actor.current_target_region_id
+			else:
+				target_id = _ai_pick_target_region(u, prof)
 			if target_id == -1:
 				continue
 

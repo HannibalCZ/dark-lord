@@ -90,7 +90,11 @@ const ACTORS: Dictionary = {
 					{ "condition": "heat > 85", "multiplier": 4.0 }
 				],
 				"handler": "move_army_toward_player",
-				"handler_params": {}
+				"handler_params": {},
+				"target": {
+					"select": "nearest",
+					"filters": { "owner_rule": "good_faction" }
+				}
 			},
 
 			# Útok — eskalace nad 85, dominuje při Heat 100+
@@ -102,7 +106,11 @@ const ACTORS: Dictionary = {
 					{ "condition": "heat > 100", "multiplier": 10.0 }
 				],
 				"handler": "attack_player_base",
-				"handler_params": {}
+				"handler_params": {},
+				"target": {
+					"select": "nearest",
+					"filters": { "owner_rule": "player" }
+				}
 			}
 		}
 	}
