@@ -26,6 +26,28 @@ func init_actors() -> void:
 # Herní smyčka
 # ---------------------------------------------------------------------------
 
+# Nastaví current_behavior pro každou řízenou frakci podle aktuálního herního stavu.
+# Voláno z GameState.advance_turn() po reputation_manager.update_all() —
+# reputation_modifier musí být čerstvě přepočítán před výpočtem efektivního heatu.
+func update_faction_behaviors() -> void:
+	_update_paladin_behavior()
+
+func _update_paladin_behavior() -> void:
+	var faction: Faction = game_state.faction_manager.get_faction("paladin")
+	if faction == null:
+		return
+	var eff: int = game_state.heat + faction.reputation_modifier
+	if eff >= Balance.HEAT_MAX:
+		faction.current_behavior = Faction.Behavior.COORDINATED
+	elif eff >= Balance.HEAT_STAGE_3:
+		faction.current_behavior = Faction.Behavior.AGGRESSIVE
+	elif eff >= Balance.HEAT_STAGE_2:
+		faction.current_behavior = Faction.Behavior.ACTING
+	elif eff >= Balance.HEAT_STAGE_1:
+		faction.current_behavior = Faction.Behavior.PATROLLING
+	else:
+		faction.current_behavior = Faction.Behavior.PASSIVE
+
 # Hlavní entry point — volat z GameState.advance_turn().
 func process_turn() -> void:
 	for faction_id in _actors.keys():
@@ -154,7 +176,7 @@ func _handler_spawn_unit(actor: AIActor, params: Dictionary) -> void:
 
 # Přesun paladínských armád směrem k hráči (heat 85 — fáze výhrůžky).
 # POZOR: AIManager.execute_ai_turn() již pohybuje všemi paladin_army jednotkami
-# přes profil paladin_threat (AGGRESSIVE behavior) nastaveným v _check_heat_thresholds().
+# přes profil paladin_threat (AGGRESSIVE behavior) nastaveným v update_faction_behaviors().
 # Tento handler zatím pouze loguje záměr — nevykonává duplicitní pohyb.
 # Budoucí migrace: přesunout pohybovou logiku sem a řídit přes WorldAI plán.
 func _handler_move_army_toward_player(actor: AIActor, params: Dictionary) -> void:
@@ -166,7 +188,7 @@ func _handler_move_army_toward_player(actor: AIActor, params: Dictionary) -> voi
 
 # Útok na hráčovu základnu (heat 100 — závěrečná výprava).
 # POZOR: AIManager.execute_ai_turn() již pohybuje paladin_army jednotkami
-# přes profil final_assault (COORDINATED behavior) nastaveným v _check_heat_thresholds().
+# přes profil final_assault (COORDINATED behavior) nastaveným v update_faction_behaviors().
 # Tento handler zatím pouze loguje záměr — nevykonává duplicitní útok.
 # Budoucí migrace: přesunout útočnou logiku sem a řídit přes WorldAI plán.
 func _handler_attack_player_base(actor: AIActor, params: Dictionary) -> void:
