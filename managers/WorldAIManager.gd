@@ -9,6 +9,9 @@ var game_state: GameStateSingleton
 # Interní stav aktérů — přistupovat pouze přes metody tohoto manažera.
 var _actors: Dictionary = {}  # { faction_id: AIActor }
 
+# Migrovaní aktéři (Epics 1–3 dokončeny):
+#   "paladin" — eskalační chování (E1), spawn rozhodnutí (E2), strategický target (E3)
+
 # ---------------------------------------------------------------------------
 # Inicializace
 # ---------------------------------------------------------------------------

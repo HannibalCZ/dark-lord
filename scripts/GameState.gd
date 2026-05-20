@@ -428,7 +428,7 @@ func advance_turn() -> void:
 	# AWARENESS reakce
 	_check_awareness_thresholds(prev_awareness, awareness)
 
-	# AI spawn (po heat thresholdech, aby paladin viděl aktuální stav)
+	# AI spawn (po heat thresholdech — frakce spravované WorldAI jsou přeskočeny přes managed_by_world_ai)
 	process_ai_spawning()
 	# Průzkumník — jednorázový spawn oddělený od process_ai_spawning()
 	_try_spawn_explorer()
@@ -496,24 +496,13 @@ func advance_turn() -> void:
 	emit_signal("turn_resolved")
 
 func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
-	var paladin_faction := faction_manager.get_faction("paladin")
-	if paladin_faction == null:
-		return
-
-	# žádná změna → nic neřešíme
+	# heat_stage je hra-wide koncept — žádná frakce-specifická logika.
+	# Per-frakční eskalace (current_behavior, spawn) spravuje WorldAIManager.
 	if new_heat == old_heat:
 		return
 
-	# Reputacni modifier — snizuje/zvysuje efektivni heat pro tuto frakci.
-	# Hostile: -10 (frakce reaguje drive),
-	# Infiltrated: +10 (reaguje pozdeji),
-	# Controlled: +99 (prakticky nikdy neprekroci threshold)
-	var rep_mod: int = paladin_faction.reputation_modifier
-	var eff_old: int = old_heat + rep_mod
-	var eff_new: int = new_heat + rep_mod
-
 	# --- STAGE 1 ---
-	if eff_old < Balance.HEAT_STAGE_1 and eff_new >= Balance.HEAT_STAGE_1:
+	if old_heat < Balance.HEAT_STAGE_1 and new_heat >= Balance.HEAT_STAGE_1:
 		heat_stage = max(heat_stage, 1)
 		_log({
 			"type": "heat",
@@ -521,7 +510,7 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 		})
 
 	# --- STAGE 2 ---
-	if eff_old < Balance.HEAT_STAGE_2 and eff_new >= Balance.HEAT_STAGE_2:
+	if old_heat < Balance.HEAT_STAGE_2 and new_heat >= Balance.HEAT_STAGE_2:
 		heat_stage = max(heat_stage, 2)
 		_log({
 			"type": "heat",
@@ -529,16 +518,15 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 		})
 
 	# --- STAGE 3 ---
-	if eff_old < Balance.HEAT_STAGE_3 and eff_new >= Balance.HEAT_STAGE_3:
+	if old_heat < Balance.HEAT_STAGE_3 and new_heat >= Balance.HEAT_STAGE_3:
 		heat_stage = max(heat_stage, 3)
-		# ai_regular_spawns_enabled pro paladíny spravuje WorldAIManager._handler_spawn_unit()
 		_log({
 			"type": "heat",
 			"text": "🔥🔥🔥 [HEAT 85] Svaté výpravy proudí ze všech koutů světa."
 		})
 
 	# --- STAGE 4 ---
-	if eff_old < Balance.HEAT_MAX and eff_new >= Balance.HEAT_MAX:
+	if old_heat < Balance.HEAT_MAX and new_heat >= Balance.HEAT_MAX:
 		heat_stage = 4
 		_log({
 			"type": "cycle",

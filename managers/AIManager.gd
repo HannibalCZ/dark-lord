@@ -91,7 +91,9 @@ func _pick_profile(u: Unit) -> String:
 		else:
 			return "defender"      # lair je neutral/ai → stojí na místě a brání
 
-	# 3) Faction behavior: paladin_army a ostatní bez fixed profile
+	# 3) Faction behavior — pro WorldAI-řízené frakce nastavuje WorldAIManager.update_faction_behaviors()
+	#    (Epic 1). Strategický cíl pro pohyb přichází z world_ai_manager.get_actor() (Epic 3).
+	#    Tato větev je navržený komunikační kanál WorldAI → AIManager, ne deprecated kód.
 	var faction: Faction = game_state.faction_manager.get_faction(u.faction_id)
 	if faction == null:
 		return "defender"
