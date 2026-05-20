@@ -531,7 +531,7 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 	# --- STAGE 3 ---
 	if eff_old < Balance.HEAT_STAGE_3 and eff_new >= Balance.HEAT_STAGE_3:
 		heat_stage = max(heat_stage, 3)
-		paladin_faction.ai_regular_spawns_enabled = true
+		# ai_regular_spawns_enabled pro paladíny spravuje WorldAIManager._handler_spawn_unit()
 		_log({
 			"type": "heat",
 			"text": "🔥🔥🔥 [HEAT 85] Svaté výpravy proudí ze všech koutů světa."
@@ -653,6 +653,11 @@ func _process_domain_events(events: Array) -> void:
 func process_ai_spawning() -> void:
 	for faction_id in Balance.AI_SPAWN:
 		var cfg: Dictionary = Balance.AI_SPAWN[faction_id]
+
+		# WorldAI spravuje spawn pro tuto frakci — přeskočit
+		if cfg.get("managed_by_world_ai", false):
+			continue
+
 		var faction: Faction = faction_manager.get_faction(faction_id)
 		if faction == null:
 			continue

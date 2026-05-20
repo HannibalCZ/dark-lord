@@ -160,18 +160,68 @@ func _execute_action(actor: AIActor, action_def: Dictionary) -> void:
 		_:
 			push_warning("WorldAI: neznámý handler '%s'" % handler)
 
-# Spawn paladínské armády.
-# POZOR: process_ai_spawning() v GameState.advance_turn() (sekce E) již spawní
-# paladin_army při heat >= 85 se spawn_rate 4 a limitem 3 jednotek.
-# Tento handler zatím pouze loguje záměr — nevykonává duplicitní spawn.
-# Budoucí migrace: přesunout spawn logiku sem a odstranit z process_ai_spawning().
+# Spawn jednotky pro frakci řízenou WorldAI.
+# Čte konfiguraci z Balance.AI_SPAWN[faction_id] (threshold, spawn_rate, unit_limit).
+# Spravuje faction.spawn_counter a faction.ai_regular_spawns_enabled.
+# Deleguje mechanické provedení na game_state._spawn_faction_unit().
 func _handler_spawn_unit(actor: AIActor, params: Dictionary) -> void:
 	var unit_key: String = params.get("unit_key", "")
+	var cfg: Dictionary = Balance.AI_SPAWN.get(actor.faction_id, {})
+	if cfg.is_empty() or unit_key == "":
+		actor.last_decision_log["handler_result"] = {
+			"handler": "spawn_unit", "status": "no_config"
+		}
+		return
+
+	var faction: Faction = game_state.faction_manager.get_faction(actor.faction_id)
+	if faction == null:
+		return
+
+	# Ovládnutá frakce nespawnuje — reset counteru
+	if faction.reputation_phase == "controlled":
+		faction.spawn_counter = 0
+		faction.ai_regular_spawns_enabled = false
+		actor.last_decision_log["handler_result"] = {
+			"handler": "spawn_unit", "status": "controlled"
+		}
+		return
+
+	# Trigger threshold + reputation modifier
+	var trigger_value: int = game_state.heat if cfg.get("trigger") == "heat" \
+							 else game_state.awareness
+	var effective_threshold: int = int(cfg["threshold"]) + faction.reputation_modifier
+	faction.ai_regular_spawns_enabled = trigger_value >= effective_threshold
+
+	if not faction.ai_regular_spawns_enabled:
+		faction.spawn_counter = 0
+		actor.last_decision_log["handler_result"] = {
+			"handler": "spawn_unit", "status": "below_threshold",
+			"trigger": trigger_value, "threshold": effective_threshold
+		}
+		return
+
+	# Unit limit
+	var current_count: int = game_state.query.units.count_units_by_faction_and_key(
+		actor.faction_id, unit_key)
+	if current_count >= int(cfg["unit_limit"]):
+		actor.last_decision_log["handler_result"] = {
+			"handler": "spawn_unit", "status": "at_limit", "count": current_count
+		}
+		return
+
+	# Spawn counter
+	faction.spawn_counter += 1
+	if faction.spawn_counter < int(cfg["spawn_rate"]):
+		actor.last_decision_log["handler_result"] = {
+			"handler": "spawn_unit", "status": "counter_wait",
+			"counter": faction.spawn_counter, "rate": cfg["spawn_rate"]
+		}
+		return
+
+	faction.spawn_counter = 0
+	game_state._spawn_faction_unit(actor.faction_id, unit_key)
 	actor.last_decision_log["handler_result"] = {
-		"handler": "spawn_unit",
-		"unit_key": unit_key,
-		"status": "delegated_to_existing",
-		"note": "process_ai_spawning() v GameState sekce E"
+		"handler": "spawn_unit", "status": "spawned", "unit_key": unit_key
 	}
 
 # Přesun paladínských armád směrem k hráči (heat 85 — fáze výhrůžky).

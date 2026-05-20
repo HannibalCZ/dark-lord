@@ -1023,11 +1023,12 @@ const ORG_NEUTRAL_EFFECTS = {
 # --- AI Spawning ---
 const AI_SPAWN = {
 	"paladin": {
-		"unit_key":   "paladin_army",
-		"trigger":    "heat",
-		"threshold":  85,
-		"spawn_rate": 4,
-		"unit_limit": 3
+		"unit_key":            "paladin_army",
+		"trigger":             "heat",
+		"threshold":           50,   # patrol vyhrává na heat < 85; spawn začíná se STAGE 2
+		"spawn_rate":          4,
+		"unit_limit":          3,
+		"managed_by_world_ai": true  # spawn rozhodnutí řídí WorldAIManager._handler_spawn_unit()
 	},
 	"elf": {
 		"unit_key":   "inquisitor",
