@@ -424,6 +424,7 @@ func advance_turn() -> void:
 
 	# HEAT reakce
 	_check_heat_thresholds(old_heat, heat)
+	world_ai_manager.update_faction_behaviors()
 	# AWARENESS reakce
 	_check_awareness_thresholds(prev_awareness, awareness)
 
@@ -544,18 +545,6 @@ func _check_heat_thresholds(old_heat: int, new_heat: int) -> void:
 			"text": "💀 [HEAT 100] Začíná závěrečná křížová výprava proti Temnému pánovi!"
 		})
 
-	# --- BEHAVIOR ENUM — zalozeno na efektivnim heat vcetne rep_mod ---
-	# HEAT_MAX (100) musí být před STAGE_3 (85) — obě podmínky by jinak platily současně
-	if eff_new >= Balance.HEAT_MAX:
-		paladin_faction.current_behavior = Faction.Behavior.COORDINATED
-	elif eff_new >= Balance.HEAT_STAGE_3:
-		paladin_faction.current_behavior = Faction.Behavior.AGGRESSIVE
-	elif eff_new >= Balance.HEAT_STAGE_2:
-		paladin_faction.current_behavior = Faction.Behavior.ACTING
-	elif eff_new >= Balance.HEAT_STAGE_1:
-		paladin_faction.current_behavior = Faction.Behavior.PATROLLING
-	else:
-		paladin_faction.current_behavior = Faction.Behavior.PASSIVE
 
 func _check_awareness_thresholds(old_aw: int, new_aw: int) -> void:
 	if old_aw == new_aw:

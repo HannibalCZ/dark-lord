@@ -10,7 +10,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/ProgressionTab.tscn" id="7_ptab"]
 [ext_resource type="PackedScene" path="res://scenes/ui/FactionsTab.tscn" id="8_ftab"]
 [ext_resource type="PackedScene" path="res://scenes/ui/AlertBar.tscn" id="9_alertbar"]
-[ext_resource type="PackedScene" uid="uid://c_aidebug_tscn" path="res://scenes/ui/AIDebugTab.tscn" id="10_aidebug"]
+[ext_resource type="PackedScene" path="res://scenes/ui/AIDebugTab.tscn" id="10_aidebug"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
