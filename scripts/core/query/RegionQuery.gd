@@ -291,7 +291,7 @@ func is_inhabited(region_id: int) -> bool:
 
 func get_uninhabited_regions() -> Array[Region]:
 	var result: Array[Region] = []
-	for r in _regions:
+	for r in by_id:
 		if r != null and not r.inhabited:
 			result.append(r)
 	return result
