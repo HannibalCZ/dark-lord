@@ -18,7 +18,7 @@
 	{ "id": 9,  "name": "Elfi haj",              "owner_faction_id": "elf",      "region_type": "forest",    "region_kind": "civilized",  "inhabited": true,  "position": {"x": 780, "y": 380},  "neighbors": [5, 8, 12] },
 	{ "id": 10, "name": "Obchodni město",        "owner_faction_id": "merchant", "region_type": "town",      "region_kind": "civilized",  "inhabited": true,  "position": {"x": 240, "y": 540},  "neighbors": [6, 11, 13] },
 	{ "id": 11, "name": "Hranicni osada",        "owner_faction_id": "neutral",  "region_type": "village",   "region_kind": "civilized",  "inhabited": true,  "position": {"x": 420, "y": 540},  "neighbors": [7, 8, 10, 14] },
-	{ "id": 12, "name": "Elfi svatyne",          "owner_faction_id": "elf",      "region_type": "forest",    "region_kind": "civilized",  "inhabited": true,  "position": {"x": 780, "y": 540},  "neighbors": [9] },
+	{ "id": 12, "name": "Elfi svatyne",          "owner_faction_id": "elf",      "region_type": "forest",    "region_kind": "civilized",  "inhabited": true,  "position": {"x": 780, "y": 540},  "neighbors": [9, 20] },
 	{ "id": 13, "name": "Přistav kupcu",         "owner_faction_id": "merchant", "region_type": "town",      "region_kind": "civilized",  "inhabited": true,  "position": {"x": 240, "y": 700},  "neighbors": [10, 14, 22] },
 	{ "id": 14, "name": "Temny hvozd",           "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wilderness", "inhabited": false, "position": {"x": 420, "y": 700},  "neighbors": [11, 13, 15, 16] },
 	{ "id": 15, "name": "Zapomenuta zřicenina",  "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wilderness", "inhabited": false, "position": {"x": 600, "y": 700},  "neighbors": [8, 14, 17, 20] },
@@ -26,7 +26,7 @@
 	{ "id": 17, "name": "Proklata bažina",       "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wilderness", "inhabited": false, "position": {"x": 600, "y": 860},  "neighbors": [15, 16, 18, 21] },
 	{ "id": 18, "name": "Zapomenute hlubiny",    "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wilderness", "inhabited": false, "position": {"x": 420, "y": 1020}, "neighbors": [16, 17] },
 	{ "id": 19, "name": "Paladinská provincie",  "owner_faction_id": "paladin",  "region_type": "plains",    "region_kind": "civilized",  "inhabited": true,  "position": {"x": 420, "y": 60},   "neighbors": [1, 3] },
-	{ "id": 20, "name": "Jižní průsmyk",         "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wilderness", "inhabited": false, "position": {"x": 780, "y": 700},  "neighbors": [15, 21] },
+	{ "id": 20, "name": "Jižní průsmyk",         "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wilderness", "inhabited": false, "position": {"x": 780, "y": 700},  "neighbors": [12, 15, 21] },
 	{ "id": 21, "name": "Jižní doupě 1",         "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wilderness", "inhabited": true,  "position": {"x": 780, "y": 860},  "neighbors": [17, 20], "lair": { "id": "orc_camp", "control": "neutral", "influence": 0 } },
 	{ "id": 22, "name": "Jižní doupě 2",         "owner_faction_id": "neutral",  "region_type": "wasteland", "region_kind": "wilderness", "inhabited": true,  "position": {"x": 240, "y": 860}, "neighbors": [13, 10], "lair": { "id": "orc_camp", "control": "neutral", "influence": 0 } }
   ]
