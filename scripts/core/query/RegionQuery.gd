@@ -181,6 +181,9 @@ func _matches_filters(region_id: int, actor_faction_id: String, filters: Diction
 		"player":
 			if r.owner_faction_id != Balance.PLAYER_FACTION:
 				return false
+		"neutral":
+			if r.owner_faction_id != "neutral":
+				return false
 		_:
 			return false
 
