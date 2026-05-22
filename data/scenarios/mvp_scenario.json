@@ -23,7 +23,8 @@
 	  "resources": { "gold": 30, "mana": 10, "research":30 }
 	},
 	{ "id": "paladin", "name": "Cech Paladinů", "alignment": "good", "ai_spawn_unit": "paladin_army", "resources": {} },
-	{ "id": "elf", "name": "Říše elfů", "alignment": "good", "ai_spawn_unit": "inquisitor", "resources": {} },
+	{ "id": "elf", "name": "Říše elfů", "alignment": "good", "resources": {} },
+	{ "id": "inquisition", "name": "Inkvizice", "alignment": "good", "resources": {} },
 	{ "id": "merchant", "name": "Obchodní města", "alignment": "good", "ai_spawn_unit": "", "resources": {} },
 	{ "id": "orc", "name": "Orčí tlupa", "alignment": "neutral", "ai_spawn_unit": "orc_band", "resources": {} },
 	{ "id": "lair", "name": "Lair", "alignment": "neutral", "resources": {} },
@@ -34,7 +35,7 @@
 	{ "id": 1,   "unit_key": "agent",   "region_id": 16, "faction_id": "player",  "state": "healthy" },
 
 	{ "id": 100, "unit_key": "paladin_army", "region_id": 7,  "faction_id": "paladin", "state": "healthy" },
-	{ "id": 101, "unit_key": "inquisitor",   "region_id": 5,  "faction_id": "elf",     "state": "healthy" }
+	{ "id": 101, "unit_key": "inquisitor",   "region_id": 5,  "faction_id": "inquisition", "state": "healthy" }
   ],
   "orgs": [
 	{ "org_type": "crime_syndicate", "owner": "neutral", "region_id": 10, "doctrine": "extortion",    "loyalty": 100 },

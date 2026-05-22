@@ -1,10 +1,11 @@
 extends Control
 
 const FACTION_COLORS := {
-	"paladin":  Color("#cca644"),
-	"elf":      Color("#4caf50"),
-	"merchant": Color("#55aadd"),
-	"orc":      Color("#8b0000"),
+	"paladin":     Color("#cca644"),
+	"elf":         Color("#4caf50"),
+	"inquisition": Color("#9c27b0"),
+	"merchant":    Color("#55aadd"),
+	"orc":         Color("#8b0000"),
 }
 
 @onready var factions_container: VBoxContainer = $VBoxContainer/ScrollContainer/FactionsContainer

@@ -1030,7 +1030,7 @@ const AI_SPAWN = {
 		"unit_limit":          3,
 		"managed_by_world_ai": true  # spawn rozhodnutí řídí WorldAIManager._handler_spawn_unit()
 	},
-	"elf": {
+	"inquisition": {
 		"unit_key":   "inquisitor",
 		"trigger":    "awareness",
 		"threshold":  50,       # sníženo z 70 — první inkvizitor přichází dříve
@@ -1364,10 +1364,11 @@ static func get_progression_one_time(node_key: String) -> Dictionary:
 
 # Vychozi reputace per frakce
 const REPUTATION_BASE = {
-	"paladin":  15,
-	"elf":      10,
-	"merchant": 20,
-	"orc":      40
+	"paladin":     15,
+	"elf":         10,
+	"inquisition": 10,
+	"merchant":    20,
+	"orc":         40
 }
 
 # Fazove prahy

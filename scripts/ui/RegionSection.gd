@@ -164,6 +164,7 @@ func _format_faction(faction_id: String) -> String:
 		Balance.PLAYER_FACTION: return "Temny pan"
 		"paladin":              return "Paladini"
 		"elf":                  return "Elfove"
+		"inquisition":          return "Inkvizice"
 		"orc":                  return "Orkove"
 		_:                      return faction_id
 
