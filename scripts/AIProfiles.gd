@@ -113,5 +113,44 @@ const ACTORS: Dictionary = {
 				}
 			}
 		}
+	},
+
+	"inquisition": {
+		"display_name": "Inkvizice",
+		"plan_switch_threshold": 0.20,
+
+		"goals": {
+			"eliminate_darkness": 1.0,
+			"investigate_threats": 0.8
+		},
+
+		"actions": {
+			# Awareness | dormant | investigate | Vítěz
+			# < 30      |  0.60   |    0.20     | dormant
+			# 30–50     |  0.30   |    0.40     | investigate
+			# 50+       |  0.09   |    1.60     | investigate
+
+			"dormant": {
+				"base_score": 0.6,
+				"goal": "eliminate_darkness",
+				"score_modifiers": [
+					{ "condition": "awareness > 30", "multiplier": 0.5 },
+					{ "condition": "awareness > 50", "multiplier": 0.3 }
+				],
+				"handler": "stay_dormant",
+				"handler_params": {}
+			},
+
+			"investigate": {
+				"base_score": 0.2,
+				"goal": "investigate_threats",
+				"score_modifiers": [
+					{ "condition": "awareness > 30", "multiplier": 2.0 },
+					{ "condition": "awareness > 50", "multiplier": 4.0 }
+				],
+				"handler": "activate_inquisition",
+				"handler_params": {}
+			}
+		}
 	}
 }

@@ -165,6 +165,10 @@ func _execute_action(actor: AIActor, action_def: Dictionary) -> void:
 			_handler_move_army_toward_player(actor, params)
 		"attack_player_base":
 			_handler_attack_player_base(actor, params)
+		"stay_dormant":
+			_handler_stay_dormant(actor, params)
+		"activate_inquisition":
+			_handler_activate_inquisition(actor, params)
 		"":
 			pass  # žádná akce
 		_:
@@ -258,6 +262,13 @@ func _handler_attack_player_base(actor: AIActor, params: Dictionary) -> void:
 		"status": "delegated_to_existing",
 		"note": "AIManager final_assault profil (COORDINATED behavior)"
 	}
+
+func _handler_stay_dormant(actor: AIActor, params: Dictionary) -> void:
+	actor.last_decision_log["handler_result"] = "dormant — inkvizice čeká"
+
+func _handler_activate_inquisition(actor: AIActor, params: Dictionary) -> void:
+	# Taktická logika zůstává v AIManager — zde pouze logujeme strategické rozhodnutí
+	actor.last_decision_log["handler_result"] = "active — inkvizice pronásleduje"
 
 # ---------------------------------------------------------------------------
 # Utility scoring
