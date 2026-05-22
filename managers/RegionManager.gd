@@ -75,6 +75,7 @@ func load_map_from_json(path: String) -> void:
 
 		var r := Region.new(id, name, owner, rtype)
 		r.region_kind = kind
+		r.inhabited = bool(rd.get("inhabited", true))
 
 		# Secret (optional)
 		if rd.has("secret"):

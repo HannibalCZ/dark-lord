@@ -169,6 +169,8 @@ func _execute_action(actor: AIActor, action_def: Dictionary) -> void:
 			_handler_stay_dormant(actor, params)
 		"activate_inquisition":
 			_handler_activate_inquisition(actor, params)
+		"spawn_colonist":
+			_handler_spawn_colonist(actor, params)
 		"":
 			pass  # žádná akce
 		_:
@@ -261,6 +263,35 @@ func _handler_attack_player_base(actor: AIActor, params: Dictionary) -> void:
 		"target_region": game_state.player_start_region_id,
 		"status": "delegated_to_existing",
 		"note": "AIManager final_assault profil (COORDINATED behavior)"
+	}
+
+func _handler_spawn_colonist(actor: AIActor, _params: Dictionary) -> void:
+	# Spawnuje elfího kolonizátora v elfím hraničním regionu sousedícím s uninhabited územím.
+	# Podmínky: alespoň 1 uninhabited neutral region sousedí s elfím územím AND živé kolonizátory < 2.
+	var elf_regions := game_state.query.regions.regions_owned_by("elf")
+	var spawn_candidates: Array[int] = []
+	for er in elf_regions:
+		for n_id in game_state.query.regions.neighbors(er.id):
+			var nr := game_state.query.regions.get_by_id(n_id)
+			if nr != null and not nr.inhabited and nr.owner_faction_id == "neutral":
+				if not spawn_candidates.has(er.id):
+					spawn_candidates.append(er.id)
+	if spawn_candidates.is_empty():
+		actor.last_decision_log["handler_result"] = {
+			"handler": "spawn_colonist", "status": "no_adjacent_uninhabited"
+		}
+		return
+	# Limit: maximálně 2 živí kolonizátoři najednou
+	var colonist_count: int = game_state.query.units.count_units_by_faction_and_key("elf", "elf_colonist")
+	if colonist_count >= 2:
+		actor.last_decision_log["handler_result"] = {
+			"handler": "spawn_colonist", "status": "limit_reached", "count": colonist_count
+		}
+		return
+	# Spawn v prvním elfím regionu — kolonizátor se pak pohybuje k cíli přes colonist AI profil.
+	game_state._spawn_faction_unit("elf", "elf_colonist")
+	actor.last_decision_log["handler_result"] = {
+		"handler": "spawn_colonist", "status": "spawned"
 	}
 
 func _handler_stay_dormant(actor: AIActor, params: Dictionary) -> void:

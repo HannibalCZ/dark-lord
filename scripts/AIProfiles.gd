@@ -152,5 +152,22 @@ const ACTORS: Dictionary = {
 				"handler_params": {}
 			}
 		}
+	},
+
+	"elf": {
+		"plan_switch_threshold": 0.20,
+		"goals": {
+			"expand_territory": 1.0
+		},
+		"actions": {
+			"colonize": {
+				"base_score": 0.5,
+				"goal": "expand_territory",
+				"score_modifiers": [],
+				"handler": "spawn_colonist",
+				"handler_params": {},
+				"conditions": []
+			}
+		}
 	}
 }

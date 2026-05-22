@@ -42,3 +42,5 @@ signal lair_unit_spawned(region_id: int, faction_id: String, unit_key: String)
 signal militia_spawned(region_id: int)
 
 signal warband_disbanded(unit_id: int, unit_name: String, region_id: int)
+
+signal colonist_disbanded(unit_name: String, region_id: int)

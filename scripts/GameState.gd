@@ -838,6 +838,23 @@ func _process_capture_step() -> void:
 		if factions_present.size() > 1:
 			continue
 
+		# --- Kolonizace neobydleného regionu ---
+		# Jednotka s disband_after_capture (kolonizátor) okamžitě obsadí neutrální neobydlený region.
+		if not region.inhabited and region.owner_faction_id == "neutral":
+			for unit in query.units.in_region(region.id):
+				if Balance.UNIT.get(unit.unit_key, {}).get("disband_after_capture", false):
+					region_manager.claim_region(region.id, unit.faction_id)
+					region.inhabited = true
+					for u2 in query.units.in_region(region.id):
+						if Balance.UNIT.get(u2.unit_key, {}).get("disband_after_capture", false):
+							unit_manager.kill_unit(u2.id)
+							EventBus.colonist_disbanded.emit(u2.name, region.id)
+					break
+
+		# Neobydlené regiony nelze dobýt vojensky — armády mohou stát a bojovat, ale capture se nespustí
+		if not region.inhabited:
+			continue
+
 		var max_def: int = Balance.REGION_TYPE.get(region.region_type, {}).get("defense", 3)
 
 		# Žádná armáda → regenerace defense
@@ -873,6 +890,12 @@ func _process_capture_step() -> void:
 			if region.get_meta("occupation_ready", false):
 				# Druhé kolo s defense=0 — obsadit region
 				region_manager.claim_region(region.id, attacker_id)
+				if not region.inhabited:
+					region.inhabited = true
+				for unit in query.units.in_region(region.id):
+					if Balance.UNIT.get(unit.unit_key, {}).get("disband_after_capture", false):
+						unit_manager.kill_unit(unit.id)
+						EventBus.colonist_disbanded.emit(unit.name, region.id)
 				region.occupying_faction = ""
 				region.defense = max_def
 				region.remove_meta("occupation_ready")

@@ -221,6 +221,11 @@ func _matches_filters(region_id: int, actor_faction_id: String, filters: Diction
 			if tag.get("id", "") == forbidden_tag:
 				return false
 
+	# not_inhabited: true = region musí být neobydlený
+	if filters.get("not_inhabited", false):
+		if r.inhabited:
+			return false
+
 	return true
 
 # Vrací region s nejvyšší korupcí hráčské frakce, který projde filters.
@@ -275,6 +280,21 @@ func has_uncontrolled_lair(region_id: int) -> bool:
 	if r == null:
 		return false
 	return r.has_lair() and r.lair_control != Balance.PLAYER_FACTION
+
+# --- Inhabited queries ---
+
+func is_inhabited(region_id: int) -> bool:
+	var r := get_by_id(region_id)
+	if r == null:
+		return true  # bezpečný fallback — neznámý region považujeme za obydlený
+	return r.inhabited
+
+func get_uninhabited_regions() -> Array[Region]:
+	var result: Array[Region] = []
+	for r in _regions:
+		if r != null and not r.inhabited:
+			result.append(r)
+	return result
 
 func is_adjacent_to_player_territory(region_id: int) -> bool:
 	var r := get_by_id(region_id)

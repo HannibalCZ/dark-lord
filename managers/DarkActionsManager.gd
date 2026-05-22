@@ -103,6 +103,10 @@ func can_cast(faction_id:String, action_key:String, region_id:int = -1) -> Dicti
 		if not game_state.query.regions.is_adjacent_to_player_territory(region_id):
 			return {"ok": false, "reason": "Region musí sousedit s vaším územím."}
 
+	if req.get("requires_uninhabited_region", false):
+		if game_state.query.regions.is_inhabited(region_id):
+			return {"ok": false, "reason": "Podmanění lze použít pouze na neobydlený region."}
+
 	return {"ok": true}
 
 
@@ -181,6 +185,8 @@ func cast(faction_id:String, action_key:String, region_id:int = -1) -> Dictionar
 	# zpracování speciálního efektu claim_region — strukturální změna vlastnictví, mimo EffectsSystem
 	if effects.has("claim_region"):
 		if target_region != null:
+			if not target_region.inhabited:
+				target_region.inhabited = true
 			game_state.region_manager.claim_region(region_id, Balance.PLAYER_FACTION)
 			logs.append({
 				"type": "dark_action",

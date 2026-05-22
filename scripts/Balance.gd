@@ -495,6 +495,7 @@ const DARK_ACTIONS = {
 		},
 		"requirements": {
 			"requires_neutral_region": true,
+			"requires_uninhabited_region": true,
 			"requires_no_undiscovered_secret": true,
 			"requires_no_uncontrolled_lair": true,
 			"requires_adjacent_player_territory": true
@@ -599,6 +600,21 @@ const UNIT = {
 		"faction": "merchant",
 		"ai_profile": "scout"
 		# Fixní profil — _pick_profile() vrátí "scout" přes unit-level override.
+	},
+	"elf_colonist": {
+		"display_name": "Elfí kolonizátor",
+		"type": "army",
+		"power": 1,
+		"recruit_cost": {},
+		"upkeep_cost": {},
+		"moves": 1,
+		"resilient": false,
+		"disband_after_capture": true,
+		"can_do": [],
+		"icon": "res://art/units/elf_colonist.png",
+		"faction": "elf",
+		"ai_profile": "colonist"
+		# AI-only jednotka. Po obsazení neobydleného regionu okamžitě zanikne.
 	}
 }
 
@@ -710,6 +726,19 @@ const AI_PROFILE = {
 		# Průzkumník neutíká před bojem — nechá se porazit
 		# Inkvizitor ho může eliminovat jako nepřátelskou jednotku
 		"move_towards_target": false,
+		"action_at_target": null
+	},
+	"colonist": {
+		# Elfí kolonizátor — pohybuje se k nejbližšímu neobydlenému neutrálnímu regionu.
+		# Po příchodu do regionu je okamžitě obsadí a zanikne (_process_capture_step).
+		"target": {
+			"select": "nearest",
+			"filters": {
+				"owner_rule": "neutral",
+				"not_inhabited": true
+			}
+		},
+		"move_towards_target": true,
 		"action_at_target": null
 	}
 }

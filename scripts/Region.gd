@@ -25,6 +25,7 @@ var corruption_levels : Dictionary = {}   # { "darklord": 40, "elves": 15 }
 # "civilized" – města/pláně/hory pod kontrolou frakcí (korupce, raid…)
 # "wilderness" – divočina vhodná pro secrets, lairy, dominion
 var region_kind: String = "civilized"
+var inhabited: bool = true  # true = lze dobýt vojensky; false = vyžaduje kolonizaci
 
 # --- SECRET MECHANIKA ---
 var secret_id: String = ""          # odkaz do Balance.SECRET

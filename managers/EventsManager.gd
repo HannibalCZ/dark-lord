@@ -62,6 +62,9 @@ var _pending_militia_events: Array[EventData] = []
 # Warband se rozešla po vypršení lifespanu — buffrovano pri signalu warband_disbanded.
 var _pending_warband_events: Array[EventData] = []
 
+# Elfí kolonizátor obsadil neobydlený region — buffrovano pri signalu colonist_disbanded.
+var _pending_colonist_events: Array[EventData] = []
+
 # Tajemství odhaleno průzkumníkem — buffrovano pri signalu secret_stolen.
 var _pending_secret_events: Array[EventData] = []
 
@@ -89,6 +92,7 @@ func reset() -> void:
 	_pending_region_control_events.clear()
 	_pending_militia_events.clear()
 	_pending_warband_events.clear()
+	_pending_colonist_events.clear()
 	_prev_reputation_phases.clear()
 	_active_advisors.clear()
 
@@ -113,6 +117,7 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.region_corruption_maxed.connect(_on_region_corruption_maxed)
 	EventBus.militia_spawned.connect(_on_militia_spawned)
 	EventBus.warband_disbanded.connect(_on_warband_disbanded)
+	EventBus.colonist_disbanded.connect(_on_colonist_disbanded)
 	GameState.game_ended.connect(_on_game_ended)
 
 # ---------------------------
@@ -141,6 +146,7 @@ func generate_events_for_turn() -> Array[EventData]:
 	_collect_pending_region_control_events(events)
 	_collect_pending_militia_events(events)
 	_collect_pending_warband_events(events)
+	_collect_pending_colonist_events(events)
 
 	_collected_player_results.clear()
 
@@ -496,6 +502,23 @@ func _collect_pending_warband_events(events: Array[EventData]) -> void:
 	for event in _pending_warband_events:
 		events.append(event)
 	_pending_warband_events.clear()
+
+
+func _on_colonist_disbanded(unit_name: String, region_id: int) -> void:
+	var region: Region = game_state.query.regions.get_by_id(region_id)
+	var region_name: String = region.name if region != null else "neznámém regionu"
+	_pending_colonist_events.append(EventData.create(
+		Balance.ADVISOR_ZVEDKA,
+		Balance.EVENT_IMPORTANT,
+		"Elfí kolonizátoři osídlili %s. Území přešlo pod elfí vliv." % region_name,
+		"Kolonizátor disbandován v regionu %s." % region_name
+	))
+
+
+func _collect_pending_colonist_events(events: Array[EventData]) -> void:
+	for event in _pending_colonist_events:
+		events.append(event)
+	_pending_colonist_events.clear()
 
 
 # ---------------------------
