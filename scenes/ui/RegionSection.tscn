@@ -155,6 +155,33 @@ visible = false
 layout_mode = 2
 theme_override_constants/separation = 4
 
+[node name="LairInfoSection" type="VBoxContainer" parent="."]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="LairInfoLabel" type="Label" parent="LairInfoSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Orčí tábor"
+
+[node name="LairInfluenceLabel" type="Label" parent="LairInfoSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Vliv: 0 / 20"
+
+[node name="LairControlLabel" type="Label" parent="LairInfoSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Stav: Neutrální"
+
+[node name="LairDecayLabel" type="Label" parent="LairInfoSection"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
+theme_override_font_sizes/font_size = 12
+text = "Úbytek: −2 / tah"
+
 [node name="LairDirectiveSection" type="VBoxContainer" parent="."]
 visible = false
 layout_mode = 2
@@ -172,8 +199,10 @@ theme_override_constants/separation = 8
 
 [node name="DefensiveButton" type="Button" parent="LairDirectiveSection/LairDirectiveOptions"]
 layout_mode = 2
+tooltip_text = "Jednotky zůstávají v Lairu a brání se."
 text = "Bránit"
 
 [node name="RaiderButton" type="Button" parent="LairDirectiveSection/LairDirectiveOptions"]
 layout_mode = 2
+tooltip_text = "Jednotky útočí na nejbližší civilizovaný region."
 text = "Raidit"

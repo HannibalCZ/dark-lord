@@ -23,6 +23,12 @@ extends VBoxContainer
 @onready var secrets_header: Button          = $SecretsSection/VBoxContainer/SecretsHeader
 @onready var secrets_content: VBoxContainer  = $SecretsSection/VBoxContainer/SecretsContent
 
+@onready var lair_info_section: VBoxContainer    = $LairInfoSection
+@onready var lair_info_label: Label              = $LairInfoSection/LairInfoLabel
+@onready var lair_influence_label: Label         = $LairInfoSection/LairInfluenceLabel
+@onready var lair_control_label: Label           = $LairInfoSection/LairControlLabel
+@onready var lair_decay_label: Label             = $LairInfoSection/LairDecayLabel
+
 @onready var lair_directive_section: VBoxContainer = $LairDirectiveSection
 @onready var defensive_button: Button              = $LairDirectiveSection/LairDirectiveOptions/DefensiveButton
 @onready var raider_button: Button                 = $LairDirectiveSection/LairDirectiveOptions/RaiderButton
@@ -81,6 +87,7 @@ func show_for_region(region_id: int) -> void:
 	_update_units_section(region_id)
 	_update_tags_section(region_id)
 	_update_secrets_section(region_id)
+	_refresh_lair_info(region)
 	_refresh_lair_directive(region)
 
 # --------------------------
@@ -260,6 +267,33 @@ func _update_secrets_section(region_id: int) -> void:
 		label.text = "%s: %d/%d" % [sname, progress, difficulty]
 	label.add_theme_font_size_override("font_size", 12)
 	secrets_content.add_child(label)
+
+# --------------------------
+# LAIR INFO
+
+func _refresh_lair_info(region: Region) -> void:
+	if not region.has_lair():
+		lair_info_section.visible = false
+		return
+
+	lair_info_section.visible = true
+
+	var lair_cfg: Dictionary = Balance.LAIR.get(region.lair_id, {})
+	var display_name: String = lair_cfg.get("display_name", region.lair_id)
+
+	lair_info_label.text = display_name
+	lair_influence_label.text = "Vliv: %d / %d" % [
+		region.lair_influence,
+		Balance.LAIR_INFLUENCE_CONTROL_THRESHOLD
+	]
+
+	if region.lair_control == "player":
+		lair_control_label.text = "Stav: Pod kontrolou"
+		lair_decay_label.visible = true
+		lair_decay_label.text = "Úbytek: −%d / tah" % Balance.LAIR_INFLUENCE_DECAY
+	else:
+		lair_control_label.text = "Stav: Neutrální"
+		lair_decay_label.visible = false
 
 # --------------------------
 # LAIR DIRECTIVE
