@@ -169,5 +169,44 @@ const ACTORS: Dictionary = {
 				"conditions": []
 			}
 		}
+	},
+
+	# Heat   | trade | defend | Vítěz
+	# < 25   |  0.60 |  0.20  | trade
+	# 25–50  |  0.60 |  0.40  | trade
+	# 50–85  |  0.42 |  0.60  | defend
+	# 85+    |  0.21 |  0.60  | defend
+	"merchant": {
+		"display_name": "Obchodní města",
+		"plan_switch_threshold": 0.20,
+
+		"goals": {
+			"maintain_trade": 1.0,
+			"protect_territory": 0.6
+		},
+
+		"actions": {
+			"trade": {
+				"base_score": 0.6,
+				"goal": "maintain_trade",
+				"score_modifiers": [
+					{ "condition": "heat > 50", "multiplier": 0.7 },
+					{ "condition": "heat > 85", "multiplier": 0.5 }
+				],
+				"handler": "merchant_trade",
+				"handler_params": {}
+			},
+
+			"defend": {
+				"base_score": 0.2,
+				"goal": "protect_territory",
+				"score_modifiers": [
+					{ "condition": "heat > 25", "multiplier": 2.0 },
+					{ "condition": "heat > 50", "multiplier": 3.0 }
+				],
+				"handler": "merchant_defend",
+				"handler_params": {}
+			}
+		}
 	}
 }

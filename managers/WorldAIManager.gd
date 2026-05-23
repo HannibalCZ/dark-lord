@@ -10,7 +10,8 @@ var game_state: GameStateSingleton
 var _actors: Dictionary = {}  # { faction_id: AIActor }
 
 # Migrovaní aktéři (Epics 1–3 dokončeny):
-#   "paladin" — eskalační chování (E1), spawn rozhodnutí (E2), strategický target (E3)
+#   "paladin"   — eskalační chování (E1), spawn rozhodnutí (E2), strategický target (E3)
+#   "merchant"  — trade/defend agenda (log-only; taktická logika zůstává v AIManager)
 
 # ---------------------------------------------------------------------------
 # Inicializace
@@ -171,6 +172,10 @@ func _execute_action(actor: AIActor, action_def: Dictionary) -> void:
 			_handler_activate_inquisition(actor, params)
 		"spawn_colonist":
 			_handler_spawn_colonist(actor, params)
+		"merchant_trade":
+			_handler_merchant_trade(actor, params)
+		"merchant_defend":
+			_handler_merchant_defend(actor, params)
 		"":
 			pass  # žádná akce
 		_:
@@ -300,6 +305,16 @@ func _handler_stay_dormant(actor: AIActor, params: Dictionary) -> void:
 func _handler_activate_inquisition(actor: AIActor, params: Dictionary) -> void:
 	# Taktická logika zůstává v AIManager — zde pouze logujeme strategické rozhodnutí
 	actor.last_decision_log["handler_result"] = "active — inkvizice pronásleduje"
+
+func _handler_merchant_trade(actor: AIActor, _params: Dictionary) -> void:
+	# Obchodníci udržují obchodní aktivity — taktická logika v AIManager
+	# Budoucí migrace: propojit s ekonomickým systémem frakce
+	actor.last_decision_log["handler_result"] = "trade — obchodní aktivita probíhá"
+
+func _handler_merchant_defend(actor: AIActor, _params: Dictionary) -> void:
+	# Obchodníci posilují obranu — taktická logika v AIManager
+	# Budoucí migrace: spawn obranných jednotek při ohrožení
+	actor.last_decision_log["handler_result"] = "defend — posílení obrany"
 
 # ---------------------------------------------------------------------------
 # Utility scoring
