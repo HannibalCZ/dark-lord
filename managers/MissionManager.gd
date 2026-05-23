@@ -37,6 +37,7 @@ func plan_mission(unit: Unit, region: Region, mission_key:String) -> void:
 	var mission := Mission.new(unit, region, mission_key)
 	planned_missions.append(mission)
 	unit.is_busy = true
+	unit.moves_left = 0
 	emit_signal("missions_changed")
 
 	EventBus.emit_signal("mission_planned", mission)
