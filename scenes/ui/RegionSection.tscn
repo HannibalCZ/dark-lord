@@ -155,27 +155,42 @@ visible = false
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="LairInfoSection" type="VBoxContainer" parent="."]
+[node name="LairInfoSection" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="LairInfoSection"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="LairInfoHeader" type="Button" parent="LairInfoSection/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "▶ DOUPĚ"
+flat = true
+alignment = 0
+
+[node name="LairInfoContent" type="VBoxContainer" parent="LairInfoSection/VBoxContainer"]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="LairInfoLabel" type="Label" parent="LairInfoSection"]
+[node name="LairInfoLabel" type="Label" parent="LairInfoSection/VBoxContainer/LairInfoContent"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Orčí tábor"
 
-[node name="LairInfluenceLabel" type="Label" parent="LairInfoSection"]
+[node name="LairInfluenceLabel" type="Label" parent="LairInfoSection/VBoxContainer/LairInfoContent"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Vliv: 0 / 20"
 
-[node name="LairControlLabel" type="Label" parent="LairInfoSection"]
+[node name="LairControlLabel" type="Label" parent="LairInfoSection/VBoxContainer/LairInfoContent"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Stav: Neutrální"
 
-[node name="LairDecayLabel" type="Label" parent="LairInfoSection"]
+[node name="LairDecayLabel" type="Label" parent="LairInfoSection/VBoxContainer/LairInfoContent"]
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)

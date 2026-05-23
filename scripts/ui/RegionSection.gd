@@ -23,11 +23,13 @@ extends VBoxContainer
 @onready var secrets_header: Button          = $SecretsSection/VBoxContainer/SecretsHeader
 @onready var secrets_content: VBoxContainer  = $SecretsSection/VBoxContainer/SecretsContent
 
-@onready var lair_info_section: VBoxContainer    = $LairInfoSection
-@onready var lair_info_label: Label              = $LairInfoSection/LairInfoLabel
-@onready var lair_influence_label: Label         = $LairInfoSection/LairInfluenceLabel
-@onready var lair_control_label: Label           = $LairInfoSection/LairControlLabel
-@onready var lair_decay_label: Label             = $LairInfoSection/LairDecayLabel
+@onready var lair_info_section: PanelContainer   = $LairInfoSection
+@onready var lair_info_header: Button            = $LairInfoSection/VBoxContainer/LairInfoHeader
+@onready var lair_info_content: VBoxContainer    = $LairInfoSection/VBoxContainer/LairInfoContent
+@onready var lair_info_label: Label              = $LairInfoSection/VBoxContainer/LairInfoContent/LairInfoLabel
+@onready var lair_influence_label: Label         = $LairInfoSection/VBoxContainer/LairInfoContent/LairInfluenceLabel
+@onready var lair_control_label: Label           = $LairInfoSection/VBoxContainer/LairInfoContent/LairControlLabel
+@onready var lair_decay_label: Label             = $LairInfoSection/VBoxContainer/LairInfoContent/LairDecayLabel
 
 @onready var lair_directive_section: VBoxContainer = $LairDirectiveSection
 @onready var defensive_button: Button              = $LairDirectiveSection/LairDirectiveOptions/DefensiveButton
@@ -68,9 +70,18 @@ func _ready() -> void:
 	bg_secrets.content_margin_bottom = 12.0
 	secrets_section.add_theme_stylebox_override("panel", bg_secrets)
 
+	var bg_lair_info := StyleBoxFlat.new()
+	bg_lair_info.bg_color = Color("#221a10")
+	bg_lair_info.content_margin_left   = 12.0
+	bg_lair_info.content_margin_right  = 12.0
+	bg_lair_info.content_margin_top    = 12.0
+	bg_lair_info.content_margin_bottom = 12.0
+	lair_info_section.add_theme_stylebox_override("panel", bg_lair_info)
+
 	units_header.pressed.connect(func(): _toggle_section(units_content, units_header))
 	tags_header.pressed.connect(func(): _toggle_section(tags_content, tags_header))
 	secrets_header.pressed.connect(func(): _toggle_section(secrets_content, secrets_header))
+	lair_info_header.pressed.connect(func(): _toggle_section(lair_info_content, lair_info_header))
 	defensive_button.pressed.connect(_on_defensive_pressed)
 	raider_button.pressed.connect(_on_raider_pressed)
 
@@ -277,6 +288,8 @@ func _refresh_lair_info(region: Region) -> void:
 		return
 
 	lair_info_section.visible = true
+	lair_info_header.text = "▶ DOUPĚ"
+	lair_info_content.visible = false
 
 	var lair_cfg: Dictionary = Balance.LAIR.get(region.lair_id, {})
 	var display_name: String = lair_cfg.get("display_name", region.lair_id)
