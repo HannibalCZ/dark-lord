@@ -162,6 +162,7 @@ func claim_region(region_id: int, faction_id: String) -> Dictionary:
 		return {"ok": false, "reason": "Region neexistuje."}
 	var old_owner: String = r.owner_faction_id
 	r.owner_faction_id = faction_id
+	r.controller_faction_id = faction_id
 	if game_state.query != null:
 		game_state.query.regions.rebuild()
 	if faction_id == Balance.PLAYER_FACTION:

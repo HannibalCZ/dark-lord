@@ -838,18 +838,32 @@ func _process_capture_step() -> void:
 		if factions_present.size() > 1:
 			continue
 
-		# --- Kolonizace neobydleného regionu ---
-		# Jednotka s disband_after_capture (kolonizátor) okamžitě obsadí neutrální neobydlený region.
+		# --- Kolonizace neobydleného regionu (2 tahy — hráč má čas reagovat) ---
 		if not region.inhabited and region.owner_faction_id == "neutral":
+			var colonist_present: bool = false
+			var colonist_faction: String = ""
 			for unit in query.units.in_region(region.id):
 				if Balance.UNIT.get(unit.unit_key, {}).get("disband_after_capture", false):
-					region_manager.claim_region(region.id, unit.faction_id)
+					colonist_present = true
+					colonist_faction = unit.faction_id
+					break
+			if colonist_present:
+				if region.get_meta("colonization_ready", false):
+					# 2. tah s kolonizátorem — provést kolonizaci
+					region_manager.claim_region(region.id, colonist_faction)
 					region.inhabited = true
+					region.remove_meta("colonization_ready")
 					for u2 in query.units.in_region(region.id):
 						if Balance.UNIT.get(u2.unit_key, {}).get("disband_after_capture", false):
 							unit_manager.kill_unit(u2.id)
 							EventBus.colonist_disbanded.emit(u2.name, region.id)
-					break
+				else:
+					# 1. tah s kolonizátorem — připrav kolonizaci příští tah
+					region.set_meta("colonization_ready", true)
+			else:
+				# Kolonizátor odešel nebo byl zabit — zruš přípravu
+				if region.has_meta("colonization_ready"):
+					region.remove_meta("colonization_ready")
 
 		# Neobydlené regiony nelze dobýt vojensky — armády mohou stát a bojovat, ale capture se nespustí
 		if not region.inhabited:

@@ -121,7 +121,12 @@ func _update_region_section(region: Region) -> void:
 		occupation_label.add_theme_color_override("font_color", Color("#e65100"))
 		occupation_label.visible = true
 	else:
-		occupation_label.visible = false
+		if not region.inhabited:
+			occupation_label.text = "Neobydlený — vyžaduje kolonizaci"
+			occupation_label.add_theme_color_override("font_color", Color("#78909c"))
+			occupation_label.visible = true
+		else:
+			occupation_label.visible = false
 
 func _format_income(region: Region) -> String:
 	var inc := region.get_income()
