@@ -197,27 +197,32 @@ theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
 theme_override_font_sizes/font_size = 12
 text = "Úbytek: −2 / tah"
 
-[node name="LairDirectiveSection" type="VBoxContainer" parent="."]
+[node name="LairDirectiveSection" type="PanelContainer" parent="."]
 visible = false
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="LairDirectiveSection"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="LairDirectiveLabel" type="Label" parent="LairDirectiveSection"]
+[node name="LairDirectiveHeader" type="Button" parent="LairDirectiveSection/VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
-theme_override_font_sizes/font_size = 11
-text = "Direktiva doupěte:"
+size_flags_horizontal = 3
+text = "▶ DIREKTIVA"
+flat = true
+alignment = 0
 
-[node name="LairDirectiveOptions" type="HBoxContainer" parent="LairDirectiveSection"]
+[node name="LairDirectiveContent" type="VBoxContainer" parent="LairDirectiveSection/VBoxContainer"]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="DefensiveButton" type="Button" parent="LairDirectiveSection/LairDirectiveOptions"]
+[node name="DefensiveButton" type="Button" parent="LairDirectiveSection/VBoxContainer/LairDirectiveContent"]
 layout_mode = 2
 tooltip_text = "Jednotky zůstávají v Lairu a brání se."
 text = "Bránit"
 
-[node name="RaiderButton" type="Button" parent="LairDirectiveSection/LairDirectiveOptions"]
+[node name="RaiderButton" type="Button" parent="LairDirectiveSection/VBoxContainer/LairDirectiveContent"]
 layout_mode = 2
 tooltip_text = "Jednotky útočí na nejbližší civilizovaný region."
 text = "Raidit"

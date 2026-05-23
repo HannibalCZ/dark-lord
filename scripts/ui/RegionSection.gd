@@ -31,9 +31,11 @@ extends VBoxContainer
 @onready var lair_control_label: Label           = $LairInfoSection/VBoxContainer/LairInfoContent/LairControlLabel
 @onready var lair_decay_label: Label             = $LairInfoSection/VBoxContainer/LairInfoContent/LairDecayLabel
 
-@onready var lair_directive_section: VBoxContainer = $LairDirectiveSection
-@onready var defensive_button: Button              = $LairDirectiveSection/LairDirectiveOptions/DefensiveButton
-@onready var raider_button: Button                 = $LairDirectiveSection/LairDirectiveOptions/RaiderButton
+@onready var lair_directive_section: PanelContainer  = $LairDirectiveSection
+@onready var lair_directive_header: Button           = $LairDirectiveSection/VBoxContainer/LairDirectiveHeader
+@onready var lair_directive_content: VBoxContainer   = $LairDirectiveSection/VBoxContainer/LairDirectiveContent
+@onready var defensive_button: Button                = $LairDirectiveSection/VBoxContainer/LairDirectiveContent/DefensiveButton
+@onready var raider_button: Button                   = $LairDirectiveSection/VBoxContainer/LairDirectiveContent/RaiderButton
 
 var _region: Region = null
 
@@ -78,10 +80,19 @@ func _ready() -> void:
 	bg_lair_info.content_margin_bottom = 12.0
 	lair_info_section.add_theme_stylebox_override("panel", bg_lair_info)
 
+	var bg_lair_directive := StyleBoxFlat.new()
+	bg_lair_directive.bg_color = Color("#221a10")
+	bg_lair_directive.content_margin_left   = 12.0
+	bg_lair_directive.content_margin_right  = 12.0
+	bg_lair_directive.content_margin_top    = 12.0
+	bg_lair_directive.content_margin_bottom = 12.0
+	lair_directive_section.add_theme_stylebox_override("panel", bg_lair_directive)
+
 	units_header.pressed.connect(func(): _toggle_section(units_content, units_header))
 	tags_header.pressed.connect(func(): _toggle_section(tags_content, tags_header))
 	secrets_header.pressed.connect(func(): _toggle_section(secrets_content, secrets_header))
 	lair_info_header.pressed.connect(func(): _toggle_section(lair_info_content, lair_info_header))
+	lair_directive_header.pressed.connect(func(): _toggle_section(lair_directive_content, lair_directive_header))
 	defensive_button.pressed.connect(_on_defensive_pressed)
 	raider_button.pressed.connect(_on_raider_pressed)
 
@@ -316,6 +327,8 @@ func _refresh_lair_directive(region: Region) -> void:
 		lair_directive_section.visible = false
 		return
 	lair_directive_section.visible = true
+	lair_directive_header.text = "▶ DIREKTIVA"
+	lair_directive_content.visible = false
 	var is_defensive: bool = region.lair_directive == Balance.LAIR_DIRECTIVE_DEFENSIVE
 	defensive_button.disabled = is_defensive
 	raider_button.disabled = not is_defensive
