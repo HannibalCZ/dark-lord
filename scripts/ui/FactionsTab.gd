@@ -137,6 +137,17 @@ func _create_card(faction: Faction) -> PanelContainer:
 	]
 	vbox.add_child(breakdown_label)
 
+	# --- Řádek 7: pokladna (gold / mana) ---
+	var economy_label := Label.new()
+	economy_label.name = "EconomyLabel"
+	economy_label.add_theme_font_size_override("font_size", 12)
+	economy_label.add_theme_color_override("font_color", Color("#888888"))
+	var fac_gold := faction.get_resource("gold")
+	var fac_mana := faction.get_resource("mana")
+	economy_label.visible = fac_gold > 0 or fac_mana > 0
+	economy_label.text = "Pokladna: %dg / %dm" % [int(fac_gold), int(fac_mana)]
+	vbox.add_child(economy_label)
+
 	return card
 
 # ---------------------------------------------------------
@@ -198,6 +209,14 @@ func _update_card(card: Node, faction: Faction) -> void:
 		breakdown_label.text = "  Zaklad: +%d | Korupce: +%d | Sit: +%d" % [
 			bd["base"], bd["corruption"], bd["shadow_net"]
 		]
+
+	# EconomyLabel — pokladna (gold / mana)
+	var economy_label: Label = vbox.get_node_or_null("EconomyLabel")
+	if economy_label != null:
+		var fac_gold := faction.get_resource("gold")
+		var fac_mana := faction.get_resource("mana")
+		economy_label.visible = fac_gold > 0 or fac_mana > 0
+		economy_label.text = "Pokladna: %dg / %dm" % [int(fac_gold), int(fac_mana)]
 
 # ---------------------------------------------------------
 # Helpers
