@@ -157,7 +157,7 @@ text = " "
 [node name="ControlValue" type="Label" parent="HBoxContainer/ControlSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "0/8"
+text = "Kontrola: 0/7"
 
 [node name="VSeparator4" type="VSeparator" parent="HBoxContainer"]
 layout_mode = 2

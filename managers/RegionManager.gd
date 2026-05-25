@@ -70,12 +70,15 @@ func load_map_from_json(path: String) -> void:
 
 		var name: String = String(rd.get("name", "Region %d" % id))
 		var owner: String = String(rd.get("owner_faction_id", "neutral"))
-		var rtype: String = String(rd.get("region_type", "plains"))
+		var rtype: String = String(rd.get("terrain", "plains"))
 		var kind: String = String(rd.get("region_kind", "civilized"))
 
 		var r := Region.new(id, name, owner, rtype)
-		r.region_kind = kind
 		r.inhabited = bool(rd.get("inhabited", true))
+
+		# population: explicit value preferred; fallback z region_kind pro zpětnou kompatibilitu
+		var pop_fallback: int = 3 if kind == "civilized" else 0
+		r.population = int(rd.get("population", pop_fallback))
 
 		# Secret (optional)
 		if rd.has("secret"):
@@ -101,8 +104,9 @@ func load_map_from_json(path: String) -> void:
 	# safety: doplň prázdné sloty, pokud JSON nemá všechny regiony
 	for i in regions.size():
 		if regions[i] == null:
-			regions[i] = Region.new(i, "Region %d" % i, "neutral", "plains")
-			regions[i].region_kind = "civilized"
+			var fallback := Region.new(i, "Region %d" % i, "neutral", "plains")
+			fallback.population = Balance.CIVILIZED_THRESHOLD
+			regions[i] = fallback
 
 	# explicitní sousedství ze JSON (druhý průchod — všechny regiony již načteny)
 	if _use_explicit_neighbors:

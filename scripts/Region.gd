@@ -6,7 +6,7 @@ class_name Region
 @export var name: String
 @export var owner_faction_id: String
 @export var controller_faction_id: String
-@export var region_type: String
+@export var terrain: String
 @export var fear: int = 0
 @export var defense: int = 0
 var occupying_faction: String = ""
@@ -22,9 +22,12 @@ var tags: Array = []
 var corruption_levels : Dictionary = {}   # { "darklord": 40, "elves": 15 }
 
 # --- TYP REGIONU PRO MECHANIKY ---
-# "civilized" – města/pláně/hory pod kontrolou frakcí (korupce, raid…)
-# "wilderness" – divočina vhodná pro secrets, lairy, dominion
-var region_kind: String = "civilized"
+# "civilized" – population >= CIVILIZED_THRESHOLD (odvozeno dynamicky)
+# "wilderness" – population < CIVILIZED_THRESHOLD
+var region_kind: String:
+	get:
+		return "civilized" if population >= Balance.CIVILIZED_THRESHOLD else "wilderness"
+var population: int = 0
 var inhabited: bool = true  # true = lze dobýt vojensky; false = vyžaduje kolonizaci
 
 # --- SECRET MECHANIKA ---
@@ -40,29 +43,21 @@ var lair_influence: int = 0        # jednoduchý číselný ukazatel, jak moc je
 var lair_spawn_counter: int = 0    # počítadlo tahů do dalšího spawnu (resetuje se na 0 po spawnu)
 var lair_directive: String = "defensive"  # "defensive" | "raider"
 
-func _init(_id: int, _name: String, _faction_id: String, _region_type: String):
+func _init(_id: int, _name: String, _faction_id: String, _terrain: String):
 	id = _id
 	name = _name
 	owner_faction_id = _faction_id
 	controller_faction_id = _faction_id
-	region_type = _region_type
+	terrain = _terrain
 	fear = 0
-	
-	var reg_temp = Balance.REGION_TYPE.get(_region_type,{})
-	
-	defense = reg_temp.get("defense", 3)
-	gold_income = reg_temp.get("gold_income", 0)
-	mana_income = reg_temp.get("mana_income", 0)
-	research_income = reg_temp.get("research_income", 0)	
-	position = Vector2i.ZERO
 
-	match _region_type:
-		"town", "plains", "mountains":
-			region_kind = "civilized"
-		"forest", "wasteland":
-			region_kind = "wilderness"
-		_:
-			region_kind = "civilized" # fallback
+	var terrain_data: Dictionary = Balance.TERRAIN.get(_terrain, {})
+
+	defense = terrain_data.get("defense_base", 3)
+	gold_income = terrain_data.get("base_gold_rate", 0)
+	mana_income = terrain_data.get("base_mana_rate", 0)
+	research_income = terrain_data.get("base_research_rate", 0)
+	position = Vector2i.ZERO
 
 # ---------------------------------------------------------------------------------------
 # TAG MANAGEMENT
@@ -169,8 +164,8 @@ func get_corruption_phase_def_for(faction_id: String) -> Dictionary:
 
 func get_info_text() -> String:
 	# 1) základní řádky o regionu
-	var type_def: Dictionary = Balance.REGION_TYPE.get(region_type, {})
-	var type_name: String = type_def.get("display_type_name", region_type)
+	var type_def: Dictionary = Balance.TERRAIN.get(terrain, {})
+	var type_name: String = type_def.get("display_name", terrain)
 
 	var line1 := "%s | %s | %s" % [
 		name,

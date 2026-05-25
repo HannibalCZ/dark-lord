@@ -399,6 +399,7 @@ func advance_turn() -> void:
 	# D) Souboje (po world ticku)
 	# =========================
 	_process_capture_step()
+	_process_population_changes()
 
 	var combat_res: Dictionary = combat_manager.resolve_all_combats()
 	for e in combat_res.get("logs", []):
@@ -546,10 +547,10 @@ func check_end_conditions() -> Dictionary:
 	if game_over:
 		return game_over_result
 
-	# WIN: 2/3 civilizovaných regionů pod kontrolou
+	# WIN: WIN_THRESHOLD_RATIO civilizovaných regionů pod kontrolou (dynamicky)
 	var controlled: int = query.regions.count_player_controlled_civilized()
 	var total_civ: int = query.regions.count_total_civilized()
-	if controlled >= Balance.WIN_REGIONS_REQUIRED:
+	if controlled >= get_win_threshold():
 		game_over = true
 		game_over_result = {
 			"ok": true,
@@ -869,7 +870,7 @@ func _process_capture_step() -> void:
 		if not region.inhabited:
 			continue
 
-		var max_def: int = Balance.REGION_TYPE.get(region.region_type, {}).get("defense", 3)
+		var max_def: int = Balance.TERRAIN.get(region.terrain, {}).get("defense_base", 3)
 
 		# Žádná armáda → regenerace defense
 		if factions_present.is_empty():
@@ -975,6 +976,28 @@ func _place_procedural_secrets() -> void:
 		region.secret_known    = true
 		region.secret_state    = "none"
 		region.secret_progress = 0
+
+func get_current_civilized_count() -> int:
+	return query.regions.count_total_civilized()
+
+func get_win_threshold() -> int:
+	return max(1, int(floor(float(get_current_civilized_count()) * Balance.WIN_THRESHOLD_RATIO)))
+
+func _process_population_changes() -> void:
+	for region in region_manager.regions:
+		if region == null:
+			continue
+		# Ztráta při válce — region právě padá (dobývání ve finální fázi)
+		if region.occupying_faction != "" and region.defense <= 0:
+			region.population = max(Balance.POPULATION_FLOOR_INHABITED, region.population - Balance.POPULATION_WAR_PENALTY)
+		# Přirozený růst inhabited regionů
+		if region.population > 0:
+			var terrain_data: Dictionary = Balance.TERRAIN.get(region.terrain, {})
+			var cap: int = terrain_data.get("pop_cap", 3)
+			if region.population < cap:
+				# TODO: podmínit prosperitou a stabilitou až budou implementovány
+				if randf() < Balance.POPULATION_GROWTH_CHANCE * 0.5:
+					region.population += 1
 
 func apply_command_result(res: Dictionary) -> Dictionary:
 	# jednotné místo: logs + events + UI signal

@@ -18,12 +18,18 @@ const HEAT_MAX = 100  # stage 4 + podmínka prohry
 const HEAT_DECAY_PER_TURN = 1  # přirozené snižování Heat každý tah
 
 # Podmínka výhry
-const WIN_REGIONS_REQUIRED = 6  # 2/3 z 8 civilizovaných regionů (zaokrouhleno nahoru)
-const WIN_REGION_KIND = "civilized"  # pouze regiony s tímto kind se počítají pro výhru
-const WIN_CORRUPTION_PHASE = 3       # minimální fáze korupce pro "pod kontrolou"
+const WIN_THRESHOLD_RATIO: float = 0.6  # hráč potřebuje toto % civilizovaných regionů
+const WIN_REGION_KIND = "civilized"     # pouze regiony s tímto kind se počítají pro výhru
+const WIN_CORRUPTION_PHASE = 3          # minimální fáze korupce pro "pod kontrolou"
+
+# Population
+const CIVILIZED_THRESHOLD: int = 3          # population >= 3 → civilized
+const POPULATION_WAR_PENALTY: int = 1       # ztráta při obsazení regionu
+const POPULATION_GROWTH_CHANCE: float = 0.15  # šance na +1 za tah při míru
+const POPULATION_FLOOR_INHABITED: int = 1   # minimum pro inhabited region
 
 # Doupata
-const LAIR_INFLUENCE_CONTROL_THRESHOLD = 20
+const LAIR_INFLUENCE_CONTROL_THRESHOLD = 10
 const LAIR_INFLUENCE_DECAY: int = 2
 const LAIR_INFLUENCE_LOSS_THRESHOLD: int = 0
 const LAIR_DIRECTIVE_DEFENSIVE = "defensive"
@@ -750,42 +756,43 @@ const AI_HEAL_IGNORE_HEAT: int = 85     # heat nad touto hodnotou → AI léčen
 const REGION_DEFENCE_REGEN: int = 1
 # Obnova defense per tah pokud region není dobýván
 
-const REGION_TYPE = {
-	"town": {
-		"display_type_name": "Město",
-		"defense": 5,
-		"gold_income": 3,
-		"mana_income": 1,
-		"research_income": 1,
-	},
+const TERRAIN = {
 	"plains": {
-		"display_type_name": "Pláně",
-		"defense": 3,
-		"gold_income": 2,
-		"mana_income": 0,
-		"research_income": 0,
+		"display_name": "Planiny",
+		"defense_base": 2,
+		"pop_cap": 8,
+		"prosperity_cap": 90,
+		"base_gold_rate": 3.0,
+		"base_mana_rate": 0.0,
+		"base_research_rate": 0.5,
 	},
 	"forest": {
-		"display_type_name": "Hvozd",
-		"defense": 4,
-		"gold_income": 1,
-		"mana_income": 3,
-		"research_income": 0,
+		"display_name": "Hvozd",
+		"defense_base": 4,
+		"pop_cap": 5,
+		"prosperity_cap": 70,
+		"base_gold_rate": 1.0,
+		"base_mana_rate": 3.0,
+		"base_research_rate": 0.5,
 	},
 	"wasteland": {
-		"display_type_name": "Divočina",
-		"defense": 2,
-		"gold_income": 1,
-		"mana_income": 0,
-		"research_income": 0,
+		"display_name": "Divočina",
+		"defense_base": 2,
+		"pop_cap": 3,
+		"prosperity_cap": 40,
+		"base_gold_rate": 0.5,
+		"base_mana_rate": 0.0,
+		"base_research_rate": 0.0,
 	},
 	"mountains": {
-		"display_type_name": "Hory",
-		"defense": 6,
-		"gold_income": 0,
-		"mana_income": 0,
-		"research_income": 0,
-	}
+		"display_name": "Hory",
+		"defense_base": 6,
+		"pop_cap": 4,
+		"prosperity_cap": 50,
+		"base_gold_rate": 0.0,
+		"base_mana_rate": 1.0,
+		"base_research_rate": 1.0,
+	},
 }
 
 const HEAT_EVENTS = [

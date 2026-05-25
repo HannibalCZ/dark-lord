@@ -10,6 +10,7 @@ extends VBoxContainer
 @onready var strach_val: Label          = $StatPanel/VBoxContainer/StatsRow/RightCol/StrachVal
 @onready var corruption_effect_label: Label = $StatPanel/VBoxContainer/CorruptionEffectLabel
 @onready var occupation_label: Label        = $StatPanel/VBoxContainer/OccupationLabel
+@onready var population_label: Label       = $StatPanel/VBoxContainer/PopulationLabel
 
 @onready var units_section: PanelContainer = $UnitsSection
 @onready var units_header: Button          = $UnitsSection/VBoxContainer/UnitsHeader
@@ -108,7 +109,7 @@ func _update_region_section(region: Region) -> void:
 	region_name_label.text = region.name
 	region_owner.text = region.controller_faction_id
 
-	var max_def: int = Balance.REGION_TYPE.get(region.region_type, {}).get("defense", 3)
+	var max_def: int = Balance.TERRAIN.get(region.terrain, {}).get("defense_base", 3)
 	obrana_val.text = "%d/%d" % [region.defense, max_def]
 
 	prijem_val.text = _format_income(region)
@@ -145,6 +146,10 @@ func _update_region_section(region: Region) -> void:
 			occupation_label.visible = true
 		else:
 			occupation_label.visible = false
+
+	var pop_cap: int = Balance.TERRAIN.get(region.terrain, {}).get("pop_cap", 0)
+	var terrain_name: String = Balance.TERRAIN.get(region.terrain, {}).get("display_name", region.terrain)
+	population_label.text = "Terén: %s  |  Obyvatelstvo: %d / %d" % [terrain_name, region.population, pop_cap]
 
 func _format_income(region: Region) -> String:
 	var inc := region.get_income()

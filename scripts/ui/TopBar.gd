@@ -186,12 +186,14 @@ func _update_infamy(value: int) -> void:
 
 func _update_control_count() -> void:
 	var controlled: int = GameState.query.regions.count_player_controlled_civilized()
-	var total: int = GameState.query.regions.count_total_civilized()
-	control_value.text = "%d/%d" % [controlled, total]
-	var ratio: float = float(controlled) / float(total) if total > 0 else 0.0
-	if ratio >= 0.67:
+	var threshold: int = GameState.get_win_threshold()
+	var total_civ: int = GameState.query.regions.count_total_civilized()
+	control_value.text = "Kontrola: %d / %d" % [controlled, threshold]
+	control_value.tooltip_text = "Civilizovaných celkem: %d  |  Nutných ke kontrole: %d" % [total_civ, threshold]
+	var ratio: float = float(controlled) / float(threshold) if threshold > 0 else 0.0
+	if ratio >= 1.0:
 		control_value.add_theme_color_override("font_color", Color("#4caf50"))
-	elif ratio >= 0.33:
+	elif ratio >= 0.5:
 		control_value.add_theme_color_override("font_color", Color("#ff9800"))
 	else:
 		control_value.add_theme_color_override("font_color", Color("#aaaaaa"))

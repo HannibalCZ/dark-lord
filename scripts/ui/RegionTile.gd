@@ -49,7 +49,7 @@ func setup(id: int, region: Region) -> void:
 	region_id = id
 
 	# terrain podle typu
-	terrain_sprite.texture = load(_get_terrain_texture_path(region.region_type))
+	terrain_sprite.texture = load(_get_terrain_texture_path(region.terrain))
 
 	# tag icon podle toho, zda tagy existují
 	_update_tag_icon(region.tags)
@@ -118,8 +118,8 @@ func _get_corruption_alpha_for_phase(phase_id: int) -> float:
 		_:
 			return 0.0
 
-func _get_terrain_texture_path(region_type: String) -> String:
-	match region_type:
+func _get_terrain_texture_path(terrain: String) -> String:
+	match terrain:
 		"forest":
 			return "res://art/tiles/forest.png"
 		"plains":
@@ -128,10 +128,8 @@ func _get_terrain_texture_path(region_type: String) -> String:
 			return "res://art/tiles/mountains.png"
 		"wasteland":
 			return "res://art/tiles/wasteland.png"
-		"town":
-			return "res://art/tiles/mountains.png" # need to change
 		_:
-			return "res://art/tiles/mountains.png" # need to change
+			return "res://art/tiles/plains.png"
 
 func refresh_from_region(region: Region) -> void:
 	_update_tag_icon(region.tags)
