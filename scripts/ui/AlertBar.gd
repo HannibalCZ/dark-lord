@@ -73,21 +73,27 @@ func _refresh_agents_badge() -> void:
 
 func _refresh_org_badge() -> void:
 	_low_loyalty_org_regions.clear()
-	var low_loyalty_orgs: Array = []
-	for org: Dictionary in GameState.org_manager.get_player_orgs():
-		if org["loyalty"] < 30:
-			_low_loyalty_org_regions.append(org["region_id"])
-			low_loyalty_orgs.append(org)
+	var low_loyalty_nfs: Array[Faction] = []
+	for nf: Faction in GameState.faction_manager.get_player_network_factions():
+		if nf.loyalty < 30:
+			for region_id: int in nf.influence.keys():
+				_low_loyalty_org_regions.append(region_id)
+			low_loyalty_nfs.append(nf)
 
 	org_badge.visible = not _low_loyalty_org_regions.is_empty()
-	if low_loyalty_orgs.is_empty():
+	if low_loyalty_nfs.is_empty():
 		org_badge.tooltip_text = ""
 	else:
-		var tooltip: String = "Nestabilní organizace (%d)" % low_loyalty_orgs.size()
-		for org: Dictionary in low_loyalty_orgs:
-			var org_name: String = Balance.ORG[org["org_type"]]["display_name"]
-			var region_name: String = GameState.region_manager.get_region(org["region_id"]).name
-			tooltip += "\n• %s — %s (loajalita: %d)" % [org_name, region_name, org["loyalty"]]
+		var tooltip: String = "Nestabilní organizace (%d)" % low_loyalty_nfs.size()
+		for nf: Faction in low_loyalty_nfs:
+			var org_name: String = Balance.ORG.get(nf.network_type, {}).get("display_name", nf.network_type)
+			var region_ids: Array = nf.influence.keys()
+			var region_name: String = ""
+			if not region_ids.is_empty():
+				var r: Region = GameState.region_manager.get_region(region_ids[0])
+				if r != null:
+					region_name = r.name
+			tooltip += "\n• %s — %s (loajalita: %d)" % [org_name, region_name, nf.loyalty]
 		org_badge.tooltip_text = tooltip
 
 

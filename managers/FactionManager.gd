@@ -129,3 +129,52 @@ func remove_network_faction(region_id: int) -> void:
 				_factions.erase(faction_id)
 			EventBus.network_faction_destroyed.emit(faction_id, region_id)
 			return
+
+
+func get_player_network_factions() -> Array[Faction]:
+	return get_all_network_factions().filter(
+		func(f: Faction): return f.source_faction_id == Balance.PLAYER_FACTION and not f.is_rogue
+	)
+
+
+func get_network_faction_display_data(region_id: int) -> Dictionary:
+	var nf: Faction = get_network_faction_in_region(region_id)
+	if nf == null:
+		return {}
+	return {
+		"faction_id":       nf.id,
+		"network_type":     nf.network_type,
+		"display_name":     Balance.ORG.get(nf.network_type, {}).get("display_name", nf.network_type),
+		"doctrine":         nf.doctrine,
+		"doctrine_display": Balance.ORG.get(nf.network_type, {}).get("doctrines", {}).get(nf.doctrine, {}).get("display_name", ""),
+		"loyalty":          nf.loyalty,
+		"is_rogue":         nf.is_rogue,
+		"visible":          nf.visible,
+		"is_player_org":    nf.source_faction_id == Balance.PLAYER_FACTION,
+		"influence":        nf.influence.get(region_id, 0)
+	}
+
+
+func get_available_doctrines_by_region(region_id: int) -> Array[Dictionary]:
+	var nf: Faction = get_network_faction_in_region(region_id)
+	if nf == null:
+		return []
+	var current_doctrine: String = nf.doctrine
+	var doctrines_cfg: Dictionary = Balance.ORG.get(nf.network_type, {}).get("doctrines", {})
+	var result: Array[Dictionary] = []
+	for key in doctrines_cfg.keys():
+		var d: Dictionary = doctrines_cfg[key]
+		result.append({
+			"key":          key,
+			"display_name": d["display_name"],
+			"effects":      d.get("effects", {}),
+			"is_current":   key == current_doctrine
+		})
+	return result
+
+
+func set_doctrine_by_region(region_id: int, doctrine_key: String) -> void:
+	var nf: Faction = get_network_faction_in_region(region_id)
+	if nf == null:
+		return
+	set_doctrine(nf.id, doctrine_key)

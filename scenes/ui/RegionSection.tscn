@@ -236,8 +236,44 @@ layout_mode = 2
 tooltip_text = "Jednotky útočí na nejbližší civilizovaný region."
 text = "Raidit"
 
-[node name="NetworkFactionLabel" type="Label" parent="."]
+[node name="NetworkFactionSection" type="VBoxContainer" parent="."]
 visible = false
 layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="NetworkFactionHeader" type="Label" parent="NetworkFactionSection"]
+layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.4, 0.8, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="NetworkInfluenceLabel" type="Label" parent="NetworkFactionSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
 theme_override_font_sizes/font_size = 11
+
+[node name="NetworkLoyaltyLabel" type="Label" parent="NetworkFactionSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="NetworkDoctrineContainer" type="VBoxContainer" parent="NetworkFactionSection"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="NetworkDoctrineLabel" type="Label" parent="NetworkFactionSection/NetworkDoctrineContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.667, 0.667, 0.667, 1)
+theme_override_font_sizes/font_size = 11
+text = "Doktrína:"
+
+[node name="NetworkDoctrinePicker" type="OptionButton" parent="NetworkFactionSection/NetworkDoctrineContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
+
+[node name="NetworkDoctrineEffects" type="Label" parent="NetworkFactionSection/NetworkDoctrineContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.533, 0.533, 0.533, 1)
+theme_override_font_sizes/font_size = 11
+autowrap_mode = 3

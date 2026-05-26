@@ -38,9 +38,16 @@ extends VBoxContainer
 @onready var defensive_button: Button                = $LairInfoSection/VBoxContainer/LairInfoContent/LairDirectiveOptions/LairButtonRow/DefensiveButton
 @onready var raider_button: Button                   = $LairInfoSection/VBoxContainer/LairInfoContent/LairDirectiveOptions/LairButtonRow/RaiderButton
 
-@onready var network_faction_label: Label = $NetworkFactionLabel
+@onready var network_faction_section: VBoxContainer    = $NetworkFactionSection
+@onready var network_faction_header: Label             = $NetworkFactionSection/NetworkFactionHeader
+@onready var network_influence_label: Label            = $NetworkFactionSection/NetworkInfluenceLabel
+@onready var network_loyalty_label: Label              = $NetworkFactionSection/NetworkLoyaltyLabel
+@onready var network_doctrine_container: VBoxContainer = $NetworkFactionSection/NetworkDoctrineContainer
+@onready var network_doctrine_picker: OptionButton     = $NetworkFactionSection/NetworkDoctrineContainer/NetworkDoctrinePicker
+@onready var network_doctrine_effects: Label           = $NetworkFactionSection/NetworkDoctrineContainer/NetworkDoctrineEffects
 
 var _region: Region = null
+var _nf_doctrine_keys: Array[String] = []
 
 func _ready() -> void:
 	var bg_stat := StyleBoxFlat.new()
@@ -89,6 +96,7 @@ func _ready() -> void:
 	lair_info_header.pressed.connect(func(): _toggle_section(lair_info_content, lair_info_header))
 	defensive_button.pressed.connect(_on_defensive_pressed)
 	raider_button.pressed.connect(_on_raider_pressed)
+	network_doctrine_picker.item_selected.connect(_on_network_doctrine_selected)
 
 func show_for_region(region_id: int) -> void:
 	if region_id == -1:
@@ -357,19 +365,91 @@ func _on_raider_pressed() -> void:
 # NETWORK FACTION
 
 func _refresh_network_faction(region: Region) -> void:
-	var nf: Faction = GameState.faction_manager.get_network_faction_in_region(region.id)
-	if nf == null:
-		network_faction_label.visible = false
+	var data: Dictionary = GameState.faction_manager.get_network_faction_display_data(region.id)
+	if data.is_empty():
+		network_faction_section.visible = false
 		return
-	var type_display: Dictionary = {
-		"cult": "Kult",
-		"crime_syndicate": "Syndikát",
-		"shadow_network": "Stínová síť"
-	}
-	var display_name: String = type_display.get(nf.network_type, nf.network_type)
-	var inf: int = nf.influence.get(region.id, 0)
-	network_faction_label.text = "%s: vliv %d" % [display_name, inf]
-	network_faction_label.visible = true
+
+	network_faction_section.visible = true
+	network_faction_header.text = data["display_name"]
+	network_influence_label.text = "Vliv: %d" % data["influence"]
+
+	var loyalty: int = data["loyalty"]
+	var phase_text: String
+	var phase_color: Color
+	if data["is_rogue"]:
+		phase_text = "Odpadlá"
+		phase_color = Color("#f44336")
+	elif loyalty >= Balance.ORG_LOYALTY_FAITHFUL:
+		phase_text = "Věrná"
+		phase_color = Color("#4caf50")
+	elif loyalty >= Balance.ORG_LOYALTY_STABLE:
+		phase_text = "Stabilní"
+		phase_color = Color("#ffd700")
+	else:
+		phase_text = "Nestabilní"
+		phase_color = Color("#f44336")
+	network_loyalty_label.text = "%d — %s" % [loyalty, phase_text]
+	network_loyalty_label.add_theme_color_override("font_color", phase_color)
+
+	var show_doctrine: bool = data["is_player_org"] and not data["is_rogue"]
+	network_doctrine_container.visible = show_doctrine
+	if show_doctrine:
+		_populate_network_doctrine_picker(region.id)
+
+
+func _populate_network_doctrine_picker(region_id: int) -> void:
+	network_doctrine_picker.clear()
+	_nf_doctrine_keys.clear()
+	var doctrines: Array[Dictionary] = GameState.faction_manager.get_available_doctrines_by_region(region_id)
+	var current_idx: int = 0
+	for i in doctrines.size():
+		var d: Dictionary = doctrines[i]
+		network_doctrine_picker.add_item(d["display_name"])
+		_nf_doctrine_keys.append(d["key"])
+		if d["is_current"]:
+			current_idx = i
+	network_doctrine_picker.select(current_idx)
+	_update_network_doctrine_effects(region_id)
+
+
+func _update_network_doctrine_effects(region_id: int) -> void:
+	var doctrines: Array[Dictionary] = GameState.faction_manager.get_available_doctrines_by_region(region_id)
+	var selected: int = network_doctrine_picker.selected
+	if selected < 0 or selected >= doctrines.size():
+		network_doctrine_effects.text = ""
+		return
+	network_doctrine_effects.text = _format_nf_effects(doctrines[selected]["effects"])
+
+
+func _on_network_doctrine_selected(index: int) -> void:
+	if _region == null or index < 0 or index >= _nf_doctrine_keys.size():
+		return
+	var new_key: String = _nf_doctrine_keys[index]
+	var data: Dictionary = GameState.faction_manager.get_network_faction_display_data(_region.id)
+	if new_key == data.get("doctrine", ""):
+		return
+	GameState.faction_manager.set_doctrine_by_region(_region.id, new_key)
+	_update_network_doctrine_effects(_region.id)
+
+
+func _format_nf_effects(effects: Dictionary) -> String:
+	var parts: Array[String] = []
+	if effects.has("gold"):
+		parts.append("%+d zlato/tah" % int(effects["gold"]))
+	if effects.has("mana"):
+		parts.append("%+d mana/tah" % int(effects["mana"]))
+	if effects.has("heat"):
+		parts.append("%+d heat/tah" % int(effects["heat"]))
+	if effects.has("awareness"):
+		parts.append("%+d awareness/tah" % int(effects["awareness"]))
+	if effects.has("mission_bonus"):
+		parts.append("+%d%% šance na mise" % int(effects["mission_bonus"]))
+	if effects.get("dark_action_empowered", false):
+		parts.append("Dark Actions zesíleny")
+	if parts.is_empty():
+		return "Žádné pasivní efekty"
+	return "  ".join(parts)
 
 # --------------------------
 # TOGGLE HELPER

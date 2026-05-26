@@ -26,22 +26,11 @@ extends Control
 @onready var unit_select_container: HBoxContainer = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/UnitSelectContainer
 @onready var unit_select: OptionButton            = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/ActionsSection/VBoxContainer/UnitSelectContainer/UnitSelect
 
-# --- OrgSection ---
-@onready var org_section: PanelContainer  = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection
-@onready var org_name: Label              = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/OrgHeader/OrgName
-@onready var org_owner: Label             = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/OrgHeader/OrgOwner
-@onready var doctrine_picker: OptionButton = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/DoctrinePicker
-@onready var doctrine_effects: Label      = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/DoctrineEffects
-@onready var org_loyalty_label: Label     = $HBoxContainer/RightPanel/ScrollContainer/ScrollContent/OrgSection/VBoxContainer/OrgLoyaltyLabel
-
-var org_visibility_label: Label = null   # vytvoren dynamicky v _ready()
 
 var _tile_by_id: Dictionary = {}  # { region_id: int -> RegionTile }
 var _connections: Array = []      # [ {a: Vector2, b: Vector2}, ... ]
 var selected_region_idx: int = -1
 var _selected_unit_id: int = -1
-# parallel array — uchovává doctrine key pro každý item v doctrine_picker
-var _doctrine_keys: Array[String] = []
 var _current_movement_target_tile = null
 var _highlighted_neighbor_tiles: Array = []
 var _movement_in_progress: bool = false
@@ -69,14 +58,6 @@ func _ready() -> void:
 	bg_actions.content_margin_bottom = 12.0
 	actions_section.add_theme_stylebox_override("panel", bg_actions)
 
-	var bg_org := StyleBoxFlat.new()
-	bg_org.bg_color = Color("#1a2535")
-	bg_org.content_margin_left   = 12.0
-	bg_org.content_margin_right  = 12.0
-	bg_org.content_margin_top    = 12.0
-	bg_org.content_margin_bottom = 12.0
-	org_section.add_theme_stylebox_override("panel", bg_org)
-
 	connection_layer.draw.connect(_on_connection_layer_draw)
 	_build_grid()
 
@@ -88,23 +69,14 @@ func _ready() -> void:
 	deselect_btn.pressed.connect(func(): _select_unit(-1))
 	unit_select.item_selected.connect(_on_unit_select_item_selected)
 
-	# signály — org sekce
-	doctrine_picker.item_selected.connect(_on_doctrine_picker_item_selected)
-
 	GameState.connect("unit_moved", Callable(self, "_on_unit_moved"))
 	GameState.connect("turn_resolved", Callable(self, "_on_turn_resolved"))
 	GameState.connect("game_updated", Callable(self, "_on_game_updated"))
 
 	EventBus.connect("mission_resolved", Callable(self, "_on_mission_resolved"))
 
-	# EventBus — org zmeny refreshuji OrgSection
-	EventBus.org_founded.connect(_on_org_changed)
-	EventBus.org_destroyed.connect(_on_org_changed)
-	EventBus.org_doctrine_changed.connect(_on_doctrine_externally_changed)
-
 	right_panel.visible = false
 	_set_actions_enabled(false)
-	org_section.visible = false
 
 	mission_success_effects = Label.new()
 	mission_success_effects.name = "MissionSuccessEffects"
@@ -126,15 +98,6 @@ func _ready() -> void:
 	var _mi_idx: int = mission_info.get_index()
 	_mission_parent.move_child(mission_success_effects, _mi_idx + 1)
 	_mission_parent.move_child(mission_fail_effects, _mi_idx + 2)
-
-	# Org visibility label — pridano dynamicky za org_loyalty_label
-	org_visibility_label = Label.new()
-	org_visibility_label.name = "OrgVisibilityLabel"
-	org_visibility_label.add_theme_font_size_override("font_size", 12)
-	org_visibility_label.visible = false
-	var _org_vbox: Node = org_loyalty_label.get_parent()
-	_org_vbox.add_child(org_visibility_label)
-	_org_vbox.move_child(org_visibility_label, org_loyalty_label.get_index() + 1)
 
 	visibility_changed.connect(func(): set_process(is_visible_in_tree()))
 	set_process(is_visible_in_tree())
@@ -246,15 +209,17 @@ func _on_game_updated() -> void:
 func _refresh_org_indicators() -> void:
 	for region_id in _tile_by_id:
 		var tile = _tile_by_id[region_id]
-		var org: Dictionary = GameState.org_manager.get_org_in_region(region_id)
-		var has_org: bool = not org.is_empty()
-		var is_rogue: bool = org.get("is_rogue", false)
-		var is_neutral: bool = has_org and org.get("owner", "") != Balance.PLAYER_FACTION
-		# is_hidden: hracova org ktera jeste nebyla odhalena
-		var is_hidden: bool = has_org \
-				and not is_neutral \
-				and not is_rogue \
-				and not org.get("visible", true)
+		var nf: Faction = GameState.faction_manager.get_network_faction_in_region(region_id)
+		var has_org: bool = nf != null
+		var is_rogue: bool = nf != null and nf.is_rogue
+		var is_neutral: bool = nf != null and nf.source_faction_id != Balance.PLAYER_FACTION
+		var is_hidden: bool = nf != null and not nf.is_rogue and not is_neutral and not nf.visible
+		if not has_org:
+			var org: Dictionary = GameState.org_manager.get_org_in_region(region_id)
+			has_org = not org.is_empty()
+			is_rogue = org.get("is_rogue", false)
+			is_neutral = has_org and org.get("owner", "") != Balance.PLAYER_FACTION
+			is_hidden = has_org and not is_neutral and not is_rogue and not org.get("visible", true)
 		tile.set_org_indicator(has_org, is_rogue, is_neutral, is_hidden)
 
 func _on_mission_selected(_idx: int) -> void:
@@ -574,7 +539,6 @@ func _refresh_selected_panel() -> void:
 	region_section.show_for_region(selected_region_idx)
 
 	_build_dark_actions_menu()
-	_update_org_section(selected_region_idx)
 	scroll_container.scroll_vertical = 0
 
 	if _selection_mode == "unit" and _selected_unit_id != -1:
@@ -957,120 +921,6 @@ func _on_dark_action_confirm() -> void:
 	_build_dark_actions_menu()
 	region_section.show_for_region(selected_region_idx)
 
-# --------------------------
-# ORG SECTION
-
-func _update_org_section(region_id: int) -> void:
-	var data: Dictionary = GameState.org_manager.get_org_display_data(region_id)
-	if not data.get("has_org", false):
-		org_section.visible = false
-		org_loyalty_label.visible = false
-		return
-
-	org_section.visible = true
-	org_name.text = data["display_name"]
-
-	if data["is_player_org"]:
-		org_owner.visible = false
-		doctrine_picker.visible = true
-		doctrine_effects.visible = true
-		_populate_doctrine_picker(region_id)
-	else:
-		org_owner.visible = true
-		org_owner.text = _format_owner(data["owner"])
-		doctrine_picker.visible = false
-		doctrine_effects.visible = false
-
-	# Loajalita — cti primo z org Dictionary, ne z display_data
-	var org: Dictionary = GameState.org_manager.get_org_in_region(region_id)
-	var loyalty: int = org.get("loyalty", Balance.ORG_LOYALTY_START)
-	var is_rogue: bool = org.get("is_rogue", false)
-
-	var phase_text: String
-	var phase_color: Color
-	if is_rogue:
-		phase_text = "Rogue"
-		phase_color = Color("#888888")
-	elif loyalty >= Balance.ORG_LOYALTY_FAITHFUL:
-		phase_text = "Verna"
-		phase_color = Color("#4caf50")
-	elif loyalty >= Balance.ORG_LOYALTY_STABLE:
-		phase_text = "Stabilni"
-		phase_color = Color("#ffd700")
-	else:
-		phase_text = "Nestabilni"
-		phase_color = Color("#f44336")
-
-	org_loyalty_label.text = "%d — %s" % [loyalty, phase_text]
-	org_loyalty_label.add_theme_color_override("font_color", phase_color)
-	org_loyalty_label.visible = true
-
-	# Viditelnost organizace — zobrazit pouze pro hracovy orgy
-	if org_visibility_label != null and data["is_player_org"]:
-		var is_visible_to_enemy: bool = org.get("visible", false)
-		if is_visible_to_enemy:
-			org_visibility_label.text = "Stav: Odhalena"
-			org_visibility_label.add_theme_color_override(
-				"font_color", Color("#f44336"))
-		else:
-			org_visibility_label.text = "Stav: Skryta"
-			org_visibility_label.add_theme_color_override(
-				"font_color", Color("#4caf50"))
-		org_visibility_label.visible = true
-	elif org_visibility_label != null:
-		org_visibility_label.visible = false
-
-
-func _populate_doctrine_picker(region_id: int) -> void:
-	doctrine_picker.clear()
-	_doctrine_keys.clear()
-	var doctrines: Array[Dictionary] = GameState.org_manager.get_available_doctrines(region_id)
-	var current_idx: int = 0
-	for i in doctrines.size():
-		var d: Dictionary = doctrines[i]
-		doctrine_picker.add_item(d["display_name"])
-		_doctrine_keys.append(d["key"])
-		if d["is_current"]:
-			current_idx = i
-	doctrine_picker.select(current_idx)
-	_update_doctrine_effects(region_id)
-
-
-func _update_doctrine_effects(region_id: int) -> void:
-	var doctrines: Array[Dictionary] = GameState.org_manager.get_available_doctrines(region_id)
-	var selected: int = doctrine_picker.selected
-	if selected < 0 or selected >= doctrines.size():
-		doctrine_effects.text = ""
-		return
-	doctrine_effects.text = _format_org_effects(doctrines[selected]["effects"])
-
-
-func _format_owner(owner: String) -> String:
-	match owner:
-		Balance.ORG_OWNER_ROGUE:   return "Odpadlicka organizace"
-		Balance.ORG_OWNER_NEUTRAL: return "Nezavisla organizace"
-		Balance.ORG_OWNER_RIVAL:   return "Rivalitni Temny pan"
-		_: return owner
-
-
-func _format_org_effects(effects: Dictionary) -> String:
-	var parts: Array[String] = []
-	if effects.has("gold"):
-		parts.append("%+d zlato/tah" % int(effects["gold"]))
-	if effects.has("mana"):
-		parts.append("%+d mana/tah" % int(effects["mana"]))
-	if effects.has("heat"):
-		parts.append("%+d heat/tah" % int(effects["heat"]))
-	if effects.has("awareness"):
-		parts.append("%+d awareness/tah" % int(effects["awareness"]))
-	if effects.has("mission_bonus"):
-		parts.append("+%d%% sance na mise" % int(effects["mission_bonus"]))
-	if effects.get("dark_action_empowered", false):
-		parts.append("Dark Actions zesíleny")
-	if parts.is_empty():
-		return "Žádné pasivní efekty"
-	return "  ".join(parts)
-
 
 func _format_effects(effects: Dictionary) -> String:
 	if effects.is_empty():
@@ -1099,22 +949,3 @@ func _format_effects(effects: Dictionary) -> String:
 	return ", ".join(parts)
 
 
-func _on_doctrine_picker_item_selected(index: int) -> void:
-	if index < 0 or index >= _doctrine_keys.size():
-		return
-	var new_key: String = _doctrine_keys[index]
-	var current: Dictionary = GameState.org_manager.get_org_display_data(selected_region_idx)
-	if new_key == current.get("doctrine_key", ""):
-		return  # žádná změna
-	GameState.org_manager.set_doctrine(selected_region_idx, new_key)
-	_update_doctrine_effects(selected_region_idx)
-
-
-func _on_org_changed(_ignored) -> void:
-	if selected_region_idx >= 0:
-		_update_org_section(selected_region_idx)
-
-
-func _on_doctrine_externally_changed(region_id: int, _doctrine: String) -> void:
-	if region_id == selected_region_idx:
-		_populate_doctrine_picker(region_id)
