@@ -367,7 +367,7 @@ func _handler_network_action(actor: AIActor, action_def: Dictionary) -> void:
 	var effects: Dictionary = action_def.get("effects", {})
 
 	if effects.has("gold"):
-		faction.gold += float(effects["gold"])
+		faction.change_resource("gold", float(effects["gold"]))
 	if effects.has("visibility"):
 		faction.visibility = clamp(
 			faction.visibility + int(effects["visibility"]),
@@ -409,13 +409,14 @@ func _handler_network_expand(actor: AIActor, action_def: Dictionary) -> void:
 		return
 
 	# Ověř zlato
-	if faction.gold < gold_cost:
-		actor.last_decision_log["handler_result"] = "expand: insufficient gold (%.1f < %.1f)" % [faction.gold, gold_cost]
+	var current_gold: float = faction.get_resource("gold")
+	if current_gold < gold_cost:
+		actor.last_decision_log["handler_result"] = "expand: insufficient gold (%.1f < %.1f)" % [current_gold, gold_cost]
 		return
 
 	var target_id: int = candidates[0]
 	faction.influence[source_id] = max(0, faction.influence[source_id] - influence_cost)
-	faction.gold -= gold_cost
+	faction.change_resource("gold", -gold_cost)
 	faction.influence[target_id] = initial_influence
 	faction.visibility = clamp(
 		faction.visibility + int(effects.get("visibility", 0)),
