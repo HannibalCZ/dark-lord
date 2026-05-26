@@ -64,6 +64,18 @@ var reputation_phase: String = "neutral"
 var reputation_modifier: int = 0
 # Heat threshold modifier: -10 / 0 / +10 / +99
 
+var faction_type: String = "territorial"  # "territorial" / "network"
+var network_type: String = ""             # "cult" / "crime_syndicate" / "shadow_network"
+var influence: Dictionary = {}            # { region_id: int }
+var visibility: int = 0                   # 0–100
+
+var loyalty: int = 100          # 0–100, relevantní pro network factions
+var is_rogue: bool = false       # true = osamostatnila se od hráče
+var doctrine: String = ""        # aktivní doktrína, klíč do Balance.ORG[network_type]["doctrines"]
+var visible: bool = true         # false = inkvizitor nevidí
+var founded_turn: int = 0        # tah kdy byla frakce founded
+var source_faction_id: String = ""  # kdo frakci ovládá / založil
+
 func change_resource(kind:String, amount:float) -> void:
 	if not resources.has(kind):
 		push_error("Faction %s: unknown resource '%s'" % [id, kind])
