@@ -240,6 +240,24 @@ func _create_network_card(faction: Faction) -> PanelContainer:
 	influence_detail.text = _influence_detail_text(faction)
 	vbox.add_child(influence_detail)
 
+	# --- Separator ---
+	vbox.add_child(HSeparator.new())
+
+	# --- Doktrína label ---
+	var doctrine_label := Label.new()
+	doctrine_label.name = "DoctrineLabel"
+	doctrine_label.add_theme_font_size_override("font_size", 11)
+	doctrine_label.add_theme_color_override("font_color", Color("#ccaaff"))
+	doctrine_label.text = _doctrine_display(faction)
+	vbox.add_child(doctrine_label)
+
+	# --- Tlačítka doktrín ---
+	var doctrine_row := HBoxContainer.new()
+	doctrine_row.name = "DoctrineRow"
+	doctrine_row.add_theme_constant_override("separation", 6)
+	vbox.add_child(doctrine_row)
+	_populate_doctrine_buttons(doctrine_row, faction)
+
 	return card
 
 # ---------------------------------------------------------
@@ -339,6 +357,14 @@ func _update_network_card(card: Node, faction: Faction) -> void:
 	if influence_detail != null:
 		influence_detail.text = _influence_detail_text(faction)
 
+	var doctrine_label: Label = vbox.get_node_or_null("DoctrineLabel")
+	if doctrine_label != null:
+		doctrine_label.text = _doctrine_display(faction)
+
+	var doctrine_row: HBoxContainer = vbox.get_node_or_null("DoctrineRow")
+	if doctrine_row != null:
+		_populate_doctrine_buttons(doctrine_row, faction)
+
 # ---------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------
@@ -409,6 +435,31 @@ func _influence_detail_text(faction: Faction) -> String:
 	if pairs.size() > 4:
 		text += " (+%d)" % (pairs.size() - 4)
 	return text
+
+func _doctrine_display(faction: Faction) -> String:
+	if faction.doctrine == "":
+		return "Doktrína: —"
+	var doctrines: Dictionary = Balance.ORG.get(faction.network_type, {}).get("doctrines", {})
+	var display: String = doctrines.get(faction.doctrine, {}).get("display_name", faction.doctrine)
+	return "Doktrína: %s" % display
+
+func _populate_doctrine_buttons(row: HBoxContainer, faction: Faction) -> void:
+	for child in row.get_children():
+		child.queue_free()
+	var doctrines: Dictionary = GameState.faction_manager.get_available_doctrines(faction.id)
+	for doctrine_key in doctrines.keys():
+		var btn := Button.new()
+		var dname: String = doctrines[doctrine_key].get("display_name", doctrine_key)
+		btn.text = dname
+		btn.disabled = (faction.doctrine == doctrine_key)
+		btn.add_theme_font_size_override("font_size", 10)
+		var fid: String = faction.id
+		var dkey: String = doctrine_key
+		btn.pressed.connect(func():
+			GameState.faction_manager.set_doctrine(fid, dkey)
+			GameState.game_updated.emit()
+		)
+		row.add_child(btn)
 
 func _behavior_effect_display(faction: Faction) -> String:
 	var mod: int = faction.reputation_modifier

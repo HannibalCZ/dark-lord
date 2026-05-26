@@ -48,6 +48,26 @@ func create_network_faction(network_type: String, owner_faction_id: String,
 	add_faction(faction)
 	return faction
 
+func set_doctrine(faction_id: String, doctrine_key: String) -> void:
+	var faction: Faction = get_faction(faction_id)
+	if faction == null:
+		push_warning("FactionManager.set_doctrine: faction '%s' neexistuje" % faction_id)
+		return
+	if faction.faction_type != "network":
+		push_warning("FactionManager.set_doctrine: faction '%s' není network type" % faction_id)
+		return
+	var doctrines: Dictionary = Balance.ORG.get(faction.network_type, {}).get("doctrines", {})
+	if not doctrines.has(doctrine_key):
+		push_warning("FactionManager.set_doctrine: doktrína '%s' neexistuje pro '%s'" % [doctrine_key, faction.network_type])
+		return
+	faction.doctrine = doctrine_key
+
+func get_available_doctrines(faction_id: String) -> Dictionary:
+	var faction: Faction = get_faction(faction_id)
+	if faction == null or faction.faction_type != "network":
+		return {}
+	return Balance.ORG.get(faction.network_type, {}).get("doctrines", {})
+
 func load_from_scenario(fd: Dictionary, fac: Faction) -> void:
 	if fd.has("loyalty"):
 		fac.loyalty = int(fd.get("loyalty", 100))

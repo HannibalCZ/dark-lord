@@ -509,6 +509,22 @@ func _calculate_action_score(action_key: String, action_def: Dictionary, faction
 		})
 		if met:
 			score = score_after
+
+	var faction: Faction = game_state.faction_manager.get_faction(faction_id)
+	if faction != null and faction.doctrine != "":
+		var doctrine_mods: Dictionary = action_def.get("doctrine_modifiers", {})
+		if doctrine_mods.has(faction.doctrine):
+			var dmul: float = doctrine_mods[faction.doctrine]
+			if dmul != 1.0:
+				breakdown.append({
+					"condition": "doctrine: %s" % faction.doctrine,
+					"met": true,
+					"multiplier": dmul,
+					"score_before": score,
+					"score_after": score * dmul,
+				})
+				score *= dmul
+
 	return {"score": score, "base": base, "breakdown": breakdown}
 
 # Vyhodnotí condition string formátu "stat op value" (např. "heat > 25").

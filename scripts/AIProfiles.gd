@@ -226,7 +226,12 @@ const ACTORS: Dictionary = {
 				"handler": "network_action",
 				"score_modifiers": [
 					{ "condition": "visibility > 50", "multiplier": 0.5 }
-				]
+				],
+				"doctrine_modifiers": {
+					"dark_rituals":       1.3,
+					"ritual_empowerment": 1.1,
+					"extortion": 1.0, "laundering": 1.0, "informants": 1.0, "disinfo": 1.0
+				}
 			},
 			"generate": {
 				"base_score": 0.30,
@@ -235,7 +240,12 @@ const ACTORS: Dictionary = {
 				"handler": "network_action",
 				"score_modifiers": [
 					{ "condition": "visibility > 70", "multiplier": 0.3 }
-				]
+				],
+				"doctrine_modifiers": {
+					"dark_rituals":       1.4,
+					"ritual_empowerment": 1.0,
+					"extortion": 1.0, "laundering": 1.0, "informants": 1.0, "disinfo": 1.0
+				}
 			},
 			"hide": {
 				"base_score": 0.20,
@@ -244,7 +254,12 @@ const ACTORS: Dictionary = {
 				"handler": "network_action",
 				"score_modifiers": [
 					{ "condition": "visibility > 50", "multiplier": 2.5 }
-				]
+				],
+				"doctrine_modifiers": {
+					"dark_rituals":       0.9,
+					"ritual_empowerment": 0.8,
+					"extortion": 1.0, "laundering": 1.0, "informants": 1.0, "disinfo": 1.0
+				}
 			},
 			"expand": {
 				"base_score": 0.40,
@@ -253,7 +268,12 @@ const ACTORS: Dictionary = {
 				"handler": "network_expand",
 				"score_modifiers": [
 					{ "condition": "influence > 60", "multiplier": 2.0 }
-				]
+				],
+				"doctrine_modifiers": {
+					"dark_rituals":       1.0,
+					"ritual_empowerment": 1.4,
+					"extortion": 1.0, "laundering": 1.0, "informants": 1.0, "disinfo": 1.0
+				}
 			},
 			"suppress": {
 				"base_score": 0.50,
@@ -262,7 +282,12 @@ const ACTORS: Dictionary = {
 				"handler": "network_suppress",
 				"score_modifiers": [
 					{ "condition": "rival_present", "multiplier": 3.0 }
-				]
+				],
+				"doctrine_modifiers": {
+					"dark_rituals":       0.8,
+					"ritual_empowerment": 1.3,
+					"extortion": 1.0, "laundering": 1.0, "informants": 1.0, "disinfo": 1.0
+				}
 			}
 		}
 	},
@@ -284,7 +309,12 @@ const ACTORS: Dictionary = {
 				"score_modifiers": [
 					{ "condition": "visibility > 70", "multiplier": 0.7 },
 					{ "condition": "visibility > 50", "multiplier": 0.3 }
-				]
+				],
+				"doctrine_modifiers": {
+					"extortion":  1.4,
+					"laundering": 0.9,
+					"dark_rituals": 1.0, "ritual_empowerment": 1.0, "informants": 1.0, "disinfo": 1.0
+				}
 			},
 			"grow": {
 				"base_score": 0.30,
@@ -293,7 +323,12 @@ const ACTORS: Dictionary = {
 				"handler": "network_action",
 				"score_modifiers": [
 					{ "condition": "visibility > 50", "multiplier": 0.5 }
-				]
+				],
+				"doctrine_modifiers": {
+					"extortion":  0.9,
+					"laundering": 1.1,
+					"dark_rituals": 1.0, "ritual_empowerment": 1.0, "informants": 1.0, "disinfo": 1.0
+				}
 			},
 			"suppress": {
 				"base_score": 0.40,
@@ -302,7 +337,12 @@ const ACTORS: Dictionary = {
 				"handler": "network_suppress",
 				"score_modifiers": [
 					{ "condition": "rival_present", "multiplier": 3.0 }
-				]
+				],
+				"doctrine_modifiers": {
+					"extortion":  1.3,
+					"laundering": 0.8,
+					"dark_rituals": 1.0, "ritual_empowerment": 1.0, "informants": 1.0, "disinfo": 1.0
+				}
 			},
 			"hide": {
 				"base_score": 0.30,
@@ -311,7 +351,12 @@ const ACTORS: Dictionary = {
 				"handler": "network_action",
 				"score_modifiers": [
 					{ "condition": "visibility > 50", "multiplier": 2.5 }
-				]
+				],
+				"doctrine_modifiers": {
+					"extortion":  0.7,
+					"laundering": 1.5,
+					"dark_rituals": 1.0, "ritual_empowerment": 1.0, "informants": 1.0, "disinfo": 1.0
+				}
 			},
 			"expand": {
 				"base_score": 0.50,
@@ -320,7 +365,12 @@ const ACTORS: Dictionary = {
 				"handler": "network_expand",
 				"score_modifiers": [
 					{ "condition": "influence > 60", "multiplier": 2.0 }
-				]
+				],
+				"doctrine_modifiers": {
+					"extortion":  1.1,
+					"laundering": 1.2,
+					"dark_rituals": 1.0, "ritual_empowerment": 1.0, "informants": 1.0, "disinfo": 1.0
+				}
 			}
 		}
 	},
@@ -341,7 +391,12 @@ const ACTORS: Dictionary = {
 				"handler": "network_action",
 				"score_modifiers": [
 					{ "condition": "visibility > 50", "multiplier": 2.5 }
-				]
+				],
+				"doctrine_modifiers": {
+					"informants": 1.3,
+					"disinfo":    1.5,
+					"dark_rituals": 1.0, "ritual_empowerment": 1.0, "extortion": 1.0, "laundering": 1.0
+				}
 			},
 			"suppress": {
 				"base_score": 0.60,
@@ -350,7 +405,12 @@ const ACTORS: Dictionary = {
 				"handler": "network_suppress",
 				"score_modifiers": [
 					{ "condition": "rival_present", "multiplier": 3.0 }
-				]
+				],
+				"doctrine_modifiers": {
+					"informants": 1.0,
+					"disinfo":    1.2,
+					"dark_rituals": 1.0, "ritual_empowerment": 1.0, "extortion": 1.0, "laundering": 1.0
+				}
 			},
 			"grow": {
 				"base_score": 0.40,
@@ -359,7 +419,12 @@ const ACTORS: Dictionary = {
 				"handler": "network_action",
 				"score_modifiers": [
 					{ "condition": "visibility > 50", "multiplier": 0.5 }
-				]
+				],
+				"doctrine_modifiers": {
+					"informants": 1.2,
+					"disinfo":    0.9,
+					"dark_rituals": 1.0, "ritual_empowerment": 1.0, "extortion": 1.0, "laundering": 1.0
+				}
 			},
 			"generate": {
 				"base_score": 0.30,
@@ -368,7 +433,12 @@ const ACTORS: Dictionary = {
 				"handler": "network_action",
 				"score_modifiers": [
 					{ "condition": "visibility > 70", "multiplier": 0.3 }
-				]
+				],
+				"doctrine_modifiers": {
+					"informants": 0.8,
+					"disinfo":    0.7,
+					"dark_rituals": 1.0, "ritual_empowerment": 1.0, "extortion": 1.0, "laundering": 1.0
+				}
 			},
 			"expand": {
 				"base_score": 0.30,
@@ -377,7 +447,12 @@ const ACTORS: Dictionary = {
 				"handler": "network_expand",
 				"score_modifiers": [
 					{ "condition": "influence > 60", "multiplier": 2.0 }
-				]
+				],
+				"doctrine_modifiers": {
+					"informants": 1.1,
+					"disinfo":    0.8,
+					"dark_rituals": 1.0, "ritual_empowerment": 1.0, "extortion": 1.0, "laundering": 1.0
+				}
 			}
 		}
 	}
