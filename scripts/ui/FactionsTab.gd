@@ -17,7 +17,18 @@ func _ready() -> void:
 	_build_factions()
 
 func _on_game_updated() -> void:
-	_refresh_factions()
+	# Pokud přibyly nové frakce (např. network), přebuduj celý list
+	var current_ids: Array = GameState.faction_manager.ai_factions().map(func(f): return f.id)
+	var needs_rebuild: bool = current_ids.size() != _faction_ids.size()
+	if not needs_rebuild:
+		for id in current_ids:
+			if id not in _faction_ids:
+				needs_rebuild = true
+				break
+	if needs_rebuild:
+		_build_factions()
+	else:
+		_refresh_factions()
 
 # ---------------------------------------------------------
 # Build — jednou při inicializaci
@@ -31,8 +42,10 @@ func _build_factions() -> void:
 	var ai_factions: Array = GameState.faction_manager.ai_factions()
 	for faction in ai_factions:
 		_faction_ids.append(faction.id)
-		var card := _create_card(faction)
-		factions_container.add_child(card)
+		if faction.faction_type == "network":
+			factions_container.add_child(_create_network_card(faction))
+		else:
+			factions_container.add_child(_create_card(faction))
 
 func _create_card(faction: Faction) -> PanelContainer:
 	var card := PanelContainer.new()
@@ -150,6 +163,85 @@ func _create_card(faction: Faction) -> PanelContainer:
 
 	return card
 
+func _create_network_card(faction: Faction) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.name = "FactionCard_" + faction.id
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#1a1228")
+	style.content_margin_left   = 8.0
+	style.content_margin_right  = 8.0
+	style.content_margin_top    = 8.0
+	style.content_margin_bottom = 8.0
+	card.add_theme_stylebox_override("panel", style)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	card.add_child(vbox)
+
+	# Řádek 1: fialová tečka + název typu
+	var header_row := HBoxContainer.new()
+	vbox.add_child(header_row)
+
+	var dot := ColorRect.new()
+	dot.custom_minimum_size = Vector2(16, 16)
+	dot.color = Color("#9c27b0")
+	header_row.add_child(dot)
+
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(6, 0)
+	header_row.add_child(spacer)
+
+	const TYPE_DISPLAY := {
+		"cult":             "Kult",
+		"crime_syndicate":  "Syndikát",
+		"shadow_network":   "Stínová síť"
+	}
+	var name_label := Label.new()
+	name_label.text = TYPE_DISPLAY.get(faction.network_type, faction.network_type)
+	name_label.add_theme_font_size_override("font_size", 14)
+	header_row.add_child(name_label)
+
+	vbox.add_child(HSeparator.new())
+
+	# Řádek 2: visibility + počet regionů s vlivem
+	var row2 := HBoxContainer.new()
+	row2.add_theme_constant_override("separation", 12)
+	vbox.add_child(row2)
+
+	var vis_label := Label.new()
+	vis_label.name = "VisibilityLabel"
+	vis_label.text = "Viditelnost: %d/100" % faction.visibility
+	vis_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row2.add_child(vis_label)
+
+	var regions_count := faction.influence.keys().filter(
+		func(rid): return faction.influence[rid] > 0).size()
+	var inf_label := Label.new()
+	inf_label.name = "InfluenceLabel"
+	inf_label.text = "Regiony: %d" % regions_count
+	row2.add_child(inf_label)
+
+	# --- Řádek 3: pokladna (gold / mana) ---
+	var economy_label := Label.new()
+	economy_label.name = "EconomyLabel"
+	economy_label.add_theme_font_size_override("font_size", 12)
+	economy_label.add_theme_color_override("font_color", Color("#888888"))
+	var fac_gold := faction.get_resource("gold")
+	var fac_mana := faction.get_resource("mana")
+	economy_label.text = "Pokladna: %dg / %dm" % [int(fac_gold), int(fac_mana)]
+	vbox.add_child(economy_label)
+
+	# --- Řádek 4: vliv per region (loajalita / síla přítomnosti) ---
+	var influence_detail := Label.new()
+	influence_detail.name = "InfluenceDetailLabel"
+	influence_detail.add_theme_font_size_override("font_size", 11)
+	influence_detail.add_theme_color_override("font_color", Color("#aaaaaa"))
+	influence_detail.text = _influence_detail_text(faction)
+	vbox.add_child(influence_detail)
+
+	return card
+
 # ---------------------------------------------------------
 # Refresh — aktualizuje hodnoty bez rebuildu
 # ---------------------------------------------------------
@@ -165,6 +257,9 @@ func _refresh_factions() -> void:
 		_update_card(card, faction)
 
 func _update_card(card: Node, faction: Faction) -> void:
+	if faction.faction_type == "network":
+		_update_network_card(card, faction)
+		return
 	var vbox: Node = card.get_child(0)
 	if vbox == null:
 		return
@@ -218,6 +313,32 @@ func _update_card(card: Node, faction: Faction) -> void:
 		economy_label.visible = fac_gold > 0 or fac_mana > 0
 		economy_label.text = "Pokladna: %dg / %dm" % [int(fac_gold), int(fac_mana)]
 
+func _update_network_card(card: Node, faction: Faction) -> void:
+	var vbox: Node = card.get_child(0)
+	if vbox == null:
+		return
+	var row2: Node = vbox.get_child(2)  # index 0=header, 1=sep, 2=row2
+	if row2 == null:
+		return
+	var vis_label: Label = row2.get_node_or_null("VisibilityLabel")
+	if vis_label != null:
+		vis_label.text = "Viditelnost: %d/100" % faction.visibility
+	var inf_label: Label = row2.get_node_or_null("InfluenceLabel")
+	if inf_label != null:
+		var count := faction.influence.keys().filter(
+			func(rid): return faction.influence[rid] > 0).size()
+		inf_label.text = "Regiony: %d" % count
+
+	var economy_label: Label = vbox.get_node_or_null("EconomyLabel")
+	if economy_label != null:
+		var fac_gold := faction.get_resource("gold")
+		var fac_mana := faction.get_resource("mana")
+		economy_label.text = "Pokladna: %dg / %dm" % [int(fac_gold), int(fac_mana)]
+
+	var influence_detail: Label = vbox.get_node_or_null("InfluenceDetailLabel")
+	if influence_detail != null:
+		influence_detail.text = _influence_detail_text(faction)
+
 # ---------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------
@@ -264,6 +385,30 @@ func _reputation_phase_color(phase: String) -> Color:
 		"infiltrated": return Color("#ffd700")
 		"controlled":  return Color("#4caf50")
 		_:             return Color("#aaaaaa")
+
+func _influence_detail_text(faction: Faction) -> String:
+	if faction.influence.is_empty():
+		return "Vliv: —"
+	# Seřaď regiony sestupně podle vlivu, zobraz max 4
+	var pairs: Array = []
+	for rid in faction.influence.keys():
+		var val: int = faction.influence[rid]
+		if val > 0:
+			pairs.append([rid, val])
+	pairs.sort_custom(func(a, b): return a[1] > b[1])
+	var parts: Array[String] = []
+	var shown: int = 0
+	for pair in pairs:
+		var region: Region = GameState.query.regions.get_by_id(pair[0])
+		var rname: String = region.name if region != null and region.name != "" else "R%d" % pair[0]
+		parts.append("%s: %d" % [rname, pair[1]])
+		shown += 1
+		if shown >= 4:
+			break
+	var text: String = "Vliv: " + " | ".join(parts)
+	if pairs.size() > 4:
+		text += " (+%d)" % (pairs.size() - 4)
+	return text
 
 func _behavior_effect_display(faction: Faction) -> String:
 	var mod: int = faction.reputation_modifier

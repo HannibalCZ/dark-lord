@@ -381,6 +381,10 @@ func _handler_network_action(actor: AIActor, action_def: Dictionary) -> void:
 			)
 
 	actor.last_decision_log["handler_result"] = "applied effects: %s" % str(effects)
+	Log_Manager.add({
+		"type": "network",
+		"text": "🕸 %s: %s" % [_network_display_name(faction), actor.current_plan]
+	})
 
 func _handler_network_expand(actor: AIActor, action_def: Dictionary) -> void:
 	var faction: Faction = game_state.faction_manager.get_faction(actor.faction_id)
@@ -424,9 +428,15 @@ func _handler_network_expand(actor: AIActor, action_def: Dictionary) -> void:
 	)
 
 	EventBus.network_faction_expanded.emit(actor.faction_id, source_id, target_id)
+	var from_name: String = _region_name(source_id)
+	var to_name: String = _region_name(target_id)
 	actor.last_decision_log["handler_result"] = "expand: %d → %d (cost gold %.1f, influence %d)" % [
 		source_id, target_id, gold_cost, influence_cost
 	]
+	Log_Manager.add({
+		"type": "network",
+		"text": "🕸 %s expandoval z %s do %s" % [_network_display_name(faction), from_name, to_name]
+	})
 
 func _handler_network_suppress(actor: AIActor, action_def: Dictionary) -> void:
 	var faction: Faction = game_state.faction_manager.get_faction(actor.faction_id)
@@ -464,9 +474,16 @@ func _handler_network_suppress(actor: AIActor, action_def: Dictionary) -> void:
 		0, Balance.NETWORK_VISIBILITY_MAX
 	)
 
+	var region_name: String = _region_name(best_region_id)
 	actor.last_decision_log["handler_result"] = "suppress: hit %s in region %d by %d" % [
 		best_rival.id, best_region_id, rival_delta
 	]
+	Log_Manager.add({
+		"type": "network",
+		"text": "🕸 %s potlačil vliv rivala v %s (%+d)" % [
+			_network_display_name(faction), region_name, rival_delta
+		]
+	})
 
 # ---------------------------------------------------------------------------
 # Utility scoring
@@ -584,3 +601,15 @@ func _get_stat_value(stat: String, faction_id: String) -> float:
 		_:
 			push_warning("WorldAI: neznámý stat '%s'" % stat)
 			return 0.0
+
+# ---------------------------------------------------------------------------
+# Helpers pro log a display
+# ---------------------------------------------------------------------------
+
+func _network_display_name(faction: Faction) -> String:
+	var profile_key: String = faction.network_type + "_network"
+	return AIProfiles.ACTORS.get(profile_key, {}).get("display_name", faction.network_type)
+
+func _region_name(region_id: int) -> String:
+	var region: Region = game_state.query.regions.get_by_id(region_id)
+	return region.name if region != null and region.name != "" else "region %d" % region_id

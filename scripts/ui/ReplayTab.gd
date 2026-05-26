@@ -79,4 +79,5 @@ func _get_color(t: String) -> String:
 		"heat":    return "#FFA500"  # oranžová
 		"cycle":   return "#BA55D3"  # fialová
 		"neutral": return "#AAAAAA"  # šedá
+		"network": return "#9c27b0"  # fialová — network faction akce
 		_:         return "#FFFFFF"  # bílá
