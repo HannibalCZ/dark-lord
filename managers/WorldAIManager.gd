@@ -17,14 +17,22 @@ var _actors: Dictionary = {}  # { faction_id: AIActor }
 # Inicializace
 # ---------------------------------------------------------------------------
 
-# Vytvoří AIActor pro každý faction_id definovaný v AIProfiles.ACTORS.
+# Přidá chybějící aktéry ze statických profilů. Idempotentní — opakované volání
+# nevytváří duplicity a nezničí dynamicky vytvořené network faction actors.
 # Volat z GameState.load_scenario() po načtení frakcí — ne z _ready().
+# Pro čistý reset volej reset_actors() před tímto.
 func init_actors() -> void:
-	_actors.clear()
 	for faction_id in AIProfiles.ACTORS.keys():
+		if _actors.has(faction_id):
+			continue  # guard — nepřepisuj existující actor
 		var actor := AIActor.new()
 		actor.faction_id = faction_id
 		_actors[faction_id] = actor
+
+# Vymaže všechny aktéry včetně dynamicky vytvořených network faction actors.
+# Volat z GameState.load_scenario() před init_actors() pro čistý start.
+func reset_actors() -> void:
+	_actors.clear()
 
 # ---------------------------------------------------------------------------
 # Herní smyčka
@@ -60,6 +68,22 @@ func process_turn() -> void:
 		if profile.is_empty():
 			continue
 		_process_actor(actor, profile)
+
+	# Network frakce — lazy actor creation + zpracování
+	for faction in game_state.faction_manager.all():
+		if faction.faction_type != "network":
+			continue
+		var nf_id: String = faction.id
+		if not _actors.has(nf_id):
+			var actor := AIActor.new()
+			actor.faction_id = nf_id
+			_actors[nf_id] = actor
+		var nf_actor: AIActor = _actors[nf_id]
+		var profile_key: String = faction.network_type + "_network"
+		var profile: Dictionary = AIProfiles.ACTORS.get(profile_key, {})
+		if profile.is_empty():
+			continue
+		_process_actor(nf_actor, profile)
 
 # ---------------------------------------------------------------------------
 # Interní — jeden aktér
@@ -176,6 +200,14 @@ func _execute_action(actor: AIActor, action_def: Dictionary) -> void:
 			_handler_merchant_trade(actor, params)
 		"merchant_defend":
 			_handler_merchant_defend(actor, params)
+		"network_grow":
+			_handler_network_grow(actor, params)
+		"network_action":
+			_handler_network_action(actor, action_def)
+		"network_expand":
+			_handler_network_expand(actor, action_def)
+		"network_suppress":
+			_handler_network_suppress(actor, action_def)
 		"":
 			pass  # žádná akce
 		_:
@@ -316,6 +348,125 @@ func _handler_merchant_defend(actor: AIActor, _params: Dictionary) -> void:
 	# Budoucí migrace: spawn obranných jednotek při ohrožení
 	actor.last_decision_log["handler_result"] = "defend — posílení obrany"
 
+func _handler_network_grow(actor: AIActor, _params: Dictionary) -> void:
+	var faction: Faction = game_state.faction_manager.get_faction(actor.faction_id)
+	if faction == null:
+		return
+	for region_id in faction.influence.keys():
+		faction.influence[region_id] = min(
+			faction.influence[region_id] + Balance.NETWORK_GROW_AMOUNT,
+			100
+		)
+	faction.visibility = min(faction.visibility + Balance.NETWORK_VISIBILITY_GROW, 100)
+	actor.last_decision_log["handler_result"] = "grew influence in %d regions" % faction.influence.size()
+
+func _handler_network_action(actor: AIActor, action_def: Dictionary) -> void:
+	var faction: Faction = game_state.faction_manager.get_faction(actor.faction_id)
+	if faction == null:
+		return
+	var effects: Dictionary = action_def.get("effects", {})
+
+	if effects.has("gold"):
+		faction.gold += float(effects["gold"])
+	if effects.has("visibility"):
+		faction.visibility = clamp(
+			faction.visibility + int(effects["visibility"]),
+			0, Balance.NETWORK_VISIBILITY_MAX
+		)
+	if effects.has("influence"):
+		for region_id in faction.influence.keys():
+			faction.influence[region_id] = clamp(
+				faction.influence[region_id] + int(effects["influence"]),
+				0, Balance.NETWORK_INFLUENCE_MAX
+			)
+
+	actor.last_decision_log["handler_result"] = "applied effects: %s" % str(effects)
+
+func _handler_network_expand(actor: AIActor, action_def: Dictionary) -> void:
+	var faction: Faction = game_state.faction_manager.get_faction(actor.faction_id)
+	if faction == null:
+		return
+	var effects: Dictionary = action_def.get("effects", {})
+	var gold_cost: float = float(effects.get("gold_cost", 0))
+	var influence_cost: int = int(effects.get("influence_cost", 0))
+	var initial_influence: int = int(effects.get("initial_influence", Balance.NETWORK_INFLUENCE_INITIAL))
+
+	# Najdi zdrojový region s dostatečnou influence
+	var source_id: int = -1
+	for region_id in faction.influence.keys():
+		if faction.influence[region_id] >= Balance.NETWORK_EXPANSION_THRESHOLD:
+			source_id = region_id
+			break
+
+	if source_id < 0:
+		actor.last_decision_log["handler_result"] = "expand: no region above threshold %d" % Balance.NETWORK_EXPANSION_THRESHOLD
+		return
+
+	# Najdi sousední region bez network faction
+	var candidates: Array[int] = game_state.query.regions.get_neighbors_without_network_faction(source_id)
+	if candidates.is_empty():
+		actor.last_decision_log["handler_result"] = "expand: no free neighbor for region %d" % source_id
+		return
+
+	# Ověř zlato
+	if faction.gold < gold_cost:
+		actor.last_decision_log["handler_result"] = "expand: insufficient gold (%.1f < %.1f)" % [faction.gold, gold_cost]
+		return
+
+	var target_id: int = candidates[0]
+	faction.influence[source_id] = max(0, faction.influence[source_id] - influence_cost)
+	faction.gold -= gold_cost
+	faction.influence[target_id] = initial_influence
+	faction.visibility = clamp(
+		faction.visibility + int(effects.get("visibility", 0)),
+		0, Balance.NETWORK_VISIBILITY_MAX
+	)
+
+	EventBus.network_faction_expanded.emit(actor.faction_id, source_id, target_id)
+	actor.last_decision_log["handler_result"] = "expand: %d → %d (cost gold %.1f, influence %d)" % [
+		source_id, target_id, gold_cost, influence_cost
+	]
+
+func _handler_network_suppress(actor: AIActor, action_def: Dictionary) -> void:
+	var faction: Faction = game_state.faction_manager.get_faction(actor.faction_id)
+	if faction == null:
+		return
+	var effects: Dictionary = action_def.get("effects", {})
+	var rival_delta: int = int(effects.get("rival_influence", 0))
+
+	# Najdi rivala s nejvyšší influence v regionu kde je tato frakce přítomna
+	var best_rival: Faction = null
+	var best_region_id: int = -1
+	var best_influence: int = -1
+
+	for region_id in faction.influence.keys():
+		var rival: Faction = game_state.faction_manager.get_network_faction_in_region(region_id)
+		if rival == null or rival.id == actor.faction_id:
+			continue
+		var rival_inf: int = rival.influence.get(region_id, 0)
+		if rival_inf > best_influence:
+			best_influence = rival_inf
+			best_rival = rival
+			best_region_id = region_id
+
+	if best_rival == null:
+		actor.last_decision_log["handler_result"] = "suppress: no rival found"
+		return
+
+	best_rival.influence[best_region_id] = best_rival.influence.get(best_region_id, 0) + rival_delta
+	if best_rival.influence[best_region_id] <= 0:
+		best_rival.influence.erase(best_region_id)
+		EventBus.network_faction_suppressed.emit(actor.faction_id, best_rival.id, best_region_id)
+
+	faction.visibility = clamp(
+		faction.visibility + int(effects.get("visibility", 0)),
+		0, Balance.NETWORK_VISIBILITY_MAX
+	)
+
+	actor.last_decision_log["handler_result"] = "suppress: hit %s in region %d by %d" % [
+		best_rival.id, best_region_id, rival_delta
+	]
+
 # ---------------------------------------------------------------------------
 # Utility scoring
 # ---------------------------------------------------------------------------
@@ -345,6 +496,16 @@ func _calculate_action_score(action_key: String, action_def: Dictionary, faction
 # Vyhodnotí condition string formátu "stat op value" (např. "heat > 25").
 # Při neplatném formátu vrátí false a zaloguje warning — nikdy nezpůsobí crash.
 func _evaluate_condition(condition: String, faction_id: String) -> bool:
+	if condition == "rival_present":
+		var faction: Faction = game_state.faction_manager.get_faction(faction_id)
+		if faction == null:
+			return false
+		for region_id in faction.influence.keys():
+			var rival: Faction = game_state.faction_manager.get_network_faction_in_region(region_id)
+			if rival != null and rival.id != faction_id:
+				return true
+		return false
+
 	var parts: Array = condition.split(" ")
 	if parts.size() != 3:
 		push_warning("WorldAI: neplatný formát condition '%s'" % condition)
@@ -404,6 +565,21 @@ func _get_stat_value(stat: String, faction_id: String) -> float:
 			return float(player_faction.infamy)
 		"turn":
 			return float(game_state.turn)
+		"visibility":
+			var vis_faction = game_state.faction_manager.get_faction(faction_id)
+			if vis_faction == null:
+				return 0.0
+			return float(vis_faction.visibility)
+		"influence":
+			var inf_faction: Faction = game_state.faction_manager.get_faction(faction_id)
+			if inf_faction == null:
+				return 0.0
+			if inf_faction.influence.is_empty():
+				return 0.0
+			var total: float = 0.0
+			for v in inf_faction.influence.values():
+				total += float(v)
+			return total / float(inf_faction.influence.size())
 		_:
 			push_warning("WorldAI: neznámý stat '%s'" % stat)
 			return 0.0

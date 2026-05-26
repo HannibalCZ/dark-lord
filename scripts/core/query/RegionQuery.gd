@@ -309,6 +309,13 @@ func is_adjacent_to_player_territory(region_id: int) -> bool:
 			return true
 	return false
 
+func get_neighbors_without_network_faction(region_id: int) -> Array[int]:
+	var result: Array[int] = []
+	for neighbor_id in neighbors(region_id):
+		if game.faction_manager.get_network_faction_in_region(neighbor_id) == null:
+			result.append(neighbor_id)
+	return result
+
 func find_next_step_towards(start_id: int, target_id: int) -> int:
 	if start_id == target_id:
 		return start_id

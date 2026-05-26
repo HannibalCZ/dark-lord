@@ -44,3 +44,6 @@ signal militia_spawned(region_id: int)
 signal warband_disbanded(unit_id: int, unit_name: String, region_id: int)
 
 signal colonist_disbanded(unit_name: String, region_id: int)
+
+signal network_faction_expanded(faction_id: String, from_region: int, to_region: int)
+signal network_faction_suppressed(faction_id: String, rival_id: String, region_id: int)

@@ -68,6 +68,9 @@ var _pending_colonist_events: Array[EventData] = []
 # Tajemství odhaleno průzkumníkem — buffrovano pri signalu secret_stolen.
 var _pending_secret_events: Array[EventData] = []
 
+# Network faction expand/suppress — buffrovano pri signalech WorldAIManageru.
+var _pending_network_events: Array[EventData] = []
+
 # Reputacni faze z konce minuleho tahu — pro detekci prechodu do "controlled".
 # Plni se na KONCI generate_events_for_turn(), cte se na ZACATKU dalsiho tahu.
 # Prvni tah: prazdny dict → .get(faction_id, "neutral") vraci "neutral" (bezpecny fallback).
@@ -93,6 +96,7 @@ func reset() -> void:
 	_pending_militia_events.clear()
 	_pending_warband_events.clear()
 	_pending_colonist_events.clear()
+	_pending_network_events.clear()
 	_prev_reputation_phases.clear()
 	_active_advisors.clear()
 
@@ -118,6 +122,8 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.militia_spawned.connect(_on_militia_spawned)
 	EventBus.warband_disbanded.connect(_on_warband_disbanded)
 	EventBus.colonist_disbanded.connect(_on_colonist_disbanded)
+	EventBus.network_faction_expanded.connect(_on_network_faction_expanded)
+	EventBus.network_faction_suppressed.connect(_on_network_faction_suppressed)
 	GameState.game_ended.connect(_on_game_ended)
 
 # ---------------------------
@@ -147,6 +153,7 @@ func generate_events_for_turn() -> Array[EventData]:
 	_collect_pending_militia_events(events)
 	_collect_pending_warband_events(events)
 	_collect_pending_colonist_events(events)
+	_collect_pending_network_events(events)
 
 	_collected_player_results.clear()
 
@@ -482,6 +489,39 @@ func _collect_pending_militia_events(events: Array[EventData]) -> void:
 	for event in _pending_militia_events:
 		events.append(event)
 	_pending_militia_events.clear()
+
+
+# ---------------------------
+# ZDROJ — Network faction expand/suppress (Zvěd)
+# ---------------------------
+func _on_network_faction_expanded(faction_id: String, from_region: int, to_region: int) -> void:
+	var from_region_obj: Region = game_state.query.regions.get_by_id(from_region)
+	var to_region_obj: Region = game_state.query.regions.get_by_id(to_region)
+	var from_name: String = from_region_obj.name if from_region_obj != null else "region %d" % from_region
+	var to_name: String = to_region_obj.name if to_region_obj != null else "region %d" % to_region
+	_pending_network_events.append(EventData.create(
+		Balance.ADVISOR_ZVEDKA,
+		Balance.EVENT_IMPORTANT,
+		"Pane, naše síť rozšířila vliv z %s do %s." % [from_name, to_name],
+		"Network %s expandovala do regionu %s." % [faction_id, to_name]
+	))
+
+
+func _on_network_faction_suppressed(faction_id: String, rival_id: String, region_id: int) -> void:
+	var region: Region = game_state.query.regions.get_by_id(region_id)
+	var region_name: String = region.name if region != null else "region %d" % region_id
+	_pending_network_events.append(EventData.create(
+		Balance.ADVISOR_ZVEDKA,
+		Balance.EVENT_IMPORTANT,
+		"Pane, naše síť zničila vliv rivala v %s." % region_name,
+		"Network %s potlačila %s v regionu %s." % [faction_id, rival_id, region_name]
+	))
+
+
+func _collect_pending_network_events(events: Array[EventData]) -> void:
+	for event in _pending_network_events:
+		events.append(event)
+	_pending_network_events.clear()
 
 
 # ---------------------------

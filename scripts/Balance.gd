@@ -51,6 +51,26 @@ const UNREST_CORRUPTION_MIN: int = 2
 const UNREST_FEAR_MIN: int = 3
 const UNREST_REVOLT_CHANCE: float = 0.25
 
+# R4 Stability
+const STABILITY_DEFAULT: int = 70
+const STABILITY_WILDERNESS_DEFAULT: int = 40
+const STABILITY_MAX: int = 100
+const STABILITY_MIN: int = 0
+const STABILITY_NEW_OWNER_PENALTY: int = 20
+const STABILITY_PEACE_REGEN: int = 2
+const STABILITY_OCCUPATION_PENALTY: int = 3
+const STABILITY_FEAR_PENALTY_THRESHOLD: int = 60
+const STABILITY_FEAR_PENALTY: int = 1
+const STABILITY_UNREST_THRESHOLD: int = 40
+
+# R5 Prosperity
+const PROSPERITY_DEFAULT: int = 50
+const PROSPERITY_WILDERNESS_DEFAULT: int = 25
+const PROSPERITY_MIN: int = 0
+const PROSPERITY_GROWTH_BASE: int = 2
+const PROSPERITY_DECAY_LOW_STABILITY: int = 3
+const PROSPERITY_DECAY_OCCUPIED: int = 2
+
 const CORRUPTION_PHASE_NAMES: Dictionary = {
 	0: "Cisty",
 	1: "Naruseny",
@@ -347,6 +367,55 @@ const MISSION = {
 		"fail":    { "heat": 2 },
 		"ui_icon":  "res://ui/icons/missions/spread_fear.png",
 		"ui_order": 12
+	},
+
+	"found_cult": {
+		"id":           "found_cult",
+		"category":     "influence",
+		"display_name": "Založ kult",
+		"description":  "Založí tajný kult v regionu. Vyžaduje strach a civilizovaný region bez existující síťové frakce.",
+		"base_chance":  0.75,
+		"requirements": {
+			"region_kind_in": ["civilized"],
+			"requires_no_network_faction": true,
+			"min_fear": 0
+		},
+		"cost": { "ap": 1, "mana": 15, "gold": 0 },
+		"success": { "found_network_faction": "cult" },
+		"fail":    { "heat": 4, "awareness": 2 },
+		"ui_order": 20
+	},
+
+	"found_crime_syndicate": {
+		"id":           "found_crime_syndicate",
+		"category":     "influence",
+		"display_name": "Založ syndikát",
+		"description":  "Vytvoří zločinecký syndikát v regionu s nízkou stabilitou.",
+		"base_chance":  0.70,
+		"requirements": {
+			"requires_no_network_faction": true,
+			"max_stability": 50
+		},
+		"cost": { "ap": 1, "mana": 0, "gold": 20 },
+		"success": { "found_network_faction": "crime_syndicate" },
+		"fail":    { "heat": 3, "awareness": 1 },
+		"ui_order": 21
+	},
+
+	"found_shadow_network": {
+		"id":           "found_shadow_network",
+		"category":     "influence",
+		"display_name": "Založ stínovou síť",
+		"description":  "Vybuduje stínovou síť agentů v civilizovaném regionu.",
+		"base_chance":  0.65,
+		"requirements": {
+			"region_kind_in": ["civilized"],
+			"requires_no_network_faction": true
+		},
+		"cost": { "ap": 1, "mana": 5, "gold": 10 },
+		"success": { "found_network_faction": "shadow_network" },
+		"fail":    { "heat": 3, "awareness": 2 },
+		"ui_order": 22
 	}
 
 }
@@ -532,7 +601,7 @@ const UNIT = {
 		"recruit_cost": { "mana": 15 },
 		"upkeep_cost": { "mana": 2 },
 		"moves": 2,
-		"can_do": ["corrupt","sabotage","explore","manipulate","inspect","dismantle","eliminate","heal","spread_fear"],
+		"can_do": ["corrupt","sabotage","explore","manipulate","inspect","dismantle","eliminate","heal","spread_fear", "found_cult"],
 		"resilient": true,
 		"icon": "res://art/units/vampire.png",
 	},
@@ -1439,3 +1508,20 @@ const PROCEDURAL_SEED: int = 12345
 # mimo startovni region hrace.
 const PROCEDURAL_SECRET_DENSITY_MIN: float = 0.25
 const PROCEDURAL_SECRET_DENSITY_MAX: float = 0.33
+
+# ---------------------------------------------------------------------------
+# Network Factions
+# ---------------------------------------------------------------------------
+const NETWORK_INFLUENCE_INITIAL: int = 10
+const NETWORK_INFLUENCE_CONTROL_THRESHOLD: int = 50
+const NETWORK_VISIBILITY_DETECTION_THRESHOLD: int = 50
+const NETWORK_GROW_AMOUNT: int = 8
+const NETWORK_VISIBILITY_GROW: int = 5
+const NETWORK_EXPANSION_THRESHOLD: int = 60
+const NETWORK_EXPAND_GOLD_COST: Dictionary = {
+	"cult": 10,
+	"crime_syndicate": 15,
+	"shadow_network": 12
+}
+const NETWORK_INFLUENCE_MAX: int = 100
+const NETWORK_VISIBILITY_MAX: int = 100

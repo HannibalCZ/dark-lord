@@ -208,5 +208,177 @@ const ACTORS: Dictionary = {
 				"handler_params": {}
 			}
 		}
+	},
+
+	"cult_network": {
+		"display_name": "Kult",
+		"plan_switch_threshold": 0.15,
+		"goals": { "grow_influence": 1.0, "generate_resources": 0.4 },
+		"actions": {
+			# visibility | grow  | generate | hide  | expand | suppress | Vítěz
+			# < 50       |  0.70 |   0.30   | 0.20  |  0.40  |   0.50   | grow
+			# 50–70      |  0.35 |   0.09   | 0.50  |  0.40  |   0.50   | suppress/hide
+			# > 70       |  0.35 |   0.03   | 1.25  |  0.40  |   0.50   | hide
+			"grow": {
+				"base_score": 0.70,
+				"goal": "grow_influence",
+				"effects": { "influence": 8, "visibility": 5 },
+				"handler": "network_action",
+				"score_modifiers": [
+					{ "condition": "visibility > 50", "multiplier": 0.5 }
+				]
+			},
+			"generate": {
+				"base_score": 0.30,
+				"goal": "generate_resources",
+				"effects": { "gold": 3.0, "visibility": 8 },
+				"handler": "network_action",
+				"score_modifiers": [
+					{ "condition": "visibility > 70", "multiplier": 0.3 }
+				]
+			},
+			"hide": {
+				"base_score": 0.20,
+				"goal": "grow_influence",
+				"effects": { "visibility": -15 },
+				"handler": "network_action",
+				"score_modifiers": [
+					{ "condition": "visibility > 50", "multiplier": 2.5 }
+				]
+			},
+			"expand": {
+				"base_score": 0.40,
+				"goal": "grow_influence",
+				"effects": { "influence_cost": 20, "gold_cost": 10, "initial_influence": 10, "visibility": 10 },
+				"handler": "network_expand",
+				"score_modifiers": [
+					{ "condition": "influence > 60", "multiplier": 2.0 }
+				]
+			},
+			"suppress": {
+				"base_score": 0.50,
+				"goal": "grow_influence",
+				"effects": { "rival_influence": -12, "visibility": 15 },
+				"handler": "network_suppress",
+				"score_modifiers": [
+					{ "condition": "rival_present", "multiplier": 3.0 }
+				]
+			}
+		}
+	},
+
+	"crime_syndicate_network": {
+		"display_name": "Zločinecký syndikát",
+		"plan_switch_threshold": 0.15,
+		"goals": { "generate_resources": 1.0, "grow_influence": 0.6 },
+		"actions": {
+			# visibility | generate | grow  | expand | suppress | hide  | Vítěz
+			# < 50       |   0.70   | 0.30  |  0.50  |   0.40   | 0.30  | generate
+			# 50–70      |   0.49   | 0.30  |  0.50  |   0.40   | 0.75  | hide
+			# > 70       |   0.15   | 0.30  |  0.50  |   0.40   | 1.88  | hide
+			"generate": {
+				"base_score": 0.70,
+				"goal": "generate_resources",
+				"effects": { "gold": 3.0, "visibility": 8 },
+				"handler": "network_action",
+				"score_modifiers": [
+					{ "condition": "visibility > 70", "multiplier": 0.7 },
+					{ "condition": "visibility > 50", "multiplier": 0.3 }
+				]
+			},
+			"grow": {
+				"base_score": 0.30,
+				"goal": "grow_influence",
+				"effects": { "influence": 8, "visibility": 5 },
+				"handler": "network_action",
+				"score_modifiers": [
+					{ "condition": "visibility > 50", "multiplier": 0.5 }
+				]
+			},
+			"suppress": {
+				"base_score": 0.40,
+				"goal": "grow_influence",
+				"effects": { "rival_influence": -12, "visibility": 15 },
+				"handler": "network_suppress",
+				"score_modifiers": [
+					{ "condition": "rival_present", "multiplier": 3.0 }
+				]
+			},
+			"hide": {
+				"base_score": 0.30,
+				"goal": "generate_resources",
+				"effects": { "visibility": -15 },
+				"handler": "network_action",
+				"score_modifiers": [
+					{ "condition": "visibility > 50", "multiplier": 2.5 }
+				]
+			},
+			"expand": {
+				"base_score": 0.50,
+				"goal": "grow_influence",
+				"effects": { "influence_cost": 20, "gold_cost": 15, "initial_influence": 10, "visibility": 10 },
+				"handler": "network_expand",
+				"score_modifiers": [
+					{ "condition": "influence > 60", "multiplier": 2.0 }
+				]
+			}
+		}
+	},
+
+	"shadow_network_network": {
+		"display_name": "Stínová síť",
+		"plan_switch_threshold": 0.15,
+		"goals": { "grow_influence": 1.0, "generate_resources": 0.5 },
+		"actions": {
+			# visibility | hide  | suppress | grow  | generate | expand | Vítěz
+			# < 50       |  0.60 |   0.60   | 0.40  |   0.30   |  0.30  | hide/suppress
+			# 50–70      |  1.50 |   0.60   | 0.20  |   0.09   |  0.30  | hide
+			# > 70       |  3.75 |   0.60   | 0.20  |   0.03   |  0.30  | hide
+			"hide": {
+				"base_score": 0.60,
+				"goal": "grow_influence",
+				"effects": { "visibility": -15 },
+				"handler": "network_action",
+				"score_modifiers": [
+					{ "condition": "visibility > 50", "multiplier": 2.5 }
+				]
+			},
+			"suppress": {
+				"base_score": 0.60,
+				"goal": "grow_influence",
+				"effects": { "rival_influence": -12, "visibility": 15 },
+				"handler": "network_suppress",
+				"score_modifiers": [
+					{ "condition": "rival_present", "multiplier": 3.0 }
+				]
+			},
+			"grow": {
+				"base_score": 0.40,
+				"goal": "grow_influence",
+				"effects": { "influence": 8, "visibility": 5 },
+				"handler": "network_action",
+				"score_modifiers": [
+					{ "condition": "visibility > 50", "multiplier": 0.5 }
+				]
+			},
+			"generate": {
+				"base_score": 0.30,
+				"goal": "generate_resources",
+				"effects": { "gold": 3.0, "visibility": 8 },
+				"handler": "network_action",
+				"score_modifiers": [
+					{ "condition": "visibility > 70", "multiplier": 0.3 }
+				]
+			},
+			"expand": {
+				"base_score": 0.30,
+				"goal": "grow_influence",
+				"effects": { "influence_cost": 20, "gold_cost": 12, "initial_influence": 10, "visibility": 10 },
+				"handler": "network_expand",
+				"score_modifiers": [
+					{ "condition": "influence > 60", "multiplier": 2.0 }
+				]
+			}
+		}
 	}
 }
