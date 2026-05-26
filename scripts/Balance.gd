@@ -1115,6 +1115,14 @@ const ORG_REINFORCE_LOYALTY_BOOST: int = 20
 # s celkovym dopadem >= ORG_REVEAL_THRESHOLD se stane visible.
 const ORG_REVEAL_THRESHOLD: int = 8
 
+# Network faction loyalty decay — nezavisle na ORG konstantach
+const NETWORK_LOYALTY_DECAY_LOW:           int = 8   # infamy <= 20
+const NETWORK_LOYALTY_DECAY_MID:           int = 5   # infamy <= 50
+const NETWORK_LOYALTY_DECAY_HIGH:          int = 3   # infamy <= 80
+const NETWORK_LOYALTY_DECAY_VERY_HIGH:     int = 1   # infamy > 80
+const NETWORK_LOYALTY_ROGUE_THRESHOLD:     int = 20  # pod tímto → rogue risk
+const NETWORK_LOYALTY_ROGUE_INFLUENCE_MIN: int = 80  # >= toto + nízká loajalita → rogue
+
 # --- Efekty neutralnich a Rogue organizaci ---
 # Aplikuji se kazdy tah dokud je org neutral nebo Rogue.
 # Negativni efekty motivuji hrace je resit.

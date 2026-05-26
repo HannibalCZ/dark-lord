@@ -81,3 +81,38 @@ func load_from_scenario(fd: Dictionary, fac: Faction) -> void:
 		fac.founded_turn = int(fd.get("founded_turn", 0))
 	if fd.has("source_faction_id"):
 		fac.source_faction_id = String(fd.get("source_faction_id", ""))
+
+
+func get_all_network_factions() -> Array[Faction]:
+	var result: Array[Faction] = []
+	for faction in _factions.values():
+		if faction.faction_type == "network":
+			result.append(faction)
+	return result
+
+
+func process_loyalty_decay(player_infamy: float) -> void:
+	var decay: int
+	if player_infamy <= 20:   decay = Balance.NETWORK_LOYALTY_DECAY_LOW
+	elif player_infamy <= 50: decay = Balance.NETWORK_LOYALTY_DECAY_MID
+	elif player_infamy <= 80: decay = Balance.NETWORK_LOYALTY_DECAY_HIGH
+	else:                     decay = Balance.NETWORK_LOYALTY_DECAY_VERY_HIGH
+
+	for faction in get_all_network_factions():
+		if faction.is_rogue:
+			continue
+		if faction.source_faction_id != Balance.PLAYER_FACTION:
+			continue
+		faction.loyalty = max(0, faction.loyalty - decay)
+		if faction.loyalty <= Balance.NETWORK_LOYALTY_ROGUE_THRESHOLD:
+			var max_influence: int = faction.influence.values().max() \
+					if not faction.influence.is_empty() else 0
+			if max_influence >= Balance.NETWORK_LOYALTY_ROGUE_INFLUENCE_MIN:
+				_trigger_rogue(faction)
+
+
+func _trigger_rogue(faction: Faction) -> void:
+	faction.is_rogue = true
+	faction.source_faction_id = ""
+	var region_ids: Array = faction.influence.keys()
+	EventBus.network_faction_went_rogue.emit(faction.id, region_ids)

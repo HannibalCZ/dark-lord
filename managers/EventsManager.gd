@@ -111,6 +111,7 @@ func init(gs: GameStateSingleton) -> void:
 	EventBus.progression_node_unlocked.connect(_on_progression_node_unlocked)
 	EventBus.org_founded.connect(_on_org_founded)
 	EventBus.org_went_rogue.connect(_on_org_went_rogue)
+	EventBus.network_faction_went_rogue.connect(_on_network_faction_went_rogue)
 	EventBus.explorer_appeared.connect(_on_explorer_appeared)
 	EventBus.inquisitor_returned.connect(_on_inquisitor_returned)
 	EventBus.inquisitor_gone_global.connect(_on_inquisitor_gone_global)
@@ -944,6 +945,25 @@ func _collect_pending_rogue_events(events: Array[EventData]) -> void:
 	for event in _pending_rogue_events:
 		events.append(event)
 	_pending_rogue_events.clear()
+
+
+# ---------------------------
+# Signal handler — Network faction přešla do Rogue stavu
+# ---------------------------
+func _on_network_faction_went_rogue(faction_id: String, _region_ids: Array) -> void:
+	if game_state == null:
+		return
+	var faction: Faction = game_state.faction_manager.get_faction(faction_id)
+	if faction == null:
+		return
+	var display_name: String = Balance.ORG.get(faction.network_type, {}).get("display_name", faction.name)
+	var event: EventData = EventData.create(
+		Balance.ADVISOR_VEZIR,
+		Balance.EVENT_CRITICAL,
+		"%s se vymkla kontrole. Operuje nyni na vlastni pest." % display_name,
+		"%s presla do Rogue stavu." % display_name
+	)
+	_pending_rogue_events.append(event)
 
 
 # ---------------------------

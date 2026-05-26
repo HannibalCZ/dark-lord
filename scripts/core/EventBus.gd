@@ -21,6 +21,7 @@ signal org_founded(org: Dictionary)
 signal org_destroyed(region_id: int)
 signal org_doctrine_changed(region_id: int, new_doctrine: String)
 signal org_went_rogue(org_id: String, region_id: int)
+signal network_faction_went_rogue(faction_id: String, region_ids: Array)
 signal org_revealed(org_id: String, region_id: int)
 
 signal ai_unit_spawned(faction_id: String, unit_key: String, region_id: int)

@@ -211,6 +211,7 @@ func load_scenario(path: String) -> void:
 		unit_manager.unit_limit = player_unit_limit_from_scenario
 
 	# 4c) Inicializace WorldAI aktérů — musí být po načtení frakcí
+	world_ai_manager.reset_actors()   # čistý start — vymaže i případné network actors z předchozí hry
 	world_ai_manager.init_actors()
 
 	# 5) Units
@@ -373,6 +374,9 @@ func advance_turn() -> void:
 	# 2b) loajalitni decay — po efektech, pred ekonomikou
 	# (EconomicManager uz vidi aktualni loyalty pri vypoctu gold/mana prijmu)
 	org_manager.apply_loyalty_decay()
+	var _pf: Faction = faction_manager.get_faction(Balance.PLAYER_FACTION)
+	if _pf != null:
+		faction_manager.process_loyalty_decay(_pf.get_resource("infamy"))
 
 	# 2c) odhaleni organizaci — po decay, aby loyalty byla aktualni
 	# Shadow Network disinfo uz skryla org v apply_end_of_turn_effects()
@@ -400,6 +404,8 @@ func advance_turn() -> void:
 	# =========================
 	_process_capture_step()
 	_process_population_changes()
+	_process_stability_changes()
+	_process_prosperity_changes()
 
 	var combat_res: Dictionary = combat_manager.resolve_all_combats()
 	for e in combat_res.get("logs", []):
@@ -870,7 +876,7 @@ func _process_capture_step() -> void:
 		if not region.inhabited:
 			continue
 
-		var max_def: int = Balance.TERRAIN.get(region.terrain, {}).get("defense_base", 3)
+		var max_def: int = region.max_defense
 
 		# Žádná armáda → regenerace defense
 		if factions_present.is_empty():
@@ -998,6 +1004,51 @@ func _process_population_changes() -> void:
 				# TODO: podmínit prosperitou a stabilitou až budou implementovány
 				if randf() < Balance.POPULATION_GROWTH_CHANCE * 0.5:
 					region.population += 1
+
+func _process_stability_changes() -> void:
+	for region in region_manager.regions:
+		if region == null:
+			continue
+		var changed_owner: bool = region.owner_changed_this_turn
+		region.owner_changed_this_turn = false
+
+		if changed_owner:
+			region.stability = clampi(
+				region.stability - Balance.STABILITY_NEW_OWNER_PENALTY,
+				Balance.STABILITY_MIN, Balance.STABILITY_MAX)
+			region.turns_under_owner = 0
+		else:
+			region.turns_under_owner += 1
+
+		var delta: int = 0
+		if region.occupying_faction != "":
+			delta -= Balance.STABILITY_OCCUPATION_PENALTY
+		else:
+			delta += Balance.STABILITY_PEACE_REGEN
+		if region.fear >= Balance.STABILITY_FEAR_PENALTY_THRESHOLD:
+			delta -= Balance.STABILITY_FEAR_PENALTY
+
+		region.stability = clampi(
+			region.stability + delta,
+			Balance.STABILITY_MIN, Balance.STABILITY_MAX)
+
+func _process_prosperity_changes() -> void:
+	for region in region_manager.regions:
+		if region == null:
+			continue
+		var td: Dictionary = Balance.TERRAIN.get(region.terrain, {})
+		var pros_cap: int = td.get("prosperity_cap", 100)
+
+		var delta: int = 0
+		if region.occupying_faction != "":
+			delta -= Balance.PROSPERITY_DECAY_OCCUPIED
+		elif region.stability < Balance.STABILITY_UNREST_THRESHOLD:
+			delta -= Balance.PROSPERITY_DECAY_LOW_STABILITY
+		else:
+			delta += Balance.PROSPERITY_GROWTH_BASE
+
+		region.prosperity = clampi(
+			region.prosperity + delta, Balance.PROSPERITY_MIN, pros_cap)
 
 func apply_command_result(res: Dictionary) -> Dictionary:
 	# jednotné místo: logs + events + UI signal
