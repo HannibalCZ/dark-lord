@@ -34,7 +34,6 @@ func get_reputation_breakdown(faction_id: String) -> Dictionary:
 	#   "phase": String }
 	var base: int = Balance.REPUTATION_BASE.get(faction_id, 50)
 	var corruption_score: int = 0
-	var shadow_score: int = 0
 
 	var regions = game_state.region_manager.get_regions_by_faction(faction_id)
 	for region in regions:
@@ -42,19 +41,11 @@ func get_reputation_breakdown(faction_id: String) -> Dictionary:
 		if phase >= 3:
 			corruption_score += Balance.REPUTATION_WEIGHT_CORRUPTION
 
-		var org: Dictionary = game_state.org_manager.get_org_in_region(region.id)
-		if not org.is_empty() \
-				and org.get("org_type") == "shadow_network" \
-				and org.get("owner") == Balance.ORG_OWNER_PLAYER \
-				and not org.get("is_rogue", false):
-			var loyalty: int = org.get("loyalty", Balance.ORG_LOYALTY_START)
-			shadow_score += int(float(loyalty) * Balance.REPUTATION_WEIGHT_SHADOW_NET)
-
-	var total: int = clamp(base + corruption_score + shadow_score, 0, 100)
+	var total: int = clamp(base + corruption_score, 0, 100)
 	return {
 		"base":        base,
 		"corruption":  corruption_score,
-		"shadow_net":  shadow_score,
+		"shadow_net":  0,
 		"total":       total,
 		"phase":       _compute_phase(total)
 	}
@@ -75,21 +66,6 @@ func _compute_reputation(faction_id: String) -> int:
 		var phase: int = region.get_corruption_phase_for(Balance.PLAYER_FACTION)
 		if phase >= 3:
 			score += Balance.REPUTATION_WEIGHT_CORRUPTION
-
-	# 2) Shadow Network v regionech frakce
-	# Rogue Shadow Network neprisiva k reputaci.
-	for region in regions:
-		var org: Dictionary = game_state.org_manager.get_org_in_region(region.id)
-		if org.is_empty():
-			continue
-		if org.get("org_type") != "shadow_network":
-			continue
-		if org.get("owner") != Balance.ORG_OWNER_PLAYER:
-			continue
-		if org.get("is_rogue", false):
-			continue
-		var loyalty: int = org.get("loyalty", Balance.ORG_LOYALTY_START)
-		score += int(float(loyalty) * Balance.REPUTATION_WEIGHT_SHADOW_NET)
 
 	return clamp(score, 0, 100)
 

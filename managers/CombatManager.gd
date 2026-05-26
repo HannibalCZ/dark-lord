@@ -136,18 +136,6 @@ func _resolve_region_battle(region_idx: int) -> Dictionary:
 		# Vlastnictví regionu nyní řeší
 		# GameState._process_capture_step() po vyhodnocení všech bitev.
 
-		# zniceni organizace pri obsazeni — po zmene ownera, pred emitem signalu
-		var org: Dictionary = game_state.org_manager.get_org_in_region(region.id)
-		if not org.is_empty():
-			if org["owner"] != winner_faction:
-				logs.append({
-					"type": "battle",
-					"text": "Organizace v regionu %s znicena vitezem (%s)." % [
-						region.name, winner_faction
-					]
-				})
-				game_state.org_manager.remove_org(region.id)
-
 		# zniceni Lairu paladínskou armádou
 		if region.has_lair():
 			var has_paladin := false

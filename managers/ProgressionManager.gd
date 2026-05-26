@@ -106,10 +106,7 @@ func _check_game_condition(faction_id: String, condition: Dictionary) -> bool:
 			return count >= int(condition.get("min", 0))
 
 		"orgs_active":
-			# Pocet aktivních org hráce >= min
-			# MVP: používá get_player_orgs() — platí pouze pro player frakci
-			var player_orgs := game_state.org_manager.get_player_orgs()
-			return player_orgs.size() >= int(condition.get("min", 0))
+			return false
 
 		"regions_owned":
 			# Pocet regionu kde owner == faction_id
@@ -122,13 +119,6 @@ func _check_game_condition(faction_id: String, condition: Dictionary) -> bool:
 			return int(trackers.get("military_victories", 0)) >= int(condition.get("min", 0))
 
 		"org_exists":
-			# Existuje org daneho typu aktivní alespon min_turns tahu
-			var org_type: String = String(condition.get("org_type", ""))
-			var min_turns: int = int(condition.get("min_turns", 0))
-			for org in game_state.org_manager.orgs:
-				if org["owner"] == faction_id and org["org_type"] == org_type:
-					if game_state.turn - int(org.get("founded_turn", 0)) >= min_turns:
-						return true
 			return false
 
 		"mana_cap_reached":

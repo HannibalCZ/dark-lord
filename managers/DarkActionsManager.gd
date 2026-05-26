@@ -159,9 +159,6 @@ func cast(faction_id:String, action_key:String, region_id:int = -1) -> Dictionar
 		var nf: Faction = game_state.faction_manager.get_network_faction_in_region(target_region.id)
 		if nf != null and not nf.is_rogue:
 			nf.loyalty = min(100, nf.loyalty + loyalty_boost)
-		else:
-			# fallback na starý systém pokud network faction neexistuje
-			game_state.org_manager.boost_org_loyalty(target_region.id, loyalty_boost)
 
 	# odstan org_loyalty pred predanim EffectsSystem
 	var effects_for_system: Dictionary = effects.duplicate()
@@ -250,5 +247,3 @@ func get_available_actions_for_faction(faction_id:String) -> Array[String]:
 		if cds.get(key, 0) <= 0:
 			result.append(key)
 	return result
-
-

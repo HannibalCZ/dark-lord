@@ -332,16 +332,6 @@ func _find_inquisitor_target(u: Unit) -> int:
 		if _region_has_decoy(region.id):
 			return region.id
 
-	# Priorita 1: visible hráčova org kdekoliv na mapě
-	for org in game_state.org_manager.orgs:
-		if org.get("owner") != Balance.ORG_OWNER_PLAYER:
-			continue
-		if not org.get("visible", false):
-			continue
-		if org.get("is_rogue", false):
-			continue
-		return int(org["region_id"])
-
 	# Priorita 2: elfí region s nejvyšší hráčovou korupcí
 	var elf_regions: Array[Region] = game_state.region_manager.get_regions_by_faction("elf")
 	var best_elf_id: int = -1
@@ -395,16 +385,6 @@ func _ai_inquisitor_execute_action(u: Unit) -> void:
 	var region: Region = game_state.region_manager.get_region(u.region_id)
 	if region == null:
 		return
-
-	# Preferuj dismantle pokud je v regionu visible hráčova org (ne rogue)
-	var org: Dictionary = game_state.org_manager.get_org_in_region(u.region_id)
-	if not org.is_empty() \
-			and org.get("visible", false) \
-			and org.get("owner") == Balance.ORG_OWNER_PLAYER \
-			and not org.get("is_rogue", false):
-		if game_state.mission_manager.can_do_mission(u, region, "dismantle"):
-			game_state.mission_manager.plan_ai_mission(u, region, "dismantle")
-			return
 
 	# Fallback: purge korupce
 	if game_state.mission_manager.can_do_mission(u, region, "purge"):

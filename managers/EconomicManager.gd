@@ -44,14 +44,6 @@ func compute_income_and_upkeep(faction_id: String) -> Dictionary:
 			gold_upkeep += float(upkeep.get("gold", 0))
 			mana_upkeep += float(upkeep.get("mana", 0))
 
-	# ORG PASSIVE INCOME
-	for org in game_state.org_manager.orgs:
-		if org["owner"] != faction_id:
-			continue
-		var org_effects: Dictionary = game_state.org_manager.get_org_effects_scaled(org)
-		gold_income += float(org_effects.get("gold", 0))
-		mana_income += float(org_effects.get("mana", 0))
-
 	# NET VALUES
 	var net_gold := gold_income - gold_upkeep
 	var net_mana := mana_income - mana_upkeep
@@ -190,19 +182,6 @@ func _record_player_economy_breakdown(fac: Faction) -> void:
 	var prog_mana: float = fac.modifiers.get("mana_income", 0.0)
 	if prog_gold != 0.0 or prog_mana != 0.0:
 		tracker.record("Progression bonus", int(prog_gold), int(prog_mana))
-
-	# Pasivní příjem organizací
-	for org in game_state.org_manager.orgs:
-		if org["owner"] != faction_id:
-			continue
-		var org_effects := game_state.org_manager.get_org_effects_scaled(org)
-		var og := int(float(org_effects.get("gold", 0)))
-		var om := int(float(org_effects.get("mana", 0)))
-		if og == 0 and om == 0:
-			continue
-		var org_type: String = org.get("org_type", "")
-		var org_name: String = Balance.ORG.get(org_type, {}).get("display_name", org_type)
-		tracker.record("Org: %s" % org_name, og, om)
 
 	# Upkeep jednotek
 	var upkeep_gold: float = 0.0

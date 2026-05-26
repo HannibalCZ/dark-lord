@@ -857,25 +857,8 @@ func _on_org_founded(org: Dictionary) -> void:
 # ---------------------------
 # ZDROJ 8 — Varovani pri nestabilni loajalite organizaci
 # ---------------------------
-func _collect_loyalty_events(events: Array[EventData]) -> void:
-	if game_state == null:
-		return
-	for org in game_state.org_manager.orgs:
-		if org.get("is_rogue", false):
-			continue  # Rogue orgy maji svuj vlastni event
-		var loyalty: int = org.get("loyalty", Balance.ORG_LOYALTY_START)
-		if loyalty > Balance.ORG_LOYALTY_STABLE or loyalty <= 0:
-			continue  # Pouze Nestabilni faze (1–30)
-		var org_name: String = Balance.ORG[org["org_type"]].get("display_name", org["org_type"])
-		var region: Region = game_state.region_manager.get_region(org["region_id"])
-		var region_name: String = region.name if region != null else "region %d" % org["region_id"]
-		var advisor: String = _get_org_advisor(org["org_type"])
-		events.append(EventData.create(
-			advisor,
-			Balance.EVENT_IMPORTANT,
-			"Pane, %s v regionu %s ztrace loajalitu. Musime jednat rychle nebo ji ztratite." % [org_name, region_name],
-			"Loajalita %s: %d (Nestabilni)" % [org_name, loyalty]
-		))
+func _collect_loyalty_events(_events: Array[EventData]) -> void:
+	pass  # OrgManager odstraněn — loyalty eventy nejsou
 
 
 # ---------------------------
@@ -921,24 +904,8 @@ func _collect_reputation_events(events: Array[EventData]) -> void:
 # ---------------------------
 # Signal handler + ZDROJ 9 — Prechod organizace do Rogue stavu
 # ---------------------------
-func _on_org_went_rogue(org_id: String, region_id: int) -> void:
-	if game_state == null:
-		return
-	var org: Dictionary = game_state.org_manager.get_org_in_region(region_id)
-	if org.is_empty():
-		return
-	var org_name: String = Balance.ORG[org["org_type"]].get("display_name", org["org_type"])
-	var region: Region = game_state.region_manager.get_region(region_id)
-	var region_name: String = region.name if region != null else "region %d" % region_id
-	var advisor: String = _get_org_advisor(org["org_type"])
-	var event: EventData = EventData.create(
-		advisor,
-		Balance.EVENT_CRITICAL,
-		"Pane, %s v regionu %s nam zradila. Prestali jsme mit jakykoliv vliv — organizace operuje pro sebe." % [org_name, region_name],
-		"%s presla do Rogue stavu." % org_name
-	)
-	# Buffrujeme okamzite — zpracuje se na zacatku pristiho tahu v generate_events_for_turn()
-	_pending_rogue_events.append(event)
+func _on_org_went_rogue(_org_id: String, _region_id: int) -> void:
+	pass  # OrgManager odstraněn — signál se neemituje
 
 
 func _collect_pending_rogue_events(events: Array[EventData]) -> void:

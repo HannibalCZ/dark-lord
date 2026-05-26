@@ -18,7 +18,6 @@ signal game_ended(result: Dictionary) # { ok:bool, outcome:"win"/"lose", reason:
 @onready var effects_system: EffectsSystem = EffectsSystem.new()
 @onready var ai_manager: AIManager = AIManager.new()
 @onready var events_manager: EventsManager = EventsManager.new()
-@onready var org_manager: OrgManager = OrgManager.new()
 @onready var progression_manager: ProgressionManager = ProgressionManager.new()
 @onready var heat_tracker: HeatAwarenessTracker = HeatAwarenessTracker.new()
 @onready var economy_tracker: EconomyTracker = EconomyTracker.new()
@@ -59,7 +58,6 @@ func _ready() -> void:
 	economic_manager.game_state    = self
 	building_manager.game_state    = self
 	ai_manager.game_state          = self
-	org_manager.game_state         = self
 	progression_manager.game_state = self
 	reputation_manager.game_state  = self
 	lair_manager.game_state        = self
@@ -125,8 +123,6 @@ func load_scenario(path: String) -> void:
 	mission_manager.init()
 	progression_manager.unlocked_nodes.clear()
 	progression_manager.condition_trackers.clear()
-	org_manager.orgs.clear()
-	org_manager._next_id = 1
 	events_manager.reset()
 
 	# (budovy/spells jsou zatím "game rules", ne scénář – nechávám init)
@@ -250,52 +246,6 @@ func load_scenario(path: String) -> void:
 	# 6) UnitManager ID counter sync
 	unit_manager.recompute_id_counter()
 
-	# 6b) Orgs ze scénáře — ukládáme přímo do orgs pole (bez EventBus),
-	# aby neutrální orgs nevyvolávaly EventsManager notifikace při načtení.
-	var orgs_arr: Array = data.get("orgs", [])
-	for item in orgs_arr:
-		if typeof(item) != TYPE_DICTIONARY:
-			continue
-		var od: Dictionary = item
-		var org_type: String = String(od.get("org_type", ""))
-		var owner: String    = String(od.get("owner", "neutral"))
-		var org_rid: int     = int(od.get("region_id", -1))
-		var doctrine: String = String(od.get("doctrine", ""))
-		var loyalty: int     = int(od.get("loyalty", Balance.ORG_LOYALTY_START))
-
-		if org_type == "" or org_rid < 0:
-			push_warning("Skipping invalid org entry: %s" % str(od))
-			continue
-		if not Balance.ORG.has(org_type):
-			push_warning("Org entry has unknown org_type='%s'" % org_type)
-			continue
-		if region_manager.get_region(org_rid) == null:
-			push_warning("Org entry has invalid region_id=%d" % org_rid)
-			continue
-
-		var default_doctrine: String = Balance.ORG[org_type]["default_doctrine"]
-		var used_doctrine: String = doctrine if doctrine != "" else default_doctrine
-		if not Balance.ORG[org_type]["doctrines"].has(used_doctrine):
-			push_warning("Org entry has unknown doctrine='%s' for type='%s'" % [used_doctrine, org_type])
-			used_doctrine = default_doctrine
-
-		var org: Dictionary = {
-			"org_id":       "org_" + str(org_manager._next_id),
-			"org_type":     org_type,
-			"owner":        owner,
-			"region_id":    org_rid,
-			"doctrine":     used_doctrine,
-			"founded_turn": turn,
-			"loyalty":      loyalty,
-			"is_rogue":     false,
-			# Neutralni organizace ze scenare jsou vzdy viditelne.
-			# Hracovy organizace ze scenare zacinaji skryte
-			# (konzistentni s add_org()).
-			"visible":      owner != Balance.ORG_OWNER_PLAYER
-		}
-		org_manager._next_id += 1
-		org_manager.orgs.append(org)
-
 	# 7) Dark actions refresh pro playera na startu
 	dark_actions_manager.refresh_dark_actions_for_faction(Balance.PLAYER_FACTION)
 
@@ -367,20 +317,9 @@ func advance_turn() -> void:
 	# 1) efekty budov
 	entries += building_manager.apply_end_of_turn_effects()
 
-	# 2) pasivni efekty organizaci
-	entries += org_manager.apply_end_of_turn_effects()       # hracovy aktivni orgy
-	org_manager.apply_neutral_and_rogue_effects()             # neutral + rogue orgy
-
-	# 2b) loajalitni decay — po efektech, pred ekonomikou
-	# (EconomicManager uz vidi aktualni loyalty pri vypoctu gold/mana prijmu)
-	org_manager.apply_loyalty_decay()
 	var _pf: Faction = faction_manager.get_faction(Balance.PLAYER_FACTION)
 	if _pf != null:
 		faction_manager.process_loyalty_decay(_pf.get_resource("infamy"))
-
-	# 2c) odhaleni organizaci — po decay, aby loyalty byla aktualni
-	# Shadow Network disinfo uz skryla org v apply_end_of_turn_effects()
-	org_manager._check_org_visibility()
 
 	# 3) ekonomika
 	entries += economic_manager.apply_economy_cycle()

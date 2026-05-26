@@ -283,7 +283,7 @@ const MISSION = {
 			"requires_player_network_faction": true
 		},
 		"cost": { "ap": 1, "mana": 0, "gold": 0 },
-		"success": { "org_loyalty": ORG_INSPECT_LOYALTY_BOOST },
+		"success": { "org_loyalty": 30 },
 		"fail":    { "heat": 2 },
 		"ui_icon":  "res://ui/icons/missions/inspect.png",
 		"ui_order": 8
@@ -495,7 +495,7 @@ const DARK_ACTIONS = {
 			"requires_player_network_faction": true
 		},
 		"effects": {
-			"org_loyalty": ORG_REINFORCE_LOYALTY_BOOST
+			"org_loyalty": 20
 		}
 	},
 	"subjugation": {
@@ -963,12 +963,6 @@ const COUNCIL_MAX_CRITICAL  = 99  # zobraz vždy
 const COUNCIL_MAX_IMPORTANT = 4   # max za tah
 const COUNCIL_MAX_TOTAL     = 5   # celkový limit
 
-# --- Organizace ---
-const ORG_OWNER_PLAYER  = "player"
-const ORG_OWNER_ROGUE   = "rogue"
-const ORG_OWNER_NEUTRAL = "neutral"
-const ORG_OWNER_RIVAL   = "rival_dark_lord"
-
 const ORG = {
 	"crime_syndicate": {
 		"display_name": "Zlo\u010dineck\u00fd syndik\u00e1t",
@@ -1017,62 +1011,17 @@ const ORG = {
 	}
 }
 
-# --- Loajalita organizaci ---
+# Fazove prahy loajality (pouziva se i pro network frakce v UI)
+const ORG_LOYALTY_FAITHFUL: int = 71  # 71-100
+const ORG_LOYALTY_STABLE:   int = 31  # 31-70
 
-# Vychozi loajalita nove organizace
-const ORG_LOYALTY_START: int = 50
-
-# Fazove prahy loajality
-const ORG_LOYALTY_FAITHFUL:  int = 71  # 71-100
-const ORG_LOYALTY_STABLE:    int = 31  # 31-70
-const ORG_LOYALTY_UNSTABLE:  int = 1   # 1-30
-# 0 = Rogue
-
-# Multiplikatory efektu per faze
-const ORG_LOYALTY_MULT_FAITHFUL:  float = 1.5
-const ORG_LOYALTY_MULT_STABLE:    float = 1.0
-const ORG_LOYALTY_MULT_UNSTABLE:  float = 0.5
-
-# Pokles loajality per tah podle Infamy pasma
-const ORG_LOYALTY_DECAY_LOW:      int = 10  # Infamy 0-20
-const ORG_LOYALTY_DECAY_MID:      int = 7   # Infamy 21-50
-const ORG_LOYALTY_DECAY_HIGH:     int = 4   # Infamy 51-80
-const ORG_LOYALTY_DECAY_VERY_HIGH: int = 1  # Infamy 81+
-
-# Infamy prahy pro vypocet decay
-const ORG_INFAMY_LOW:  float = 20.0
-const ORG_INFAMY_MID:  float = 50.0
-const ORG_INFAMY_HIGH: float = 80.0
-
-# Inspect mise - boost loajality
-const ORG_INSPECT_LOYALTY_BOOST: int = 30
-
-# Dark Action "Posil loajalitu" - boost loajality
-const ORG_REINFORCE_LOYALTY_BOOST: int = 20
-
-# Prah odhaleni organizace — soucet absolutnich hodnot efektu
-# (gold, mana, heat, awareness, infamy) ktery zpusobi odhaleni.
-# Organizace ve Verne fazi (loyalty >= ORG_LOYALTY_FAITHFUL)
-# s celkovym dopadem >= ORG_REVEAL_THRESHOLD se stane visible.
-const ORG_REVEAL_THRESHOLD: int = 8
-
-# Network faction loyalty decay — nezavisle na ORG konstantach
+# Network faction loyalty decay
 const NETWORK_LOYALTY_DECAY_LOW:           int = 8   # infamy <= 20
 const NETWORK_LOYALTY_DECAY_MID:           int = 5   # infamy <= 50
 const NETWORK_LOYALTY_DECAY_HIGH:          int = 3   # infamy <= 80
 const NETWORK_LOYALTY_DECAY_VERY_HIGH:     int = 1   # infamy > 80
 const NETWORK_LOYALTY_ROGUE_THRESHOLD:     int = 20  # pod tímto → rogue risk
 const NETWORK_LOYALTY_ROGUE_INFLUENCE_MIN: int = 80  # >= toto + nízká loajalita → rogue
-
-# --- Efekty neutralnich a Rogue organizaci ---
-# Aplikuji se kazdy tah dokud je org neutral nebo Rogue.
-# Negativni efekty motivuji hrace je resit.
-# mission_penalty neni EffectsSystem klic — cte se pouze v MissionManager.
-const ORG_NEUTRAL_EFFECTS = {
-	"crime_syndicate": { "heat": 1 },
-	"shadow_network":  { "mission_penalty": 0.10 },
-	"cult":            { "awareness": 1 }
-}
 
 # --- AI Spawning ---
 const AI_SPAWN = {
@@ -1125,9 +1074,6 @@ const EXPLORER_SPAWN = {
 const EXPLORER_SECRET_STEAL: int = 50
 
 const WARBAND_DEFAULT_LIFESPAN: int = 5
-
-static func get_org_effects(org_type: String, doctrine: String) -> Dictionary:
-	return ORG[org_type]["doctrines"][doctrine]["effects"]
 
 # KONVENCE PROGRESSION EFEKTŮ:
 # TYP A — Modifikátory (mission_success, army_power...):

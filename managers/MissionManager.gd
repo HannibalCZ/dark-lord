@@ -120,22 +120,6 @@ func _compute_mission_success(mission_key: String, unit: Unit, region: Region) -
 		else:
 			region_delta += delta
 
-	# 3) mission_bonus ze Shadow Network doktríny "informants"
-	var org: Dictionary = game_state.org_manager.get_org_in_region(region.id)
-	if not org.is_empty():
-		if org["org_type"] == "shadow_network":
-			var effects: Dictionary = Balance.get_org_effects(org["org_type"], org["doctrine"])
-			if effects.has("mission_bonus"):
-				region_delta += float(effects["mission_bonus"]) / 100.0
-
-	# mission_penalty z neutralnich/Rogue organizaci v regionu
-	# Penalizuje hrace za mise v regionu kde operuje cizi organizace.
-	if not org.is_empty():
-		if org.get("owner") != Balance.PLAYER_FACTION:
-			var neutral_fx: Dictionary = Balance.ORG_NEUTRAL_EFFECTS.get(org["org_type"], {})
-			if neutral_fx.has("mission_penalty"):
-				region_delta -= float(neutral_fx["mission_penalty"])
-
 	# Progression modifier — mission_success (TYP A)
 	# Aplikuje se pouze pro hráčovy mise — konzistentní s mission_bonus ze Shadow Network
 	var player_faction = game_state.faction_manager.get_faction(Balance.PLAYER_FACTION)
@@ -217,9 +201,6 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 			var nf: Faction = game_state.faction_manager.get_network_faction_in_region(region.id)
 			if nf != null and not nf.is_rogue:
 				nf.loyalty = min(100, nf.loyalty + loyalty_boost)
-			else:
-				# fallback na starý systém pokud network faction neexistuje
-				game_state.org_manager.boost_org_loyalty(region.id, loyalty_boost)
 
 		# kill_unit — zpracuj mimo EffectsSystem: zabij první nepřátelskou jednotku v regionu
 		if effects.get("kill_unit", false):
@@ -354,15 +335,6 @@ func _check_requirements(req:Dictionary, unit:Unit, region:Region) -> bool:
 		if not region.has_lair():
 			return false
 
-	if req.get("requires_org", false):
-		var org: Dictionary = game_state.org_manager.get_org_in_region(region.id)
-		if org.is_empty():
-			return false
-		if org.get("owner", "") != Balance.PLAYER_FACTION:
-			return false
-		if org.get("is_rogue", false):
-			return false
-
 	if req.get("requires_player_network_faction", false):
 		var nf: Faction = game_state.faction_manager.get_network_faction_in_region(region.id)
 		if nf == null: return false
@@ -389,20 +361,8 @@ func _check_requirements(req:Dictionary, unit:Unit, region:Region) -> bool:
 	return true
 
 # -------------------------------------------------
-# Purge — znici organizaci v regionu pokud existuje
+# Purge — znici sit v regionu pokud existuje
 func _handle_purge_org(region_id: int) -> void:
-	var org: Dictionary = game_state.org_manager.get_org_in_region(region_id)
-	if not org.is_empty():
-		var org_type: String  = String(org.get("org_type", "?"))
-		var org_owner: String = String(org.get("owner", "?"))
-		game_state._log({
-			"type": "mission_success",
-			"text": "Purge: organizace typu '%s' (owner: %s) v regionu %d byla odhalena a znicena." % [
-				org_type, org_owner, region_id
-			]
-		})
-		game_state.org_manager.remove_org(region_id)
-
 	var nf: Faction = game_state.faction_manager.get_network_faction_in_region(region_id)
 	if nf != null:
 		game_state.faction_manager.remove_network_faction(region_id)

@@ -214,12 +214,6 @@ func _refresh_org_indicators() -> void:
 		var is_rogue: bool = nf != null and nf.is_rogue
 		var is_neutral: bool = nf != null and nf.source_faction_id != Balance.PLAYER_FACTION
 		var is_hidden: bool = nf != null and not nf.is_rogue and not is_neutral and not nf.visible
-		if not has_org:
-			var org: Dictionary = GameState.org_manager.get_org_in_region(region_id)
-			has_org = not org.is_empty()
-			is_rogue = org.get("is_rogue", false)
-			is_neutral = has_org and org.get("owner", "") != Balance.PLAYER_FACTION
-			is_hidden = has_org and not is_neutral and not is_rogue and not org.get("visible", true)
 		tile.set_org_indicator(has_org, is_rogue, is_neutral, is_hidden)
 
 func _on_mission_selected(_idx: int) -> void:
@@ -947,5 +941,3 @@ func _format_effects(effects: Dictionary) -> String:
 				if val:
 					parts.append("Eliminuje jednotku")
 	return ", ".join(parts)
-
-
