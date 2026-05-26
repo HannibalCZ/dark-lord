@@ -15,6 +15,8 @@ const ALERT_COLOR = Color(1.0, 0.65, 0.0, 0.35)
 var _active_highlight_badge: String = ""
 var _idle_agent_regions: Array[int] = []
 var _low_loyalty_org_regions: Array[int] = []
+var _occupied_regions: Array[int] = []
+var _occupation_badge: Button = null
 
 
 func _ready() -> void:
@@ -24,6 +26,14 @@ func _ready() -> void:
 	heat_badge.pressed.connect(_on_heat_badge_pressed)
 	awareness_badge.pressed.connect(_on_awareness_badge_pressed)
 	ap_badge.pressed.connect(_on_ap_badge_pressed)
+
+	var occ_btn := Button.new()
+	occ_btn.text = "⚔ Napadeno"
+	occ_btn.visible = false
+	occ_btn.pressed.connect(_on_occupation_badge_pressed)
+	add_child(occ_btn)
+	_occupation_badge = occ_btn
+
 	_on_game_updated()
 
 
@@ -33,6 +43,7 @@ func _on_game_updated() -> void:
 	_refresh_heat_badge()
 	_refresh_awareness_badge()
 	_refresh_ap_badge()
+	_refresh_occupation_badge()
 
 
 func _refresh_agents_badge() -> void:
@@ -125,6 +136,25 @@ func _on_awareness_badge_pressed() -> void:
 
 func _on_ap_badge_pressed() -> void:
 	pass
+
+
+func _refresh_occupation_badge() -> void:
+	_occupied_regions.clear()
+	for region: Region in GameState.region_manager.regions:
+		if region == null:
+			continue
+		if region.owner_faction_id == Balance.PLAYER_FACTION \
+				and region.occupying_faction != "":
+			_occupied_regions.append(region.id)
+	if _occupation_badge == null:
+		return
+	_occupation_badge.visible = not _occupied_regions.is_empty()
+	_occupation_badge.tooltip_text = "" if _occupied_regions.is_empty() \
+		else "Napadené regiony (%d)" % _occupied_regions.size()
+
+
+func _on_occupation_badge_pressed() -> void:
+	_handle_highlight_click("occupation", _occupied_regions)
 
 
 func _handle_highlight_click(badge_name: String, region_ids: Array[int]) -> void:

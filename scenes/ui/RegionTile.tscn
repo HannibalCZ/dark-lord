@@ -162,6 +162,23 @@ offset_bottom = 40.0
 mouse_filter = 2
 texture = ExtResource("5_jnrrv")
 
+[node name="OccupationLabel" type="Label" parent="Overlay"]
+visible = false
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -14.0
+offset_top = 30.0
+offset_right = 9.0
+offset_bottom = 67.0
+grow_horizontal = 2
+scale = Vector2(2, 2)
+theme_override_colors/font_color = Color(1, 0.4, 0, 1)
+theme_override_font_sizes/font_size = 9
+text = "Siege"
+horizontal_alignment = 1
+
 [node name="BorderOverlay" type="Panel" parent="."]
 layout_mode = 1
 anchors_preset = 15

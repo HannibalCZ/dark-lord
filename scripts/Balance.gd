@@ -280,34 +280,13 @@ const MISSION = {
 		"description":  "Agent navstivi organizaci a posili jeji loajalitu.",
 		"base_chance":  0.85,
 		"requirements": {
-			"requires_org": true
+			"requires_player_network_faction": true
 		},
 		"cost": { "ap": 1, "mana": 0, "gold": 0 },
 		"success": { "org_loyalty": ORG_INSPECT_LOYALTY_BOOST },
 		"fail":    { "heat": 2 },
 		"ui_icon":  "res://ui/icons/missions/inspect.png",
 		"ui_order": 8
-	},
-
-	"dismantle": {
-		"id":           "dismantle",
-		"display_name": "Rozpusteni organizace",
-		"description":  "Agent znici organizaci v tomto regionu.",
-		"base_chance":  0.70,
-		"requirements": {
-			"requires_org": true
-		},
-		"cost": { "ap": 1, "mana": 0, "gold": 0 },
-		"success": {
-			"destroy_org": true,
-			"heat": 3
-		},
-		"fail": {
-			"heat": 5,
-			"awareness": 2
-		},
-		"ui_icon":  "res://ui/icons/missions/dismantle.png",
-		"ui_order": 9
 	},
 
 	"eliminate": {
@@ -505,44 +484,6 @@ const DARK_ACTIONS = {
 
 	},
 
-	# --- Zakládání organizací ---
-	# agent_cost: true — první dostupný agent v regionu zmizí (state = "lost")
-	# gold_cost / mana_cost — odečteny při vykonání (ne při zadání)
-	"found_crime_syndicate": {
-		"display_name": "Zaloz Zlocinecky syndikat",
-		"description": "Obetuj agenta k vybudovani zlocinecke site v regionu.",
-		"type": "region",
-		"ap_cost": 1,
-		"mana_cost": 0,
-		"gold_cost": 20,
-		"cooldown": 0,
-		"agent_cost": true,
-		"effects": { "found_org": "crime_syndicate" },
-		"requirements": { "region_kind_in": ["city", "village"] }
-	},
-	"found_shadow_network": {
-		"display_name": "Zaloz Stinovou organizaci",
-		"description": "Obetuj agenta k vybudovani site informatoru v regionu.",
-		"type": "region",
-		"ap_cost": 1,
-		"mana_cost": 0,
-		"gold_cost": 15,
-		"cooldown": 0,
-		"agent_cost": true,
-		"effects": { "found_org": "shadow_network" }
-	},
-	"found_cult": {
-		"display_name": "Zaloz Kult",
-		"description": "Obetuj agenta k vybudovani tajneho kultu v regionu.",
-		"type": "region",
-		"ap_cost": 1,
-		"mana_cost": 15,
-		"gold_cost": 0,
-		"cooldown": 0,
-		"agent_cost": true,
-		"effects": { "found_org": "cult" }
-	},
-
 	"reinforce_loyalty": {
 		"display_name": "Posil loajalitu",
 		"description":  "Dark Lord osobne posili vazby s organizaci v tomto regionu.",
@@ -551,7 +492,7 @@ const DARK_ACTIONS = {
 		"ap_cost":      1,
 		"cooldown":     4,
 		"requirements": {
-			"requires_org": true
+			"requires_player_network_faction": true
 		},
 		"effects": {
 			"org_loyalty": ORG_REINFORCE_LOYALTY_BOOST
@@ -601,7 +542,7 @@ const UNIT = {
 		"recruit_cost": { "mana": 15 },
 		"upkeep_cost": { "mana": 2 },
 		"moves": 2,
-		"can_do": ["corrupt","sabotage","explore","manipulate","inspect","dismantle","eliminate","heal","spread_fear", "found_cult"],
+		"can_do": ["corrupt","sabotage","explore","manipulate","inspect","eliminate","heal","spread_fear", "found_cult"],
 		"resilient": true,
 		"icon": "res://art/units/vampire.png",
 	},
@@ -639,7 +580,7 @@ const UNIT = {
 		"recruit_cost": {},
 		"upkeep_cost": {},
 		"moves": 2,
-		"can_do": ["purge","dismantle","heal"],
+		"can_do": ["purge","heal"],
 		"resilient": true,
 		"icon": "res://art/units/inquisitor.png",
 		"aura": {

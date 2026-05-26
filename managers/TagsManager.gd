@@ -20,9 +20,10 @@ func _evaluate_state_tags(region: Region) -> void:
 	var corruption_phase: int = region.get_corruption_phase_for(Balance.PLAYER_FACTION)
 	var fear: int = region.fear
 
-	# unrest: corruption fáze >= min AND fear >= min
+	# unrest: corruption fáze >= min AND fear >= min AND nízká stabilita
 	var unrest_cond: bool = corruption_phase >= Balance.UNREST_CORRUPTION_MIN \
-		and fear >= Balance.UNREST_FEAR_MIN
+		and fear >= Balance.UNREST_FEAR_MIN \
+		and region.stability <= Balance.STABILITY_UNREST_THRESHOLD
 	if unrest_cond and not _has_tag(region, "unrest"):
 		region.add_tag(Balance.TAGS["unrest"].duplicate())
 	elif not unrest_cond and _has_tag(region, "unrest"):
@@ -33,7 +34,9 @@ func check_chain_reactions() -> void:
 	for region in game_state.region_manager.regions:
 		if not _has_tag(region, "unrest"):
 			continue
-		if game_state.rng.randf() < Balance.UNREST_REVOLT_CHANCE:
+		var revolt_chance: float = Balance.UNREST_REVOLT_CHANCE \
+			* (1.0 - float(region.stability) / 100.0)
+		if game_state.rng.randf() < revolt_chance:
 			var spawn_res := game_state.unit_manager.spawn_unit_free("militia", "militia", region.id)
 			for le in spawn_res.get("logs", []):
 				game_state._log(le)

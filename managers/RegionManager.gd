@@ -80,6 +80,14 @@ func load_map_from_json(path: String) -> void:
 		var pop_fallback: int = 3 if kind == "civilized" else 0
 		r.population = int(rd.get("population", pop_fallback))
 
+		# stability/prosperity — defaulty závisí na region_kind (computed z population)
+		var def_stab: int = Balance.STABILITY_DEFAULT \
+			if r.region_kind == "civilized" else Balance.STABILITY_WILDERNESS_DEFAULT
+		var def_pros: int = Balance.PROSPERITY_DEFAULT \
+			if r.region_kind == "civilized" else Balance.PROSPERITY_WILDERNESS_DEFAULT
+		r.stability = int(rd.get("stability", def_stab))
+		r.prosperity = int(rd.get("prosperity", def_pros))
+
 		# Secret (optional)
 		if rd.has("secret"):
 			var sd: Dictionary = rd["secret"]
@@ -167,6 +175,8 @@ func claim_region(region_id: int, faction_id: String) -> Dictionary:
 	var old_owner: String = r.owner_faction_id
 	r.owner_faction_id = faction_id
 	r.controller_faction_id = faction_id
+	r.owner_changed_this_turn = true
+	r.turns_under_owner = 0
 	if game_state.query != null:
 		game_state.query.regions.rebuild()
 	if faction_id == Balance.PLAYER_FACTION:

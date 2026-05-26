@@ -100,6 +100,15 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.529, 0.808, 0.922, 1)
 theme_override_font_sizes/font_size = 11
 
+[node name="StabilityLabel" type="Label" parent="StatPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+
+[node name="ProsperityLabel" type="Label" parent="StatPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.824, 0.706, 0.259, 1)
+theme_override_font_sizes/font_size = 11
+
 [node name="UnitsSection" type="PanelContainer" parent="."]
 visible = false
 layout_mode = 2
@@ -226,3 +235,9 @@ text = "Bránit"
 layout_mode = 2
 tooltip_text = "Jednotky útočí na nejbližší civilizovaný region."
 text = "Raidit"
+
+[node name="NetworkFactionLabel" type="Label" parent="."]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.4, 0.8, 1)
+theme_override_font_sizes/font_size = 11

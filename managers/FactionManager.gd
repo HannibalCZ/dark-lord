@@ -116,3 +116,16 @@ func _trigger_rogue(faction: Faction) -> void:
 	faction.source_faction_id = ""
 	var region_ids: Array = faction.influence.keys()
 	EventBus.network_faction_went_rogue.emit(faction.id, region_ids)
+
+
+func remove_network_faction(region_id: int) -> void:
+	for faction_id in _factions.keys():
+		var f: Faction = _factions[faction_id]
+		if f.faction_type != "network":
+			continue
+		if f.influence.has(region_id):
+			f.influence.erase(region_id)
+			if f.influence.is_empty():
+				_factions.erase(faction_id)
+			EventBus.network_faction_destroyed.emit(faction_id, region_id)
+			return

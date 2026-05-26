@@ -9,12 +9,13 @@ class_name Region
 @export var terrain: String
 @export var fear: int = 0
 @export var defense: int = 0
+var max_defense: int:
+	get:
+		var terrain_cfg: Dictionary = Balance.TERRAIN.get(terrain, {})
+		return terrain_cfg.get("defense_base", 2) + int(floor(float(population) / 2.0))
 var occupying_faction: String = ""
 # Faction která aktuálně dobývá region snižováním defense.
 # "" pokud nikdo nedobývá.
-@export var gold_income: float = 0
-@export var mana_income: float = 0
-@export var research_income: float = 0
 @export var ai_agent_priority: float = 0
 @export var position: Vector2i = Vector2i.ZERO # později pro mapu
 
@@ -28,6 +29,35 @@ var region_kind: String:
 	get:
 		return "civilized" if population >= Balance.CIVILIZED_THRESHOLD else "wilderness"
 var population: int = 0
+var stability: int = Balance.STABILITY_DEFAULT
+var prosperity: int = Balance.PROSPERITY_DEFAULT
+var owner_changed_this_turn: bool = false
+var turns_under_owner: int = 0
+
+var gold_income: float:
+	get:
+		var td: Dictionary = Balance.TERRAIN.get(terrain, {})
+		var pop_cap: int = max(td.get("pop_cap", 1), 1)
+		return td.get("base_gold_rate", 0.0) \
+			* (float(population) / float(pop_cap)) \
+			* (float(prosperity) / 100.0)
+
+var mana_income: float:
+	get:
+		var td: Dictionary = Balance.TERRAIN.get(terrain, {})
+		var pop_cap: int = max(td.get("pop_cap", 1), 1)
+		return td.get("base_mana_rate", 0.0) \
+			* (float(population) / float(pop_cap)) \
+			* (float(prosperity) / 100.0)
+
+var research_income: float:
+	get:
+		var td: Dictionary = Balance.TERRAIN.get(terrain, {})
+		var pop_cap: int = max(td.get("pop_cap", 1), 1)
+		return td.get("base_research_rate", 0.0) \
+			* (float(population) / float(pop_cap)) \
+			* (float(prosperity) / 100.0)
+
 var inhabited: bool = true  # true = lze dobýt vojensky; false = vyžaduje kolonizaci
 
 # --- SECRET MECHANIKA ---
@@ -54,9 +84,6 @@ func _init(_id: int, _name: String, _faction_id: String, _terrain: String):
 	var terrain_data: Dictionary = Balance.TERRAIN.get(_terrain, {})
 
 	defense = terrain_data.get("defense_base", 3)
-	gold_income = terrain_data.get("base_gold_rate", 0)
-	mana_income = terrain_data.get("base_mana_rate", 0)
-	research_income = terrain_data.get("base_research_rate", 0)
 	position = Vector2i.ZERO
 
 # ---------------------------------------------------------------------------------------

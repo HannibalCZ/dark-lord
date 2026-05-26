@@ -211,16 +211,15 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 	if success:
 		var effects: Dictionary = cfg.get("success", {})
 
-		# org_loyalty neni znamy EffectsSystem — zpracuj primo pres OrgManager
+		# org_loyalty — boost loajality network faction v regionu
 		var loyalty_boost: int = effects.get("org_loyalty", 0)
 		if loyalty_boost != 0:
-			game_state.org_manager.boost_org_loyalty(region.id, loyalty_boost)
-
-		# destroy_org neni znamy EffectsSystem — zpracuj primo pres OrgManager
-		if effects.get("destroy_org", false):
-			var target_org: Dictionary = game_state.org_manager.get_org_in_region(region.id)
-			if not target_org.is_empty():
-				game_state.org_manager.remove_org(region.id)
+			var nf: Faction = game_state.faction_manager.get_network_faction_in_region(region.id)
+			if nf != null and not nf.is_rogue:
+				nf.loyalty = min(100, nf.loyalty + loyalty_boost)
+			else:
+				# fallback na starý systém pokud network faction neexistuje
+				game_state.org_manager.boost_org_loyalty(region.id, loyalty_boost)
 
 		# kill_unit — zpracuj mimo EffectsSystem: zabij první nepřátelskou jednotku v regionu
 		if effects.get("kill_unit", false):
@@ -232,10 +231,9 @@ func _resolve_single_mission(mission: Mission) -> Dictionary:
 				EventBus.unit_killed.emit(killed_id, killed_key, region.id)
 				break  # zabij pouze první nepřátelskou jednotku per mise
 
-		# odstan org_loyalty, destroy_org a kill_unit pred predanim EffectsSystem
+		# odstan org_loyalty a kill_unit pred predanim EffectsSystem
 		var effects_for_system: Dictionary = effects.duplicate()
 		effects_for_system.erase("org_loyalty")
-		effects_for_system.erase("destroy_org")
 		effects_for_system.erase("kill_unit")
 
 		var ctx := EffectContext.make(game_state, region, unit.faction_id, unit)
@@ -365,9 +363,27 @@ func _check_requirements(req:Dictionary, unit:Unit, region:Region) -> bool:
 		if org.get("is_rogue", false):
 			return false
 
+	if req.get("requires_player_network_faction", false):
+		var nf: Faction = game_state.faction_manager.get_network_faction_in_region(region.id)
+		if nf == null: return false
+		if nf.source_faction_id != Balance.PLAYER_FACTION: return false
+		if nf.is_rogue: return false
+
 	if req.get("requires_enemy_unit", false):
 		var enemies: Array[Unit] = game_state.query.units.enemies_in_region(region.id, unit.faction_id)
 		if enemies.is_empty():
+			return false
+
+	if req.get("requires_no_network_faction", false):
+		if game_state.faction_manager.get_network_faction_in_region(region.id) != null:
+			return false
+
+	if req.has("min_fear"):
+		if region.fear < int(req["min_fear"]):
+			return false
+
+	if req.has("max_stability"):
+		if region.stability > int(req["max_stability"]):
 			return false
 
 	return true
@@ -376,17 +392,20 @@ func _check_requirements(req:Dictionary, unit:Unit, region:Region) -> bool:
 # Purge — znici organizaci v regionu pokud existuje
 func _handle_purge_org(region_id: int) -> void:
 	var org: Dictionary = game_state.org_manager.get_org_in_region(region_id)
-	if org.is_empty():
-		return
-	var org_type: String  = String(org.get("org_type", "?"))
-	var org_owner: String = String(org.get("owner", "?"))
-	game_state._log({
-		"type": "mission_success",
-		"text": "Purge: organizace typu '%s' (owner: %s) v regionu %d byla odhalena a znicena." % [
-			org_type, org_owner, region_id
-		]
-	})
-	game_state.org_manager.remove_org(region_id)
+	if not org.is_empty():
+		var org_type: String  = String(org.get("org_type", "?"))
+		var org_owner: String = String(org.get("owner", "?"))
+		game_state._log({
+			"type": "mission_success",
+			"text": "Purge: organizace typu '%s' (owner: %s) v regionu %d byla odhalena a znicena." % [
+				org_type, org_owner, region_id
+			]
+		})
+		game_state.org_manager.remove_org(region_id)
+
+	var nf: Faction = game_state.faction_manager.get_network_faction_in_region(region_id)
+	if nf != null:
+		game_state.faction_manager.remove_network_faction(region_id)
 
 
 func get_available_missions_for(unit:Unit, region:Region) -> Array[String]:

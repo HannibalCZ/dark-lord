@@ -50,6 +50,20 @@ func apply(e: Dictionary, ctx: EffectContext) -> Array[Dictionary]:
 	# ---- TAGS ----
 	_apply_tags(e, region, logs)
 
+	# ---- NETWORK FACTION ----
+	if e.has("found_network_faction"):
+		var network_type: String = e["found_network_faction"]
+		if region != null:
+			gs.faction_manager.create_network_faction(
+				network_type,
+				source,
+				region.id,
+				gs.turn
+			)
+			logs.append({"type": "faction", "text": "Vznikla network frakce '%s' v regionu %s." % [network_type, region.name]})
+		else:
+			push_warning("EffectsSystem: found_network_faction vyžaduje region v kontextu")
+
 	return logs
 
 

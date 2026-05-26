@@ -11,6 +11,8 @@ extends VBoxContainer
 @onready var corruption_effect_label: Label = $StatPanel/VBoxContainer/CorruptionEffectLabel
 @onready var occupation_label: Label        = $StatPanel/VBoxContainer/OccupationLabel
 @onready var population_label: Label       = $StatPanel/VBoxContainer/PopulationLabel
+@onready var stability_label: Label        = $StatPanel/VBoxContainer/StabilityLabel
+@onready var prosperity_label: Label       = $StatPanel/VBoxContainer/ProsperityLabel
 
 @onready var units_section: PanelContainer = $UnitsSection
 @onready var units_header: Button          = $UnitsSection/VBoxContainer/UnitsHeader
@@ -35,6 +37,8 @@ extends VBoxContainer
 @onready var lair_directive_options: VBoxContainer   = $LairInfoSection/VBoxContainer/LairInfoContent/LairDirectiveOptions
 @onready var defensive_button: Button                = $LairInfoSection/VBoxContainer/LairInfoContent/LairDirectiveOptions/LairButtonRow/DefensiveButton
 @onready var raider_button: Button                   = $LairInfoSection/VBoxContainer/LairInfoContent/LairDirectiveOptions/LairButtonRow/RaiderButton
+
+@onready var network_faction_label: Label = $NetworkFactionLabel
 
 var _region: Region = null
 
@@ -101,6 +105,7 @@ func show_for_region(region_id: int) -> void:
 	_update_secrets_section(region_id)
 	_refresh_lair_info(region)
 	_refresh_lair_directive(region)
+	_refresh_network_faction(region)
 
 # --------------------------
 # REGION SECTION
@@ -109,7 +114,7 @@ func _update_region_section(region: Region) -> void:
 	region_name_label.text = region.name
 	region_owner.text = region.controller_faction_id
 
-	var max_def: int = Balance.TERRAIN.get(region.terrain, {}).get("defense_base", 3)
+	var max_def: int = region.max_defense
 	obrana_val.text = "%d/%d" % [region.defense, max_def]
 
 	prijem_val.text = _format_income(region)
@@ -150,6 +155,17 @@ func _update_region_section(region: Region) -> void:
 	var pop_cap: int = Balance.TERRAIN.get(region.terrain, {}).get("pop_cap", 0)
 	var terrain_name: String = Balance.TERRAIN.get(region.terrain, {}).get("display_name", region.terrain)
 	population_label.text = "Terén: %s  |  Obyvatelstvo: %d / %d" % [terrain_name, region.population, pop_cap]
+
+	stability_label.text = "Stabilita: %d / %d" % [region.stability, Balance.STABILITY_MAX]
+	if region.stability <= Balance.STABILITY_UNREST_THRESHOLD:
+		stability_label.add_theme_color_override("font_color", Color("#e53935"))
+	elif region.stability < 60:
+		stability_label.add_theme_color_override("font_color", Color("#ff9800"))
+	else:
+		stability_label.add_theme_color_override("font_color", Color("#4caf50"))
+
+	var pros_cap: int = Balance.TERRAIN.get(region.terrain, {}).get("prosperity_cap", 100)
+	prosperity_label.text = "Prosperita: %d / %d" % [region.prosperity, pros_cap]
 
 func _format_income(region: Region) -> String:
 	var inc := region.get_income()
@@ -336,6 +352,24 @@ func _on_raider_pressed() -> void:
 		return
 	_region.lair_directive = Balance.LAIR_DIRECTIVE_RAIDER
 	_refresh_lair_directive(_region)
+
+# --------------------------
+# NETWORK FACTION
+
+func _refresh_network_faction(region: Region) -> void:
+	var nf: Faction = GameState.faction_manager.get_network_faction_in_region(region.id)
+	if nf == null:
+		network_faction_label.visible = false
+		return
+	var type_display: Dictionary = {
+		"cult": "Kult",
+		"crime_syndicate": "Syndikát",
+		"shadow_network": "Stínová síť"
+	}
+	var display_name: String = type_display.get(nf.network_type, nf.network_type)
+	var inf: int = nf.influence.get(region.id, 0)
+	network_faction_label.text = "%s: vliv %d" % [display_name, inf]
+	network_faction_label.visible = true
 
 # --------------------------
 # TOGGLE HELPER

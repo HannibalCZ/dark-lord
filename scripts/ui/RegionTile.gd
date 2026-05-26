@@ -20,6 +20,7 @@ var button: Button
 @onready var secret_icon: TextureRect = $Overlay/SecretIcon
 @onready var lair_icon: TextureRect = $Overlay/LairIcon
 @onready var org_icon: TextureRect = $Overlay/OrgIcon
+@onready var occupation_label: Label = $Overlay/OccupationLabel
 
 var _is_selected: bool = false
 var _is_hovered: bool = false
@@ -135,6 +136,7 @@ func refresh_from_region(region: Region) -> void:
 	_update_tag_icon(region.tags)
 	_update_secret_icon(region)
 	_update_lair_icon(region)
+	occupation_label.visible = region.occupying_faction != ""
 	# případně později nějaké další vizuály (např. corruption aura)
 	# --- NOVÉ: korupční overlay ---
 	var corr: float = region.get_corruption_for(Balance.PLAYER_FACTION)
