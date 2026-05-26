@@ -1093,9 +1093,6 @@ func _format_effects(effects: Dictionary) -> String:
 				parts.append("%+d Korupce" % int(val))
 			"org_loyalty":
 				parts.append("%+d Loajalita" % int(val))
-			"destroy_org":
-				if val:
-					parts.append("Zničí organizaci")
 			"kill_unit":
 				if val:
 					parts.append("Eliminuje jednotku")
