@@ -93,10 +93,40 @@ func _process_actor(actor: AIActor, profile: Dictionary) -> void:
 	var actions: Dictionary = profile.get("actions", {})
 	var threshold: float = profile.get("plan_switch_threshold", 0.25)
 
+	var faction = game_state.faction_manager.get_faction(actor.faction_id)
+	var player_faction = game_state.faction_manager.get_faction(Balance.PLAYER_FACTION)
+
+	var influence_avg: float = 0.0
+	if faction and not faction.influence.is_empty():
+		var total: float = 0.0
+		for v in faction.influence.values():
+			total += float(v)
+		influence_avg = total / float(faction.influence.size())
+
+	var has_rival := false
+	if faction:
+		for region_id in faction.influence.keys():
+			var rival = game_state.faction_manager.get_network_faction_in_region(region_id)
+			if rival != null and rival.id != actor.faction_id:
+				has_rival = true
+				break
+
+	var context: Dictionary = {
+		"heat":          game_state.heat,
+		"awareness":     game_state.awareness,
+		"turn":          game_state.turn,
+		"infamy":        player_faction.get_resource("infamy") if player_faction else 0.0,
+		"doctrine":      faction.doctrine if faction else "",
+		"visibility":    faction.visibility if faction else 0,
+		"influence":     influence_avg,
+		"faction_id":    actor.faction_id,
+		"rival_present": has_rival,
+	}
+
 	# Vypočítej skóre pro všechny akce — každé je Dictionary { score, base, breakdown }
 	var scores: Dictionary = {}
 	for action_key in actions.keys():
-		scores[action_key] = _calculate_action_score(action_key, actions[action_key], actor.faction_id)
+		scores[action_key] = _calculate_action_score(action_key, actions[action_key], context)
 
 	# Najdi nejvýše hodnocenou akci
 	var best_action: String = ""
@@ -489,16 +519,17 @@ func _handler_network_suppress(actor: AIActor, action_def: Dictionary) -> void:
 # Utility scoring
 # ---------------------------------------------------------------------------
 
+# Context sestavuje _process_actor() — tyto funkce jsou čisté
 # Vypočítá utility skóre akce. Vrací Dictionary: { score, base, breakdown }.
 # breakdown je Array kroků — každý krok zaznamenává stav před/po aplikaci multiplikátoru.
-func _calculate_action_score(action_key: String, action_def: Dictionary, faction_id: String) -> Dictionary:
+func _calculate_action_score(action_key: String, action_def: Dictionary, context: Dictionary) -> Dictionary:
 	var base: float = action_def.get("base_score", 0.0)
 	var score: float = base
 	var breakdown: Array = []
 	for modifier in action_def.get("score_modifiers", []):
 		var condition: String = modifier.get("condition", "")
 		var multiplier: float = modifier.get("multiplier", 1.0)
-		var met: bool = _evaluate_condition(condition, faction_id)
+		var met: bool = _evaluate_condition(condition, context)
 		var score_after: float = score * multiplier if met else score
 		breakdown.append({
 			"condition": condition,
@@ -510,14 +541,14 @@ func _calculate_action_score(action_key: String, action_def: Dictionary, faction
 		if met:
 			score = score_after
 
-	var faction: Faction = game_state.faction_manager.get_faction(faction_id)
-	if faction != null and faction.doctrine != "":
+	var doctrine: String = context.get("doctrine", "")
+	if doctrine != "":
 		var doctrine_mods: Dictionary = action_def.get("doctrine_modifiers", {})
-		if doctrine_mods.has(faction.doctrine):
-			var dmul: float = doctrine_mods[faction.doctrine]
+		if doctrine_mods.has(doctrine):
+			var dmul: float = doctrine_mods[doctrine]
 			if dmul != 1.0:
 				breakdown.append({
-					"condition": "doctrine: %s" % faction.doctrine,
+					"condition": "doctrine: %s" % doctrine,
 					"met": true,
 					"multiplier": dmul,
 					"score_before": score,
@@ -529,16 +560,9 @@ func _calculate_action_score(action_key: String, action_def: Dictionary, faction
 
 # Vyhodnotí condition string formátu "stat op value" (např. "heat > 25").
 # Při neplatném formátu vrátí false a zaloguje warning — nikdy nezpůsobí crash.
-func _evaluate_condition(condition: String, faction_id: String) -> bool:
+func _evaluate_condition(condition: String, context: Dictionary) -> bool:
 	if condition == "rival_present":
-		var faction: Faction = game_state.faction_manager.get_faction(faction_id)
-		if faction == null:
-			return false
-		for region_id in faction.influence.keys():
-			var rival: Faction = game_state.faction_manager.get_network_faction_in_region(region_id)
-			if rival != null and rival.id != faction_id:
-				return true
-		return false
+		return bool(context.get("rival_present", false))
 
 	var parts: Array = condition.split(" ")
 	if parts.size() != 3:
@@ -548,7 +572,7 @@ func _evaluate_condition(condition: String, faction_id: String) -> bool:
 	var stat: String = parts[0]
 	var op: String = parts[1]
 	var target: float = float(parts[2])
-	var value: float = _get_stat_value(stat, faction_id)
+	var value: float = _get_stat_value(stat, context)
 
 	match op:
 		">":  return value > target
@@ -583,40 +607,8 @@ func _compute_target_region(actor: AIActor) -> int:
 		_:
 			return -1
 
-# Načte aktuální hodnotu herního statu podle klíče.
-# infamy je vlastnost player frakce — AI aktéři reagují na hráčovu reputaci.
-func _get_stat_value(stat: String, faction_id: String) -> float:
-	match stat:
-		"heat":
-			return float(game_state.heat)
-		"awareness":
-			return float(game_state.awareness)
-		"infamy":
-			var player_faction = game_state.faction_manager.get_faction(Balance.PLAYER_FACTION)
-			if player_faction == null:
-				push_warning("WorldAI: player frakce nenalezena při čtení infamy")
-				return 0.0
-			return float(player_faction.infamy)
-		"turn":
-			return float(game_state.turn)
-		"visibility":
-			var vis_faction = game_state.faction_manager.get_faction(faction_id)
-			if vis_faction == null:
-				return 0.0
-			return float(vis_faction.visibility)
-		"influence":
-			var inf_faction: Faction = game_state.faction_manager.get_faction(faction_id)
-			if inf_faction == null:
-				return 0.0
-			if inf_faction.influence.is_empty():
-				return 0.0
-			var total: float = 0.0
-			for v in inf_faction.influence.values():
-				total += float(v)
-			return total / float(inf_faction.influence.size())
-		_:
-			push_warning("WorldAI: neznámý stat '%s'" % stat)
-			return 0.0
+func _get_stat_value(stat: String, context: Dictionary) -> float:
+	return float(context.get(stat, 0.0))
 
 # ---------------------------------------------------------------------------
 # Helpers pro log a display
