@@ -19,9 +19,9 @@ var button: Button
 @onready var corruption_overlay: TextureRect = $CorruptionSprite
 @onready var secret_icon: TextureRect = $Overlay/SecretIcon
 @onready var lair_icon: TextureRect = $Overlay/LairIcon
-@onready var shield_container: Control      = $Overlay/ShieldContainer
-@onready var shield_outline: TextureRect   = $Overlay/ShieldContainer/ShieldOutline
-@onready var shield_fill: TextureRect      = $Overlay/ShieldContainer/ShieldFill
+@onready var shield_container: Control      = $ShieldContainer
+@onready var shield_outline: TextureRect   = $ShieldContainer/ShieldOutline
+@onready var shield_fill: TextureRect      = $ShieldContainer/ShieldFill
 @onready var occupation_label: Label = $Overlay/OccupationLabel
 
 var _is_selected: bool = false
