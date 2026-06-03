@@ -19,7 +19,9 @@ var button: Button
 @onready var corruption_overlay: TextureRect = $CorruptionSprite
 @onready var secret_icon: TextureRect = $Overlay/SecretIcon
 @onready var lair_icon: TextureRect = $Overlay/LairIcon
-@onready var org_icon: TextureRect = $Overlay/OrgIcon
+@onready var shield_container: Control      = $Overlay/ShieldContainer
+@onready var shield_outline: TextureRect   = $Overlay/ShieldContainer/ShieldOutline
+@onready var shield_fill: TextureRect      = $Overlay/ShieldContainer/ShieldFill
 @onready var occupation_label: Label = $Overlay/OccupationLabel
 
 var _is_selected: bool = false
@@ -31,6 +33,7 @@ var _is_alert_highlight: bool = false
 const ICON_W := 16
 const ICON_H := 16
 const COUNT_H := 10
+const SHIELD_SIZE := 32.0
 
 func _ready() -> void:
 	button = $Button
@@ -49,8 +52,8 @@ func _ready() -> void:
 func setup(id: int, region: Region) -> void:
 	region_id = id
 
-	# terrain podle typu
-	terrain_sprite.texture = load(_get_terrain_texture_path(region.terrain))
+	# terrain podle typu a počtu obyvatel
+	terrain_sprite.texture = _get_terrain_texture(region.terrain, region.population)
 
 	# tag icon podle toho, zda tagy existují
 	_update_tag_icon(region.tags)
@@ -119,18 +122,33 @@ func _get_corruption_alpha_for_phase(phase_id: int) -> float:
 		_:
 			return 0.0
 
-func _get_terrain_texture_path(terrain: String) -> String:
-	match terrain:
-		"forest":
-			return "res://art/tiles/forest.png"
-		"plains":
-			return "res://art/tiles/plains.png"
-		"mountains":
-			return "res://art/tiles/mountains.png"
-		"wasteland":
-			return "res://art/tiles/wasteland.png"
-		_:
-			return "res://art/tiles/plains.png"
+func _get_terrain_texture(terrain: String, population: int) -> Texture2D:
+	var level: String
+	if population <= 2:
+		level = "empty"
+	elif population <= 5:
+		level = "low"
+	else:
+		level = "high"
+
+	var path = "res://art/tiles/%s_%s.png" % [terrain, level]
+	if ResourceLoader.exists(path):
+		return load(path)
+
+	var fallback_levels = ["high", "low", "empty"]
+	for fallback in fallback_levels:
+		if fallback == level:
+			continue
+		var fallback_path = "res://art/tiles/%s_%s.png" % [terrain, fallback]
+		if ResourceLoader.exists(fallback_path):
+			return load(fallback_path)
+
+	var base_path = "res://art/tiles/%s.png" % terrain
+	if ResourceLoader.exists(base_path):
+		return load(base_path)
+
+	push_warning("RegionTile: nenalezen sprite pro terrain='%s' level='%s'" % [terrain, level])
+	return null
 
 func refresh_from_region(region: Region) -> void:
 	_update_tag_icon(region.tags)
@@ -164,25 +182,30 @@ func _update_secret_icon(region: Region) -> void:
 	else:
 		secret_icon.visible = false
 
-func set_org_indicator(has_org: bool, is_rogue: bool = false, is_neutral: bool = false, is_hidden: bool = false, org_texture: Texture2D = null) -> void:
-	org_icon.visible = has_org
+func set_org_indicator(has_org: bool, is_rogue: bool = false, is_neutral: bool = false, is_hidden: bool = false, org_texture: Texture2D = null, influence: int = 0) -> void:
+	shield_container.visible = has_org
 	if not has_org:
 		return
 	if org_texture != null:
-		org_icon.texture = org_texture
-	# Priorita stavu: Rogue > Neutral > Hidden > Aktivni
-	# Rogue    — seda (hracova org mimo kontrolu)
-	# Neutral  — cervena (nepratelska organizace, vzdy viditelna)
-	# Hidden   — modra, polopruhledna (hracova org skryta pred inkvizici)
-	# Aktivni  — bila (hracova org odhalena / viditelna)
+		shield_outline.texture = org_texture
+	var col := _shield_color(is_rogue, is_neutral, is_hidden)
+	shield_outline.modulate = col
+	shield_fill.modulate = col
+	var fill_ratio := clampf(influence / 100.0, 0.0, 1.0)
+	var fill_h := SHIELD_SIZE * fill_ratio
+	shield_fill.size.y = fill_h
+	shield_fill.offset_top = -fill_h
+
+func _shield_color(is_rogue: bool, is_neutral: bool, is_hidden: bool) -> Color:
+	# Priorita: Rogue > Neutral > Hidden > Aktivni
 	if is_rogue:
-		org_icon.modulate = Color(0.5, 0.5, 0.5, 1.0)
+		return Color(0.5, 0.5, 0.5, 1.0)
 	elif is_neutral:
-		org_icon.modulate = Color(1.0, 0.4, 0.4, 1.0)
+		return Color(1.0, 0.4, 0.4, 1.0)
 	elif is_hidden:
-		org_icon.modulate = Color(0.5, 0.5, 1.0, 0.5)
+		return Color(0.5, 0.5, 1.0, 0.5)
 	else:
-		org_icon.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		return Color(1.0, 1.0, 1.0, 1.0)
 
 func _update_lair_icon(region: Region) -> void:
 	if region == null:

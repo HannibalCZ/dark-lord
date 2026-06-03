@@ -207,6 +207,7 @@ const MISSION = {
 	},
 	"purge": {
 		"id": "purge",
+		"category": "support",
 		"display_name": "Očista",
 		"description": "Sníží korupci všech frakcí v regionu. Používá ji spíš AI / hrdinové.",
 		"base_chance": 0.70,
@@ -276,6 +277,7 @@ const MISSION = {
 
 	"inspect": {
 		"id":           "inspect",
+		"category":     "influence",
 		"display_name": "Inspekce organizace",
 		"description":  "Agent navstivi organizaci a posili jeji loajalitu.",
 		"base_chance":  0.85,

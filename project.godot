@@ -25,6 +25,10 @@ TweenHelper="*res://scripts/ui/TweenHelper.gd"
 EventBus="*res://scripts/core/EventBus.gd"
 UiHelpers="*res://scripts/ui/UIHelpers.gd"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gut/plugin.cfg")
+
 [gui]
 
 theme/custom="uid://7pki6dpyep33"

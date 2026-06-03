@@ -214,7 +214,8 @@ func _refresh_org_indicators() -> void:
 		var is_rogue: bool = nf != null and nf.is_rogue
 		var is_neutral: bool = nf != null and nf.source_faction_id != Balance.PLAYER_FACTION
 		var is_hidden: bool = nf != null and not nf.is_rogue and not is_neutral and not nf.visible
-		tile.set_org_indicator(has_org, is_rogue, is_neutral, is_hidden)
+		var influence: int = nf.influence.get(region_id, 0) if nf != null else 0
+		tile.set_org_indicator(has_org, is_rogue, is_neutral, is_hidden, null, influence)
 
 func _on_mission_selected(_idx: int) -> void:
 	_update_mission_info()
