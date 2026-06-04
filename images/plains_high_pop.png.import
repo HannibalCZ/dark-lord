@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ctcmuf0qjdnxc"
-path="res://.godot/imported/mountains.png-5ffe0f100c240f7450863d029ba03619.ctex"
+uid="uid://442tgik1dhtv"
+path="res://.godot/imported/plains_high_pop.png-8a76b677561e7dca49e0a89ae9e151c9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/tiles/mountains.png"
-dest_files=["res://.godot/imported/mountains.png-5ffe0f100c240f7450863d029ba03619.ctex"]
+source_file="res://images/plains_high_pop.png"
+dest_files=["res://.godot/imported/plains_high_pop.png-8a76b677561e7dca49e0a89ae9e151c9.ctex"]
 
 [params]
 

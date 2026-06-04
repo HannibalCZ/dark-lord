@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cd7hqctiexij6"
-path="res://.godot/imported/forest.png-36297decd83cb34c3b73bca96a9ab11d.ctex"
+uid="uid://cg011l2noask"
+path="res://.godot/imported/wasteland_empty.png-9144fad2328a253a1b51c82edb5bcfe7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/tiles/forest.png"
-dest_files=["res://.godot/imported/forest.png-36297decd83cb34c3b73bca96a9ab11d.ctex"]
+source_file="res://art/tiles/wasteland_empty.png"
+dest_files=["res://.godot/imported/wasteland_empty.png-9144fad2328a253a1b51c82edb5bcfe7.ctex"]
 
 [params]
 

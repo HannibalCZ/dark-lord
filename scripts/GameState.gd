@@ -86,8 +86,8 @@ func init_data() -> void:
 
 func _emit_welcome_event() -> void:
 	_welcome_shown = true
-	var welcome: EventData = events_manager.generate_welcome_event()
-	pending_events = [welcome]
+	var intro: Array[EventData] = events_manager.generate_intro_events()
+	pending_events = intro
 	EventBus.council_events_ready.emit(pending_events)
 
 func load_scenario(path: String) -> void:

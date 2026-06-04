@@ -169,20 +169,44 @@ func generate_events_for_turn() -> Array[EventData]:
 # ---------------------------
 # Uvítací event — zobrazí se jednou při startu nové hry
 # ---------------------------
-func generate_welcome_event() -> EventData:
-	var narrative: String = (
-		"Pane, jménem Rady zasvěcených vás vítám v nové éře. "
-		+ "Svět vás dosud nezná — vaše jméno se nevyslovuje v síních mocných ani v modlitbách chrámů. "
-		+ "Operujeme ze stínu: neviditelní, trpěliví, neúprosní. "
-		+ "Temný pán povstává."
-	)
-	var summary: String = "Nová hra zahájena. Tah 1."
-	return EventData.create(
+func generate_intro_events() -> Array[EventData]:
+	var events: Array[EventData] = []
+
+	events.append(EventData.create(
 		Balance.ADVISOR_VEZIR,
-		Balance.EVENT_IMPORTANT,
-		narrative,
-		summary
-	)
+		Balance.EVENT_CRITICAL,
+		"Svět ještě neví tvé jméno, Pane. To je naše největší zbraň. "
+		+ "Každé město, každá provincie — uvnitř žijí lidé unavení svými pány, "
+		+ "připravení uvěřit něčemu temnějšímu. Korupce je trpělivá. "
+		+ "Začni tam, kde jsou hradby nejtenčí.",
+		"Pošli agenta do sousedního regionu a zahaj misi Korupce. "
+		+ "Opakuj každý tah — čím více fází korupce, tím blíže ovládnutí."
+	))
+
+	events.append(EventData.create(
+		Balance.ADVISOR_KAPITAN,
+		Balance.EVENT_CRITICAL,
+		"Síly dobra jsou silné v otevřeném poli, Pane. "
+		+ "Ale jejich armády musí odkudsi přijít. Lairy v divočině jsou naše — stačí je vzít. "
+		+ "A pokud potřebuješ rychlý úder, zavolej warband. "
+		+ "Přijdou, vykonají dílo a rozejdou se. Žádné stopy, žádné závazky.",
+		"Pošli agenta s misí Manipulace na nejbližší Lair. "
+		+ "Warband lze naverbovat v základně — zmizí po 5 tazích."
+	))
+
+	events.append(EventData.create(
+		Balance.ADVISOR_ZVEDKA,
+		Balance.EVENT_CRITICAL,
+		"Otevřená moc láká pozornost, Pane. Organizace pracují jinak — "
+		+ "rostou pomalu, neviditelně, a když jsou silné, "
+		+ "nepřátelé ani nevědí proč prohrávají. "
+		+ "Kult v regionu plném strachu, syndikát tam kde vládne korupce — "
+		+ "každá organizace má svůj správný půdorys.",
+		"Založ organizaci misí agenta. Sleduj loajalitu — "
+		+ "pokud klesne příliš nízko, organizace se osamostatní."
+	))
+
+	return events
 
 # ---------------------------
 # ZDROJ 1 — Pohyby AI armád (Temný kapitán)
@@ -237,6 +261,8 @@ func _collect_mission_events(events: Array[EventData]) -> void:
 
 		var mission_cfg:  Dictionary = Balance.MISSION.get(mission_key, {})
 		var mission_name: String     = String(mission_cfg.get("display_name", mission_key))
+		var stored_name:  String     = String(result.get("unit_name", ""))
+		var agent_label:  String     = stored_name if stored_name != "" else "Agent"
 
 		var priority:  String
 		var narrative: String
@@ -246,19 +272,19 @@ func _collect_mission_events(events: Array[EventData]) -> void:
 			priority  = Balance.EVENT_IMPORTANT
 			narrative = (
 				"Mise '%s' v oblasti %s byla úspěšně dokončena, Pane. "
-				+ "Naši agenti odvedli svou práci tiše a efektivně. "
+				+ "%s odvedl svou práci tiše a efektivně. "
 				+ "Výsledky jsou v souladu s očekáváním."
-			) % [mission_name, region_name]
+			) % [mission_name, region_name, agent_label]
 			var fx_str: String = _format_mission_result_effects(mission_cfg.get("success", {}))
 			summary = "Mise %s v %s: USPECH — %s" % [mission_key, region_name, fx_str]
 
 		elif is_wounded_outcome:
 			priority  = Balance.EVENT_IMPORTANT
 			narrative = (
-				"Agent provádějící misi '%s' v oblasti %s byl zraněn, Pane. "
+				"%s provádějící misi '%s' v oblasti %s byl zraněn, Pane. "
 				+ "Mise selhala — agent potřebuje čas na zotavení. "
 				+ "Doporučuji jej dočasně odvolat z aktivní služby."
-			) % [mission_name, region_name]
+			) % [agent_label, mission_name, region_name]
 			var fx_str: String = _format_mission_result_effects(mission_cfg.get("fail", {}))
 			summary = "Mise %s v %s: NEUSPECH — agent zraněn — %s" % [mission_key, region_name, fx_str]
 
@@ -266,9 +292,9 @@ func _collect_mission_events(events: Array[EventData]) -> void:
 			priority  = Balance.EVENT_CRITICAL
 			narrative = (
 				"Přináším nepříjemné zprávy, Pane. "
-				+ "Agent provádějící misi '%s' v oblasti %s byl odhalen nepřítelem a zajat. "
+				+ "%s provádějící misi '%s' v oblasti %s byl odhalen nepřítelem a zajat. "
 				+ "Tato ztráta je citelná — doporučuji přijmout opatření."
-			) % [mission_name, region_name]
+			) % [agent_label, mission_name, region_name]
 			var fx_str: String = _format_mission_result_effects(mission_cfg.get("fail", {}))
 			summary = "Mise %s v %s: NEUSPECH — agent zajat — %s" % [mission_key, region_name, fx_str]
 
@@ -276,8 +302,8 @@ func _collect_mission_events(events: Array[EventData]) -> void:
 			priority  = Balance.EVENT_ROUTINE
 			narrative = (
 				"Mise '%s' v oblasti %s selhala, avšak bez větších následků, Pane. "
-				+ "Agent se stáhl v pořádku a čeká na další rozkazy."
-			) % [mission_name, region_name]
+				+ "%s se stáhl v pořádku a čeká na další rozkazy."
+			) % [mission_name, region_name, agent_label]
 			var fx_str: String = _format_mission_result_effects(mission_cfg.get("fail", {}))
 			summary = "Mise %s v %s: NEUSPECH — %s" % [mission_key, region_name, fx_str]
 
@@ -675,6 +701,7 @@ func _on_mission_resolved(data: Dictionary) -> void:
 	var entry: Dictionary = data.duplicate()
 	entry["is_fatal"] = is_fatal
 	entry["is_wounded_outcome"] = is_wounded_outcome
+	entry["unit_name"] = unit.name
 	_collected_player_results.append(entry)
 
 # ---------------------------
