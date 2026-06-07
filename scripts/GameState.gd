@@ -206,6 +206,10 @@ func load_scenario(path: String) -> void:
 	if player_unit_limit_from_scenario >= 0:
 		unit_manager.unit_limit = player_unit_limit_from_scenario
 
+	# 4b.5) Lair frakce — per-region, musí být po načtení regionů a před init_actors
+	for region in query.regions.get_regions_with_lair():
+		faction_manager.create_lair_faction(region)
+
 	# 4c) Inicializace WorldAI aktérů — musí být po načtení frakcí
 	world_ai_manager.reset_actors()   # čistý start — vymaže i případné network actors z předchozí hry
 	world_ai_manager.init_actors()

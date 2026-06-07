@@ -28,7 +28,6 @@
 	{ "id": "inquisition", "name": "Inkvizice", "alignment": "good", "resources": { "gold": 20, "mana": 5 } },
 	{ "id": "merchant", "name": "Obchodní města", "alignment": "good", "ai_spawn_unit": "", "resources": { "gold": 30, "mana": 0 } },
 	{ "id": "orc", "name": "Orčí tlupa", "alignment": "neutral", "ai_spawn_unit": "orc_band", "resources": { "gold": 10, "mana": 0 } },
-	{ "id": "lair", "name": "Lair", "alignment": "neutral", "resources": {} },
 	{ "id": "militia", "name": "Milice", "is_player": false, "alignment": "neutral", "unit_limit": 10, "dark_actions_max": 0, "dark_actions_left": 0, "resources": { "gold": 10, "mana": 0 } }
   ],
   "units": [

@@ -3,6 +3,44 @@ class_name FactionManager
 
 var _factions : Dictionary = {}  # key = faction_id, value = Faction ref
 var game_state: GameStateSingleton
+
+var _network_name_pool: Dictionary = {}   # network_type -> Array[String] (dostupné)
+var _used_network_names: Dictionary = {}  # network_type -> Array[String] (použité)
+var _network_name_pool_loaded: bool = false
+
+func _load_network_name_pool() -> void:
+	_network_name_pool_loaded = true
+	var f := FileAccess.open("res://data/names/unit_names.json", FileAccess.READ)
+	if not f:
+		return
+	var parsed: Variant = JSON.parse_string(f.get_as_text())
+	f.close()
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return
+	var network_names: Variant = parsed.get("network_names", {})
+	if typeof(network_names) != TYPE_DICTIONARY:
+		return
+	for key in network_names.keys():
+		var arr: Array = []
+		for item in network_names[key]:
+			arr.append(item)
+		_network_name_pool[key] = arr
+
+func _pick_network_name(network_type: String) -> String:
+	if not _network_name_pool_loaded:
+		_load_network_name_pool()
+	var pool: Array = _network_name_pool.get(network_type, [])
+	if not _used_network_names.has(network_type):
+		_used_network_names[network_type] = []
+	var used: Array = _used_network_names[network_type]
+	var available := pool.filter(func(n): return not used.has(n))
+	if available.is_empty():
+		var base: String = Balance.ORG.get(network_type, {}).get("display_name", network_type)
+		return "%s %d" % [base, used.size() + 1]
+	var rng := game_state.rng if game_state != null else RandomNumberGenerator.new()
+	var chosen: String = available[rng.randi() % available.size()]
+	used.append(chosen)
+	return chosen
 	
 func add_faction(faction:Faction) -> void:
 	_factions[faction.id] = faction
@@ -29,7 +67,7 @@ func get_network_faction_in_region(region_id: int) -> Faction:
 	return null
 
 func create_network_faction(network_type: String, owner_faction_id: String,
-		region_id: int, founding_turn: int) -> Faction:
+		region_id: int, founding_turn: int, founder_unit: Unit = null) -> Faction:
 	if get_network_faction_in_region(region_id) != null:
 		push_warning("FactionManager: region %d already has a network faction" % region_id)
 		return null
@@ -45,6 +83,8 @@ func create_network_faction(network_type: String, owner_faction_id: String,
 	faction.loyalty = 100
 	faction.visible = false
 	faction.doctrine = Balance.ORG.get(network_type, {}).get("default_doctrine", "")
+	faction.faction_display_name = _pick_network_name(network_type)
+	faction.founder_name = founder_unit.name if founder_unit != null else ""
 	add_faction(faction)
 	return faction
 
@@ -131,6 +171,31 @@ func remove_network_faction(region_id: int) -> void:
 			return
 
 
+func create_lair_faction(region: Region) -> Faction:
+	var fac := Faction.new()
+	fac.id = "lair_%d" % region.id
+	fac.name = Balance.LAIR[region.lair_id].get("display_name", "Lair")
+	fac.alignment = "neutral"
+	fac.faction_type = "lair"
+	fac.source_faction_id = "neutral"
+	fac.lair_region_id = region.id
+	fac.unit_limit = Balance.LAIR[region.lair_id].get("max_units", 2)
+	add_faction(fac)
+	return fac
+
+
+func get_lair_faction_for_region(region_id: int) -> Faction:
+	return get_faction("lair_%d" % region_id)
+
+
+func get_all_lair_factions() -> Array[Faction]:
+	var result: Array[Faction] = []
+	for fac in _factions.values():
+		if fac.faction_type == "lair":
+			result.append(fac)
+	return result
+
+
 func get_player_network_factions() -> Array[Faction]:
 	return get_all_network_factions().filter(
 		func(f: Faction): return f.source_faction_id == Balance.PLAYER_FACTION and not f.is_rogue
@@ -144,7 +209,8 @@ func get_network_faction_display_data(region_id: int) -> Dictionary:
 	return {
 		"faction_id":       nf.id,
 		"network_type":     nf.network_type,
-		"display_name":     Balance.ORG.get(nf.network_type, {}).get("display_name", nf.network_type),
+		"display_name":     nf.faction_display_name if not nf.faction_display_name.is_empty() else Balance.ORG.get(nf.network_type, {}).get("display_name", nf.network_type),
+		"founder_name":     nf.founder_name,
 		"doctrine":         nf.doctrine,
 		"doctrine_display": Balance.ORG.get(nf.network_type, {}).get("doctrines", {}).get(nf.doctrine, {}).get("display_name", ""),
 		"loyalty":          nf.loyalty,

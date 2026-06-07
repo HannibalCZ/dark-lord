@@ -38,13 +38,16 @@ extends VBoxContainer
 @onready var defensive_button: Button                = $LairInfoSection/VBoxContainer/LairInfoContent/LairDirectiveOptions/LairButtonRow/DefensiveButton
 @onready var raider_button: Button                   = $LairInfoSection/VBoxContainer/LairInfoContent/LairDirectiveOptions/LairButtonRow/RaiderButton
 
-@onready var network_faction_section: VBoxContainer    = $NetworkFactionSection
-@onready var network_faction_header: Label             = $NetworkFactionSection/NetworkFactionHeader
-@onready var network_influence_label: Label            = $NetworkFactionSection/NetworkInfluenceLabel
-@onready var network_loyalty_label: Label              = $NetworkFactionSection/NetworkLoyaltyLabel
-@onready var network_doctrine_container: VBoxContainer = $NetworkFactionSection/NetworkDoctrineContainer
-@onready var network_doctrine_picker: OptionButton     = $NetworkFactionSection/NetworkDoctrineContainer/NetworkDoctrinePicker
-@onready var network_doctrine_effects: Label           = $NetworkFactionSection/NetworkDoctrineContainer/NetworkDoctrineEffects
+@onready var network_faction_section: PanelContainer   = $NetworkFactionSection
+@onready var network_faction_header: Button            = $NetworkFactionSection/VBoxContainer/NetworkFactionHeader
+@onready var network_faction_content: VBoxContainer    = $NetworkFactionSection/VBoxContainer/NetworkFactionContent
+@onready var network_faction_name_label: Label         = $NetworkFactionSection/VBoxContainer/NetworkFactionContent/NetworkFactionNameLabel
+@onready var network_founder_label: Label              = $NetworkFactionSection/VBoxContainer/NetworkFactionContent/NetworkFounderLabel
+@onready var network_influence_label: Label            = $NetworkFactionSection/VBoxContainer/NetworkFactionContent/NetworkInfluenceLabel
+@onready var network_loyalty_label: Label              = $NetworkFactionSection/VBoxContainer/NetworkFactionContent/NetworkLoyaltyLabel
+@onready var network_doctrine_container: VBoxContainer = $NetworkFactionSection/VBoxContainer/NetworkFactionContent/NetworkDoctrineContainer
+@onready var network_doctrine_picker: OptionButton     = $NetworkFactionSection/VBoxContainer/NetworkFactionContent/NetworkDoctrineContainer/NetworkDoctrinePicker
+@onready var network_doctrine_effects: Label           = $NetworkFactionSection/VBoxContainer/NetworkFactionContent/NetworkDoctrineContainer/NetworkDoctrineEffects
 
 var _region: Region = null
 var _nf_doctrine_keys: Array[String] = []
@@ -96,7 +99,16 @@ func _ready() -> void:
 	lair_info_header.pressed.connect(func(): _toggle_section(lair_info_content, lair_info_header))
 	defensive_button.pressed.connect(_on_defensive_pressed)
 	raider_button.pressed.connect(_on_raider_pressed)
+	network_faction_header.pressed.connect(func(): _toggle_section(network_faction_content, network_faction_header))
 	network_doctrine_picker.item_selected.connect(_on_network_doctrine_selected)
+
+	var bg_network := StyleBoxFlat.new()
+	bg_network.bg_color = Color("#1a1228")
+	bg_network.content_margin_left   = 12.0
+	bg_network.content_margin_right  = 12.0
+	bg_network.content_margin_top    = 12.0
+	bg_network.content_margin_bottom = 12.0
+	network_faction_section.add_theme_stylebox_override("panel", bg_network)
 
 func show_for_region(region_id: int) -> void:
 	if region_id == -1:
@@ -353,12 +365,14 @@ func _on_defensive_pressed() -> void:
 	if _region == null:
 		return
 	_region.lair_directive = Balance.LAIR_DIRECTIVE_DEFENSIVE
+	GameState.world_ai_manager.update_lair_actor_profile(_region.id)
 	_refresh_lair_directive(_region)
 
 func _on_raider_pressed() -> void:
 	if _region == null:
 		return
 	_region.lair_directive = Balance.LAIR_DIRECTIVE_RAIDER
+	GameState.world_ai_manager.update_lair_actor_profile(_region.id)
 	_refresh_lair_directive(_region)
 
 # --------------------------
@@ -371,7 +385,19 @@ func _refresh_network_faction(region: Region) -> void:
 		return
 
 	network_faction_section.visible = true
-	network_faction_header.text = data["display_name"]
+	var type_display: String = {"cult": "Kult", "crime_syndicate": "Syndikát", "shadow_network": "Stínová síť"}.get(data["network_type"], data["network_type"])
+	network_faction_header.text = "▶ ORGANIZACE — %s" % type_display
+	network_faction_content.visible = false
+
+	network_faction_name_label.text = data["display_name"]
+
+	var founder: String = data.get("founder_name", "")
+	if not founder.is_empty():
+		network_founder_label.text = "Vůdce: %s" % founder
+		network_founder_label.visible = true
+	else:
+		network_founder_label.visible = false
+
 	network_influence_label.text = "Vliv: %d" % data["influence"]
 
 	var loyalty: int = data["loyalty"]

@@ -455,5 +455,55 @@ const ACTORS: Dictionary = {
 				}
 			}
 		}
-	}
+	},
+
+	# ---------------------------------------------------------------------------
+	# Lair profily — per-region frakce
+	# ---------------------------------------------------------------------------
+	"lair_neutral": {
+		"display_name": "Neutrální doupě",
+		"plan_switch_threshold": 0.5,
+		"goals": { "survive": 1.0 },
+		"actions": {
+			"idle": {
+				"base_score": 1.0,
+				"handler": "lair_idle",
+				"effects": {}
+			}
+		}
+	},
+	"lair_defensive": {
+		"display_name": "Obranná direktiva",
+		"plan_switch_threshold": 0.3,
+		"goals": { "defend_lair": 1.0 },
+		"actions": {
+			"stay": {
+				"base_score": 0.9,
+				"handler": "lair_stay",
+				"effects": {}
+			},
+			"raid": {
+				"base_score": 0.1,
+				"handler": "lair_raid",
+				"effects": {}
+			}
+		}
+	},
+	"lair_raider": {
+		"display_name": "Nájezdnická direktiva",
+		"plan_switch_threshold": 0.3,
+		"goals": { "raid_territory": 1.0 },
+		"actions": {
+			"stay": {
+				"base_score": 0.1,
+				"handler": "lair_stay",
+				"effects": {}
+			},
+			"raid": {
+				"base_score": 0.9,
+				"handler": "lair_raid",
+				"effects": {}
+			}
+		}
+	},
 }

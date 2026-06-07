@@ -25,9 +25,27 @@ func init_actors() -> void:
 	for faction_id in AIProfiles.ACTORS.keys():
 		if _actors.has(faction_id):
 			continue  # guard — nepřepisuj existující actor
+		if faction_id.ends_with("_network"):
+			continue  # network profile actory se vytváří lazily v process_turn()
+		if faction_id.begins_with("lair_"):
+			continue  # lair actory se inicializují zvlášť níže
 		var actor := AIActor.new()
 		actor.faction_id = faction_id
 		_actors[faction_id] = actor
+
+	# Lair aktéři — jeden per Lair frakce, profil podle source_faction_id a lair_directive
+	for faction in game_state.faction_manager.get_all_lair_factions():
+		if _actors.has(faction.id):
+			continue
+		var region: Region = game_state.query.regions.get_by_id(faction.lair_region_id)
+		var actor := AIActor.new()
+		actor.faction_id = faction.id
+		_actors[faction.id] = actor
+		# Nastav výchozí plán podle profilu
+		var profile_key: String = _get_lair_profile(faction, region)
+		var profile: Dictionary = AIProfiles.ACTORS.get(profile_key, {})
+		if not profile.is_empty():
+			actor.current_plan = profile.get("actions", {}).keys()[0] if not profile.get("actions", {}).is_empty() else ""
 
 # Vymaže všechny aktéry včetně dynamicky vytvořených network faction actors.
 # Volat z GameState.load_scenario() před init_actors() pro čistý start.
@@ -62,12 +80,32 @@ func _update_paladin_behavior() -> void:
 
 # Hlavní entry point — volat z GameState.advance_turn().
 func process_turn() -> void:
+	# Vyčisti stale actory pro zničené network frakce
+	for actor_id in _actors.keys():
+		if not AIProfiles.ACTORS.has(actor_id):
+			if game_state.faction_manager.get_faction(actor_id) == null:
+				_actors.erase(actor_id)
+
 	for faction_id in _actors.keys():
 		var actor: AIActor = _actors[faction_id]
 		var profile: Dictionary = AIProfiles.ACTORS.get(faction_id, {})
 		if profile.is_empty():
 			continue
 		_process_actor(actor, profile)
+
+	# Lair aktéři — zpracuj přes dynamicky určený profil
+	for faction in game_state.faction_manager.get_all_lair_factions():
+		var lair_id: String = faction.id
+		if not _actors.has(lair_id):
+			var actor := AIActor.new()
+			actor.faction_id = lair_id
+			_actors[lair_id] = actor
+		var lair_actor: AIActor = _actors[lair_id]
+		var region: Region = game_state.query.regions.get_by_id(faction.lair_region_id)
+		var profile_key: String = _get_lair_profile(faction, region)
+		var lair_profile: Dictionary = AIProfiles.ACTORS.get(profile_key, {})
+		if not lair_profile.is_empty():
+			_process_actor(lair_actor, lair_profile)
 
 	# Network frakce — lazy actor creation + zpracování
 	for faction in game_state.faction_manager.all():
@@ -184,6 +222,31 @@ func _process_actor(actor: AIActor, profile: Dictionary) -> void:
 	_execute_action(actor, action_def)
 
 # ---------------------------------------------------------------------------
+# Lair profily
+# ---------------------------------------------------------------------------
+
+func _get_lair_profile(faction: Faction, region: Region) -> String:
+	if faction.source_faction_id != Balance.PLAYER_FACTION:
+		return "lair_neutral"
+	if region == null:
+		return "lair_defensive"
+	match region.lair_directive:
+		Balance.LAIR_DIRECTIVE_RAIDER: return "lair_raider"
+		_: return "lair_defensive"
+
+# Přepne plán Lair aktéra pokud nový profil aktuální plán neobsahuje.
+func update_lair_actor_profile(region_id: int) -> void:
+	var faction: Faction = game_state.faction_manager.get_lair_faction_for_region(region_id)
+	if faction == null or not _actors.has(faction.id):
+		return
+	var region: Region = game_state.query.regions.get_by_id(region_id)
+	var new_profile_key: String = _get_lair_profile(faction, region)
+	var actor: AIActor = _actors[faction.id]
+	var actions: Dictionary = AIProfiles.ACTORS.get(new_profile_key, {}).get("actions", {})
+	if not actions.has(actor.current_plan):
+		actor.current_plan = actions.keys()[0] if not actions.is_empty() else ""
+
+# ---------------------------------------------------------------------------
 # Public read API
 # ---------------------------------------------------------------------------
 
@@ -238,6 +301,12 @@ func _execute_action(actor: AIActor, action_def: Dictionary) -> void:
 			_handler_network_expand(actor, action_def)
 		"network_suppress":
 			_handler_network_suppress(actor, action_def)
+		"lair_idle":
+			_handler_lair_idle(actor)
+		"lair_stay":
+			_handler_lair_stay(actor)
+		"lair_raid":
+			_handler_lair_raid(actor)
 		"":
 			pass  # žádná akce
 		_:
@@ -377,6 +446,17 @@ func _handler_merchant_defend(actor: AIActor, _params: Dictionary) -> void:
 	# Obchodníci posilují obranu — taktická logika v AIManager
 	# Budoucí migrace: spawn obranných jednotek při ohrožení
 	actor.last_decision_log["handler_result"] = "defend — posílení obrany"
+
+func _handler_lair_idle(actor: AIActor) -> void:
+	actor.last_decision_log["handler_result"] = "idle — doupě čeká"
+
+func _handler_lair_stay(actor: AIActor) -> void:
+	# Jednotky zůstanou v Lairu — taktická logika (defender profil) v AIManager
+	actor.last_decision_log["handler_result"] = "stay — jednotky brání doupě"
+
+func _handler_lair_raid(actor: AIActor) -> void:
+	# Jednotky útočí na nejbližší civilizovaný region — taktická logika v AIManager (lair_raider_active)
+	actor.last_decision_log["handler_result"] = "raid — jednotky nájezdí"
 
 func _handler_network_grow(actor: AIActor, _params: Dictionary) -> void:
 	var faction: Faction = game_state.faction_manager.get_faction(actor.faction_id)
