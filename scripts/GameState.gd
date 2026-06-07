@@ -140,6 +140,10 @@ func load_scenario(path: String) -> void:
 
 	_place_procedural_secrets()
 
+	# Rebuild region query po načtení mapy — nutné před vytvořením Lair frakcí
+	# a před init_actors(), jinak get_regions_with_lair() vrátí prázdné pole.
+	query.regions.rebuild()
+
 	# 3) Globals
 	var g: Dictionary = data.get("globals", {})
 	turn = int(g.get("turn", 1))
