@@ -161,6 +161,15 @@ func _process_actor(actor: AIActor, profile: Dictionary) -> void:
 		"rival_present": has_rival,
 	}
 
+	# Tick active_modifiers a přidej do context
+	for key in actor.active_modifiers.keys():
+		var mod = actor.active_modifiers[key]
+		context[key] = mod["value"]
+		mod["turns_remaining"] -= 1
+		if mod["turns_remaining"] <= 0:
+			actor.active_modifiers.erase(key)
+			EventBus.ai_modifier_expired.emit(actor.faction_id, key)
+
 	# Vypočítej skóre pro všechny akce — každé je Dictionary { score, base, breakdown }
 	var scores: Dictionary = {}
 	for action_key in actions.keys():
@@ -260,7 +269,8 @@ func get_all_actor_snapshots() -> Array:
 			"faction_id": faction_id,
 			"active_plan": actor.current_plan,
 			"plan_turn": actor.plan_turn,
-			"log": actor.last_decision_log.duplicate()
+			"log": actor.last_decision_log.duplicate(),
+			"active_modifiers": actor.active_modifiers.duplicate()
 		})
 	return result
 
@@ -560,15 +570,25 @@ func _handler_network_suppress(actor: AIActor, action_def: Dictionary) -> void:
 	var best_region_id: int = -1
 	var best_influence: int = -1
 
+	var checked_regions: Dictionary = {}
+
 	for region_id in faction.influence.keys():
-		var rival: Faction = game_state.faction_manager.get_network_faction_in_region(region_id)
-		if rival == null or rival.id == actor.faction_id:
-			continue
-		var rival_inf: int = rival.influence.get(region_id, 0)
-		if rival_inf > best_influence:
-			best_influence = rival_inf
-			best_rival = rival
-			best_region_id = region_id
+		var regions_to_check: Array = [region_id]
+		regions_to_check.append_array(game_state.query.regions.neighbors(region_id))
+
+		for check_id in regions_to_check:
+			if checked_regions.has(check_id):
+				continue
+			checked_regions[check_id] = true
+
+			var rival: Faction = game_state.faction_manager.get_network_faction_in_region(check_id)
+			if rival == null or rival.id == actor.faction_id:
+				continue
+			var rival_inf: int = rival.influence.get(check_id, 0)
+			if rival_inf > best_influence:
+				best_influence = rival_inf
+				best_rival = rival
+				best_region_id = check_id
 
 	if best_rival == null:
 		actor.last_decision_log["handler_result"] = "suppress: no rival found"
